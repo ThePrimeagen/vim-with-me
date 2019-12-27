@@ -10,3 +10,6 @@ Chat, by spending channel points, can execute some set of commands on my system.
 * i3 commands
   - move windows, move focus, full screen, dock, resize, ...
 
+### Why C?
+Because I wanted to feel the pain of real development, not a language developed
+and powered by unicorn poop.
