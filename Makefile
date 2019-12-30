@@ -1,7 +1,7 @@
 all: twitchirc
 
 twitchirc: src/twitchirc.c
-	$(CC) -o bin/twitchirc src/twitchirc.c
+	$(CC) -o bin/twitchirc src/twitchirc.c src/system-commands/asdf.c
 	cp src/.config bin/.config
 
 run: twitchirc

@@ -1,12 +1,16 @@
+#ifndef __ASDF_H_
+#define __ASDF_H_
+
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-int timeLeft = 0;
-
-void asdf(void* ptr);
-void addTime(int timeToAdd);
-bool isInASDF();
+void asdfOn(int timeToAdd);
+bool asdfOff();
 bool isASDFCommand(char* ptr);
+bool isInASDF();
+int getFD();
 
+#endif

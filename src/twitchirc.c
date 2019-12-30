@@ -3,10 +3,65 @@
 #include <stdbool.h>
 #include <string.h>
 #include <time.h>
+#include <errno.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <sys/timerfd.h>
+#include <sys/select.h>
 
 #include "system-commands/asdf.h"
+
+const int ASDF_TIME = 3;
+int MAX_SOCKET = 0;
+struct DescList {
+    int fd;
+    bool (*callBack)();
+    struct DescList* next;
+    struct DescList* prev;
+} DescList;
+
+struct DescList* head;
+void removeFDNode(struct DescList* node) {
+    printf("remove Node\n");
+
+    struct DescList* prev = node->prev;
+    struct DescList* next = node->next;
+
+    if (next != NULL) {
+        next->prev = prev;
+    }
+
+    if (prev != NULL) {
+        prev->next = next;
+    }
+
+    printf("Checking %p == %p\n", node, head);
+    if (node == head) {
+        head = head->next;
+    }
+
+    free(node);
+}
+
+struct DescList* createFDNode() {
+    printf("createFDNode\n");
+
+    struct DescList* next = (struct DescList*)malloc(sizeof(struct DescList));
+    if (head == NULL) {
+        head = next;
+    }
+    else {
+        struct DescList* curr = head;
+        while (curr->next != NULL) {
+            curr = curr->next;
+        }
+
+        curr->next = next;
+        next->prev = curr;
+    }
+
+    return next;
+}
 
 int read_line(int sock, char* buffer) {
     size_t length = 0;
@@ -233,6 +288,60 @@ bool isHighlightedMessage(char* tags) {
     return strstr(tags, "msg-id=highlighted-message") != NULL;
 }
 
+
+void handleIRC(int socket_desc, char* line) {
+    int bytesRead = read_line(socket_desc, line);
+    (void)bytesRead;
+
+    printf("XXXX - Incoming line %.*s\n", bytesRead, line);
+
+    char* lineOffset = line;
+    int count = 0;
+    if (line[0] == '@') {
+        do {
+            lineOffset++;
+            count++;
+        } while (!isPRIVMSG(lineOffset));
+    }
+
+    char* prefix = get_prefix(lineOffset);
+    char* username = get_username(lineOffset);
+    char* command = get_command(lineOffset);
+    char* argument = get_last_argument(lineOffset);
+
+    if (strcmp(command, "PING") == 0) {
+        send_pong(socket_desc, argument);
+        log_with_date((char*)"Got ping. Replying with pong...");
+    }
+
+    else if (isHighlightedMessage(line)) {
+        int len = strlen("PRIVMSG #theprimeagen :");
+        char* msg = lineOffset + len;
+
+        printf("Did this even work?\n");
+        if (isASDFCommand(msg)) {
+            printf("turning on asdf\n");
+            bool inASDF = isInASDF();
+            asdfOn(ASDF_TIME);
+            if (!inASDF) {
+                struct DescList* node = createFDNode();
+                node->fd = getFD();
+                node->callBack = &asdfOff;
+                printf("fileDescriptor %d\n", node->fd);
+
+                if (MAX_SOCKET < node->fd) {
+                    MAX_SOCKET = node->fd;
+                }
+            }
+        }
+    }
+
+    free(prefix);
+    free(username);
+    free(command);
+    free(argument);
+}
+
 int main() {
     int socket_desc = socket(AF_INET, SOCK_STREAM, 0);
     if (socket_desc == -1) {
@@ -272,42 +381,49 @@ int main() {
     free(channels);
 
     char line[1024 * 10];
-    while (1) {
+    fd_set reads;
 
-        int bytesRead = read_line(socket_desc, line);
+    MAX_SOCKET = socket_desc;
 
-        char* lineOffset = line;
-        int count = 0;
-        if (line[0] == '@') {
-            do {
-                lineOffset++;
-                count++;
-            } while (!isPRIVMSG(lineOffset));
+    int loopCount = 0;
+    while (++loopCount < 250) {
+        printf("Going on another loop %d\n", loopCount);
+
+        FD_ZERO(&reads);
+        FD_SET(socket_desc, &reads);
+
+        printf("clearing structs %d\n", loopCount);
+        struct DescList* curr = head;
+        while (curr != NULL) {
+            FD_SET(curr->fd, &reads);
+            curr = curr->next;
         }
 
-        char* prefix = get_prefix(lineOffset);
-        char* username = get_username(lineOffset);
-        char* command = get_command(lineOffset);
-        char* argument = get_last_argument(lineOffset);
-
-        if (strcmp(command, "PING") == 0) {
-            send_pong(socket_desc, argument);
-            log_with_date((char*)"Got ping. Replying with pong...");
+        printf("select %d\n", loopCount);
+        if (select(MAX_SOCKET + 1, &reads, 0, 0, 0) < 0) {
+            printf("failed#select %d - %s\n", errno, strerror(errno));
+            return 1;
         }
 
-        else if (isHighlightedMessage(line)) {
-            int len = strlen("PRIVMSG #theprimeagen :");
-            char* msg = lineOffset + len;
+        // Read the IRC stuffs
+        if (FD_ISSET(socket_desc, &reads)) {
+            handleIRC(socket_desc, line);
+        }
 
-            printf("Did this even work?\n");
-            if (strncmp(msg, "!asdf", 5) == 0) {
-                system("setxkbmap us");
+        curr = head;
+        printf("while curr != null %p %d\n", head, loopCount);
+        while (curr != NULL) {
+            printf("checking FD %d\n", curr->fd);
+            struct DescList* next = curr->next;
+
+            if (FD_ISSET(curr->fd, &reads)) {
+                printf("We have something to callback\n");
+                if (!curr->callBack()) {
+                    removeFDNode(curr);
+                }
             }
-        }
 
-        free(prefix);
-        free(username);
-        free(command);
-        free(argument);
+            curr = next;
+        }
     }
 }
