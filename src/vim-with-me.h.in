@@ -1,0 +1,4 @@
+// the configured options and settings for primebot
+#define vim_with_me_VERSION_MAJOR @vim_with_me_VERSION_MAJOR@
+#define vim_with_me_VERSION_MINOR @vim_with_me_VERSION_MINOR@
+

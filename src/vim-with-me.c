@@ -9,23 +9,29 @@
 #include <sys/timerfd.h>
 #include <sys/select.h>
 
-#include "system-commands/asdf.h"
+#include "system-commands/sys-commands.h"
+#include "json-c/json.h"
 
 const int ASDF_TIME = 3;
+const int XRANDR_TIME = 4;
 int MAX_SOCKET = 0;
-struct DescList {
-    int fd;
-    bool (*callBack)();
-    struct DescList* next;
-    struct DescList* prev;
-} DescList;
 
-struct DescList* head;
-void removeFDNode(struct DescList* node) {
+struct SysCommandList {
+    struct syscommand_t* command;
+    bool (*callBack)(struct syscommand_t*);
+    struct SysCommandList* next;
+    struct SysCommandList* prev;
+} SysCommandList;
+
+struct SysCommandList* head;
+struct syscommand_t* asdf;
+struct syscommand_t* lightMeSilly;
+
+void removeFDNode(struct SysCommandList* node) {
     printf("remove Node\n");
 
-    struct DescList* prev = node->prev;
-    struct DescList* next = node->next;
+    struct SysCommandList* prev = node->prev;
+    struct SysCommandList* next = node->next;
 
     if (next != NULL) {
         next->prev = prev;
@@ -43,15 +49,15 @@ void removeFDNode(struct DescList* node) {
     free(node);
 }
 
-struct DescList* createFDNode() {
+struct SysCommandList* createFDNode() {
     printf("createFDNode\n");
 
-    struct DescList* next = (struct DescList*)malloc(sizeof(struct DescList));
+    struct SysCommandList* next = (struct SysCommandList*)malloc(sizeof(struct SysCommandList));
     if (head == NULL) {
         head = next;
     }
     else {
-        struct DescList* curr = head;
+        struct SysCommandList* curr = head;
         while (curr->next != NULL) {
             curr = curr->next;
         }
@@ -288,6 +294,17 @@ bool isHighlightedMessage(char* tags) {
     return strstr(tags, "msg-id=highlighted-message") != NULL;
 }
 
+void addCommandToFDSelect(struct syscommand_t* command) {
+    struct SysCommandList* node = createFDNode();
+    node->command = command;
+    node->callBack = &sysCommandOff;
+
+    printf("fileDescriptor %d\n", node->command->fd);
+
+    if (MAX_SOCKET < node->command->fd) {
+        MAX_SOCKET = node->command->fd;
+    }
+}
 
 void handleIRC(int socket_desc, char* line) {
     int bytesRead = read_line(socket_desc, line);
@@ -319,20 +336,20 @@ void handleIRC(int socket_desc, char* line) {
         char* msg = lineOffset + len;
 
         printf("Did this even work?\n");
-        if (isASDFCommand(msg)) {
-            printf("turning on asdf\n");
-            bool inASDF = isInASDF();
-            asdfOn(ASDF_TIME);
-            if (!inASDF) {
-                struct DescList* node = createFDNode();
-                node->fd = getFD();
-                node->callBack = &asdfOff;
-                printf("fileDescriptor %d\n", node->fd);
 
-                if (MAX_SOCKET < node->fd) {
-                    MAX_SOCKET = node->fd;
-                }
-            }
+        bool addToFD = false;
+        struct syscommand_t* cmd;
+        if (isASDFCommand(msg)) {
+            addToFD = sysCommandOn(asdf, ASDF_TIME);
+            cmd = asdf;
+        }
+        else if (isXrandrCommand(msg)) {
+            addToFD = sysCommandOn(lightMeSilly, XRANDR_TIME);
+            cmd = lightMeSilly;
+        }
+
+        if (addToFD) {
+            addCommandToFDSelect(cmd);
         }
     }
 
@@ -343,6 +360,14 @@ void handleIRC(int socket_desc, char* line) {
 }
 
 int main() {
+    asdf = (struct syscommand_t*)malloc(sizeof(syscommand_t));
+    asdf->on = "setxkbmap us";
+    asdf->off = "setxkbmap us real-prog-dvorak";
+
+    lightMeSilly = (struct syscommand_t*)malloc(sizeof(syscommand_t));
+    lightMeSilly->on = "xrandr --output eDP-1 --brightness 0.05 --output HDMI-1 --brightness 0.05";
+    lightMeSilly->off = "xrandr --output eDP-1 --brightness 1 --output HDMI-1 --brightness 1";
+
     int socket_desc = socket(AF_INET, SOCK_STREAM, 0);
     if (socket_desc == -1) {
        perror("Could not create socket");
@@ -351,6 +376,8 @@ int main() {
 
     char* ip = get_config((char*)"server");
     char* port = get_config((char*)"port");
+
+    printf("IP: %s -- Port: %s\n", ip, port);
 
     struct sockaddr_in server;
     server.sin_addr.s_addr = inet_addr(ip);
@@ -386,16 +413,16 @@ int main() {
     MAX_SOCKET = socket_desc;
 
     int loopCount = 0;
-    while (++loopCount < 250) {
+    while (++loopCount < 250000) {
         printf("Going on another loop %d\n", loopCount);
 
         FD_ZERO(&reads);
         FD_SET(socket_desc, &reads);
 
         printf("clearing structs %d\n", loopCount);
-        struct DescList* curr = head;
+        struct SysCommandList* curr = head;
         while (curr != NULL) {
-            FD_SET(curr->fd, &reads);
+            FD_SET(curr->command->fd, &reads);
             curr = curr->next;
         }
 
@@ -413,12 +440,12 @@ int main() {
         curr = head;
         printf("while curr != null %p %d\n", head, loopCount);
         while (curr != NULL) {
-            printf("checking FD %d\n", curr->fd);
-            struct DescList* next = curr->next;
+            printf("checking FD %d\n", curr->command->fd);
+            struct SysCommandList* next = curr->next;
 
-            if (FD_ISSET(curr->fd, &reads)) {
+            if (FD_ISSET(curr->command->fd, &reads)) {
                 printf("We have something to callback\n");
-                if (!curr->callBack()) {
+                if (!curr->callBack(curr->command)) {
                     removeFDNode(curr);
                 }
             }
@@ -427,3 +454,4 @@ int main() {
         }
     }
 }
+
