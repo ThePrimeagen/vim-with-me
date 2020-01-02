@@ -69,3 +69,7 @@ bool isASDFCommand(char* ptr) {
 bool isXrandrCommand(char* ptr) {
     return strncmp(ptr, "!xrandr", 7) == 0;
 }
+
+bool isSystemCommand(char* ptr) {
+    return isASDFCommand(ptr) || isXrandrCommand(ptr);
+}

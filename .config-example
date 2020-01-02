@@ -1,0 +1,21 @@
+# Move to .config
+# IRC requirements.
+server = 52.37.111.39
+port = 6667
+nick = __your_nick__
+pass = __oauth_pass_for_tmi_irc_client__
+channels = __channel_name_must_be_lower_case__
+
+# are required to generate the website
+clientID = __clientID_for_your_app__
+secretID = __secreteID_for_your_app__
+
+# Currently only using channel_read for channelID generation which is required
+# for pub sub.
+#
+# NOTE, be carefule ever allowing someone that information,
+# it contains your stream key.
+scopes = channel_subscriptions%20bits:read%20channel:read:subscriptions%20channel_read
+
+# will be generated from clientID and request
+channelID = __channel_id_for_pub_sub__

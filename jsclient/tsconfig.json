@@ -1,0 +1,18 @@
+{
+    "include": ["lib"],
+    "compilerOptions": {
+        "outDir": "./dist/",
+        "sourceMap": true,
+        "noImplicitAny": false,
+        "lib": ["es6", "dom"],
+        "module": "es6",
+        "target": "es6",
+        "esModuleInterop": true,
+        "jsx": "react",
+        "allowJs": true
+    },
+    "types": [
+        "three"
+    ]
+}
+

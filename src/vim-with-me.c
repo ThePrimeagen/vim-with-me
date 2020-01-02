@@ -11,9 +11,13 @@
 
 #include "system-commands/sys-commands.h"
 #include "json-c/json.h"
+#include "hashmap/hashmap.h"
+#include "twitch/twitch.h"
 
 const int ASDF_TIME = 3;
 const int XRANDR_TIME = 4;
+const int COMMAND_THROTTLE_MS = 60000;
+
 int MAX_SOCKET = 0;
 
 struct SysCommandList {
@@ -26,6 +30,7 @@ struct SysCommandList {
 struct SysCommandList* head;
 struct syscommand_t* asdf;
 struct syscommand_t* lightMeSilly;
+struct hashmap_table* recentUsers;
 
 void removeFDNode(struct SysCommandList* node) {
     printf("remove Node\n");
@@ -306,6 +311,45 @@ void addCommandToFDSelect(struct syscommand_t* command) {
     }
 }
 
+void handleHighlightedMessage(char* lineOffset, char* twitchName, int twitchId) {
+    struct timespec now;
+
+    if (twitchId && clock_gettime(CLOCK_REALTIME, &now) != -1) {
+        size_t currentMils = now.tv_sec * 1000;
+        size_t lastMillis = hashmap_lookup(recentUsers, twitchId);
+
+        size_t diff = currentMils - lastMillis;
+        if (diff < COMMAND_THROTTLE_MS) {
+            printf("THROTTLED %s \n", twitchName);
+            return;
+        }
+    }
+
+    int len = strlen("PRIVMSG #theprimeagen :");
+    char* msg = lineOffset + len;
+
+    bool addToFD = false;
+    struct syscommand_t* cmd = NULL;
+
+    if (isASDFCommand(msg)) {
+        addToFD = sysCommandOn(asdf, ASDF_TIME);
+        cmd = asdf;
+    }
+    else if (isXrandrCommand(msg)) {
+        addToFD = sysCommandOn(lightMeSilly, XRANDR_TIME);
+        cmd = lightMeSilly;
+    }
+
+    if (addToFD) {
+        addCommandToFDSelect(cmd);
+    }
+
+    if (cmd != NULL && twitchId) {
+        size_t currentMils = now.tv_sec * 1000;
+        hashmap_insert(recentUsers, twitchId, currentMils);
+    }
+}
+
 void handleIRC(int socket_desc, char* line) {
     int bytesRead = read_line(socket_desc, line);
     (void)bytesRead;
@@ -321,45 +365,29 @@ void handleIRC(int socket_desc, char* line) {
         } while (!isPRIVMSG(lineOffset));
     }
 
-    char* prefix = get_prefix(lineOffset);
-    char* username = get_username(lineOffset);
     char* command = get_command(lineOffset);
-    char* argument = get_last_argument(lineOffset);
 
     if (strcmp(command, "PING") == 0) {
+        char* argument = get_last_argument(lineOffset);
         send_pong(socket_desc, argument);
         log_with_date((char*)"Got ping. Replying with pong...");
+        free(argument);
     }
 
-    else if (isHighlightedMessage(line)) {
-        int len = strlen("PRIVMSG #theprimeagen :");
-        char* msg = lineOffset + len;
+    if (isHighlightedMessage(line)) {
 
-        printf("Did this even work?\n");
+        int twitchId = twitchReadUserId(line);
+        char* twitchName = twitchReadNameFromIRC(line, lineOffset);
 
-        bool addToFD = false;
-        struct syscommand_t* cmd;
-        if (isASDFCommand(msg)) {
-            addToFD = sysCommandOn(asdf, ASDF_TIME);
-            cmd = asdf;
-        }
-        else if (isXrandrCommand(msg)) {
-            addToFD = sysCommandOn(lightMeSilly, XRANDR_TIME);
-            cmd = lightMeSilly;
-        }
-
-        if (addToFD) {
-            addCommandToFDSelect(cmd);
-        }
+        handleHighlightedMessage(lineOffset, twitchName, twitchId);
     }
 
-    free(prefix);
-    free(username);
     free(command);
-    free(argument);
 }
 
 int main() {
+    recentUsers = hashmap_createTable(1381);
+
     asdf = (struct syscommand_t*)malloc(sizeof(syscommand_t));
     asdf->on = "setxkbmap us";
     asdf->off = "setxkbmap us real-prog-dvorak";
@@ -370,8 +398,8 @@ int main() {
 
     int socket_desc = socket(AF_INET, SOCK_STREAM, 0);
     if (socket_desc == -1) {
-       perror("Could not create socket");
-       exit(1);
+        perror("Could not create socket");
+        exit(1);
     }
 
     char* ip = get_config((char*)"server");
@@ -454,4 +482,3 @@ int main() {
         }
     }
 }
-

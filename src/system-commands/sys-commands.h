@@ -21,5 +21,6 @@ bool sysCommandOn(struct syscommand_t* command, int secondsToAdd);
 bool sysCommandOff(struct syscommand_t* command);
 bool isASDFCommand(char* ptr);
 bool isXrandrCommand(char* ptr);
+bool isSystemCommand(char* ptr);
 
 #endif

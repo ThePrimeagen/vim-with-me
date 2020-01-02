@@ -1,3 +1,5 @@
-src/.config
+.config
 bin
+node_modules
+
 
