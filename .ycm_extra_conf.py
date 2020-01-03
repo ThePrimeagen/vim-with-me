@@ -58,6 +58,7 @@ flags = [
 '-I', '.',
 
 '-I', './3rdparty/',
+'-I', './lib/',
 
 #'-I', '/home/mpaulson/personal/c_fun/emsdk/system/include',
 

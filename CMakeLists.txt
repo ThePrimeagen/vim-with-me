@@ -5,8 +5,13 @@ project(vim-with-me VERSION 1.0)
 
 # find_library(LIB_WEB_SOCKETS libwebsockets.so)
 
+set(PROJECT_LIB_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+
 add_subdirectory(3rdparty/json-c)
+add_subdirectory(3rdparty/libwebsockets)
+
 add_subdirectory(src)
+
 configure_file(.config src/.config COPYONLY)
 
 

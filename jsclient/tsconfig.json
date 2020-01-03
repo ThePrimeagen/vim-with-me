@@ -1,15 +1,14 @@
 {
-    "include": ["lib"],
+    "include": ["src"],
     "compilerOptions": {
         "outDir": "./dist/",
         "sourceMap": true,
-        "noImplicitAny": false,
+        "noImplicitAny": true,
         "lib": ["es6", "dom"],
         "module": "es6",
         "target": "es6",
         "esModuleInterop": true,
-        "jsx": "react",
-        "allowJs": true
+        "allowJs": false
     },
     "types": [
         "three"

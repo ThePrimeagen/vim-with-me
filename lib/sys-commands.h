@@ -23,4 +23,6 @@ bool isASDFCommand(char* ptr);
 bool isXrandrCommand(char* ptr);
 bool isSystemCommand(char* ptr);
 
+bool throttleUser(char* username, int userId,
+
 #endif

@@ -1,25 +1,11 @@
-#include "twitch.h"
+#include "twitch-irc.h"
 
 char nameParts[3] = {'@', '!', ':'};
 
-const char* listenCommand = "{\
-    \"type\": \"LISTEN\",\
-    \"data\": {\
-        \"topics\": [\"%s\"],\
-        \"auth_token\": \"%s\"\
-    }\
-}";
+bool isHighlightedMessage(char* tags) {
+    // Tags @badge-info=subscriber/16;badges=broadcaster/1,subscriber/6,sub-gifter/50;color=#FF0000;display-name=ThePrimeagen;emotes=;flags=;id=e6b18363-a1a3-4d96-96dd-9cc288fdca39;mod=0;msg-id=highlighted-message;room-id=167160215;subscriber=1;tmi-sent-ts=1577486185539;turbo=0;user-id=167160215;user-type= :theprimeagen!theprimeagen@theprimeagen.tmi.twitch.tv
 
-/**
- * don't forget to free....
- */
-char* twitchListenCommand(const char* topic, const char* authToken) {
-    size_t listenCommandLen = strlen(listenCommand) - 4;
-    size_t size = strlen(topic) + strlen(authToken) + listenCommandLen + 1;
-    char* buf = (char*)malloc(size);
-
-    snprintf(buf, size, listenCommand, topic, authToken);
-    return buf;
+    return strstr(tags, "msg-id=highlighted-message") != NULL;
 }
 
 /*

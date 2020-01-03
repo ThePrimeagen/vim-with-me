@@ -9,10 +9,10 @@
 #include <sys/timerfd.h>
 #include <sys/select.h>
 
-#include "system-commands/sys-commands.h"
+#include "sys-commands.h"
 #include "json-c/json.h"
-#include "hashmap/hashmap.h"
-#include "twitch/twitch.h"
+#include "hashmap.h"
+#include "twitch-irc.h"
 
 const int ASDF_TIME = 3;
 const int XRANDR_TIME = 4;
@@ -20,6 +20,8 @@ const int COMMAND_THROTTLE_MS = 60000;
 
 int MAX_SOCKET = 0;
 
+// TODO: Refactor:
+// System commands to be better encupsulated with the system-commands interface
 struct SysCommandList {
     struct syscommand_t* command;
     bool (*callBack)(struct syscommand_t*);
@@ -74,51 +76,6 @@ struct SysCommandList* createFDNode() {
     return next;
 }
 
-int read_line(int sock, char* buffer) {
-    size_t length = 0;
-
-    while (1) {
-        char data;
-        int result = recv(sock, &data, 1, 0);
-
-        if ((result <= 0) || (data == EOF)) {
-            perror("Connection closed");
-            exit(1);
-        }
-
-        buffer[length] = data;
-        length++;
-
-        if (length >= 2 && buffer[length-2] == '\r' && buffer[length-1] == '\n') {
-            buffer[length-2] = '\0';
-            return length;
-        }
-    }
-}
-
-void log_with_date(char* line) {
-    char date[50];
-    struct tm *current_time;
-
-    time_t now = time(0);
-    current_time = gmtime(&now);
-    strftime(date, sizeof(date), "%Y-%m-%d %H:%M:%S", current_time);
-
-    printf("[%s] %s\n", date, line);
-}
-
-void log_to_file(char* line, FILE *logfile) {
-    char date[50];
-    struct tm *current_time;
-
-    time_t now = time(0);
-    current_time = gmtime(&now);
-    strftime(date, sizeof(date), "%Y-%m-%d %H:%M:%S", current_time);
-
-    fprintf(logfile, "[%s] %s\n", date, line);
-    fflush(logfile);
-}
-
 char* get_config(char *name) {
     char* value = (char*)malloc(1024);
     FILE *configfile = fopen(".config", "r");
@@ -144,42 +101,6 @@ char* get_config(char *name) {
     }
 
     return value;
-}
-
-char* get_prefix(char *line) {
-    char* prefix = (char*)malloc(512);
-    char clone[512];
-
-    strncpy(clone, line, strlen(line) + 1);
-    if (line[0] == ':') {
-        char* splitted = strtok(clone, " ");
-        if (splitted != NULL) {
-            strncpy(prefix, splitted+1, strlen(splitted)+1);
-        } else {
-            prefix[0] = '\0';
-        }
-    } else {
-        prefix[0] = '\0';
-    }
-    return prefix;
-}
-
-char* get_username(char *line) {
-    char* username = (char*)malloc(512);
-    char clone[512];
-
-    strncpy(clone, line, strlen(line) + 1);
-    if (strchr(clone, '!') != NULL) {
-        char* splitted = strtok(clone, "!");
-        if (splitted != NULL) {
-            strncpy(username, splitted+1, strlen(splitted)+1);
-        } else {
-            username[0] = '\0';
-        }
-    } else {
-        username[0] = '\0';
-    }
-    return username;
 }
 
 char* get_command(char line[]) {
@@ -213,90 +134,6 @@ char* get_last_argument(char line[]) {
         argument[0] = '\0';
     }
     return argument;
-}
-
-char* get_argument(char line[], int argno) {
-    char* argument = (char*)malloc(512);
-    char clone[512];
-    strncpy(clone, line, strlen(line)+1);
-
-    int current_arg = 0;
-    char* splitted = strtok(clone, " ");
-    while (splitted != NULL) {
-        if (splitted[0] != ':') {
-            current_arg++;
-        }
-        if (current_arg == argno+1) {
-            strncpy(argument, splitted, strlen(splitted)+1);
-            return argument;
-        }
-        splitted = strtok(NULL, " ");
-    }
-
-    if (current_arg != argno) {
-        argument[0] = '\0';
-    }
-    return argument;
-}
-
-void set_nick(int sock, char nick[]) {
-    char nick_packet[512];
-    sprintf(nick_packet, "NICK %s\r\n", nick);
-    send(sock, nick_packet, strlen(nick_packet), 0);
-}
-
-void set_tags(int sock) {
-    char pass_packet[512];
-
-    // TODO: When I am a real man
-    sprintf(pass_packet, "CAP REQ :twitch.tv/tags\r\n");
-
-    send(sock, pass_packet, strlen(pass_packet), 0);
-}
-
-
-void SET_PASS(int sock, char pass[]) {
-    char pass_packet[512];
-    // TODO: When I am a real man
-    sprintf(pass_packet, "PASS %s\r\n", pass);
-
-    printf("PASS %.*s", 8, pass_packet);
-
-    send(sock, pass_packet, strlen(pass_packet), 0);
-}
-
-void send_user_packet(int sock, char nick[]) {
-    char user_packet[512];
-    sprintf(user_packet, "USER %s 0 * :%s\r\n", nick, nick);
-    send(sock, user_packet, strlen(user_packet), 0);
-}
-
-void join_channel(int sock, char channel[]) {
-    char join_packet[512];
-    sprintf(join_packet, "JOIN %s\r\n", channel);
-    send(sock, join_packet, strlen(join_packet), 0);
-}
-
-void send_pong(int sock, char argument[]) {
-    char pong_packet[512];
-    sprintf(pong_packet, "PONG :%s\r\n", argument);
-    send(sock, pong_packet, strlen(pong_packet), 0);
-}
-
-void send_message(int sock, char to[], char message[]) {
-    char message_packet[512];
-    sprintf(message_packet, "PRIVMSG %s :%s\r\n", to, message);
-    send(sock, message_packet, strlen(message_packet), 0);
-}
-
-bool isPRIVMSG(char* lineOffset) {
-    return strncmp(lineOffset, "PRIVMSG", 7) == 0;
-}
-
-bool isHighlightedMessage(char* tags) {
-    // Tags @badge-info=subscriber/16;badges=broadcaster/1,subscriber/6,sub-gifter/50;color=#FF0000;display-name=ThePrimeagen;emotes=;flags=;id=e6b18363-a1a3-4d96-96dd-9cc288fdca39;mod=0;msg-id=highlighted-message;room-id=167160215;subscriber=1;tmi-sent-ts=1577486185539;turbo=0;user-id=167160215;user-type= :theprimeagen!theprimeagen@theprimeagen.tmi.twitch.tv
-
-    return strstr(tags, "msg-id=highlighted-message") != NULL;
 }
 
 void addCommandToFDSelect(struct syscommand_t* command) {
@@ -349,7 +186,6 @@ void handleHighlightedMessage(char* lineOffset, char* twitchName, int twitchId) 
         hashmap_insert(recentUsers, twitchId, currentMils);
     }
 }
-
 void handleIRC(int socket_desc, char* line) {
     int bytesRead = read_line(socket_desc, line);
     (void)bytesRead;
@@ -370,7 +206,6 @@ void handleIRC(int socket_desc, char* line) {
     if (strcmp(command, "PING") == 0) {
         char* argument = get_last_argument(lineOffset);
         send_pong(socket_desc, argument);
-        log_with_date((char*)"Got ping. Replying with pong...");
         free(argument);
     }
 
@@ -393,8 +228,8 @@ int main() {
     asdf->off = "setxkbmap us real-prog-dvorak";
 
     lightMeSilly = (struct syscommand_t*)malloc(sizeof(syscommand_t));
-    lightMeSilly->on = "xrandr --output eDP-1 --brightness 0.05 --output HDMI-1 --brightness 0.05";
-    lightMeSilly->off = "xrandr --output eDP-1 --brightness 1 --output HDMI-1 --brightness 1";
+    lightMeSilly->on = "xrandr --output HDMI-1 --brightness 0.05";
+    lightMeSilly->off = "xrandr --output HDMI-1 --brightness 1";
 
     int socket_desc = socket(AF_INET, SOCK_STREAM, 0);
     if (socket_desc == -1) {
@@ -482,3 +317,4 @@ int main() {
         }
     }
 }
+
