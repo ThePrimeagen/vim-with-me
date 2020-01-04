@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 // Networking side of the things.
 #include <errno.h>
@@ -11,7 +12,7 @@
 #include <arpa/inet.h>
 #include <sys/timerfd.h>
 #include <sys/select.h>
-
+#include <semaphore.h>
 
 struct ircConfig {
     char* ip;
@@ -19,11 +20,11 @@ struct ircConfig {
     char* nick;
     char* pass;
     char* channels;
-    pthread_t thread;
+    sem_t* system;
 };
 
 /**
  * runs.  Thats it.
  */
-int ircRun(struct ircConfig* config);
+void* ircRun(void* dat);
 

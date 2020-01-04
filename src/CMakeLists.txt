@@ -1,6 +1,7 @@
 add_subdirectory(system-commands)
 add_subdirectory(hashmap)
 add_subdirectory(twitch)
+add_subdirectory(irc)
 #add_subdirectory(comms)
 
 list(APPEND EXTRA_LIBS system-commands)
@@ -8,12 +9,16 @@ list(APPEND EXTRA_LIBS json-c)
 list(APPEND EXTRA_LIBS twitch)
 list(APPEND EXTRA_LIBS hashmap)
 list(APPEND EXTRA_LIBS websockets)
+list(APPEND EXTRA_LIBS irc)
 
 # add the executable
 add_executable(vim-with-me vim-with-me.c)
 
+find_package(Threads REQUIRED)
+
 target_link_libraries(vim-with-me PUBLIC
     ${EXTRA_LIBS}
+    Threads::Threads
 )
 
 configure_file(vim-with-me.h.in vim-with-me.h)
