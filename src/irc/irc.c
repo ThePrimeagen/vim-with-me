@@ -123,6 +123,20 @@ int read_line(int sock, char* buffer) {
     return length;
 }
 
+void parseVimCommand(char* msg, struct vimcommand_t* command) {
+    // "!vim "
+    msg += 5;
+    char* navCommand = msg;
+
+    command->navCommand = navCommand[0];
+
+    if (strlen(navCommand) == 1) {
+        return;
+    }
+
+    command->times = atoi(navCommand + 2);
+}
+
 void handleHighlightedMessage(char* lineOffset, char* twitchName, int twitchId) {
 
     if (sysCommandIsThrottled(twitchName, twitchId)) {
@@ -137,6 +151,12 @@ void handleHighlightedMessage(char* lineOffset, char* twitchName, int twitchId) 
     }
     else if (isXrandrCommand(msg)) {
         sysCommandOn(twitchId, lightMeSilly, XRANDR_TIME);
+    }
+    else if (isVimCommand(msg)) {
+        struct vimcommand_t cmd;
+        parseVimCommand(msg, &cmd);
+
+        vimCommandRun(twitchId, &cmd);
     }
 }
 

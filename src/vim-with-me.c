@@ -78,11 +78,14 @@ int main() {
     pthread_join(sysThread, NULL);
     pthread_join(ircThread, NULL);
 
+    // GOOD GUY MAIN
     free(config->ip);
     free(config->port);
     free(config->nick);
     free(config->pass);
     free(config->channels);
     free(config);
+
+    return 0;
 }
 

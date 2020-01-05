@@ -10,6 +10,14 @@
 #include <sys/select.h>
 #include <semaphore.h>
 
+struct vimcommand_t {
+    char navCommand;
+    int times;
+    //
+    // This later............... (15 minutes).
+    struct itimerspec timeToBeExecuted;
+} vimcommand_t;
+
 struct syscommand_t {
     struct itimerspec timeToBeDone;
     int fd;
@@ -22,8 +30,11 @@ bool inSysCommandMode(struct syscommand_t* command);
 bool sysCommandOn(int twitchId, struct syscommand_t* command, int secondsToAdd);
 bool sysCommandOff(struct syscommand_t* command);
 bool isASDFCommand(char* ptr);
+bool isVimCommand(char* ptr);
 bool isXrandrCommand(char* ptr);
 bool isSystemCommand(char* ptr);
 int addCommandToFDSelect(struct syscommand_t* command);
 bool sysCommandIsThrottled(char* twitchName, int twitchId);
 void* runSysCommands(void *dat);
+void vimCommandRun(int twitchId, struct vimcommand_t* command);
+

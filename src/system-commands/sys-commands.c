@@ -100,8 +100,14 @@ bool isXrandrCommand(char* ptr) {
     return strncmp(ptr, "!xrandr", 7) == 0;
 }
 
+bool isVimCommand(char* ptr) {
+    return strncmp(ptr, "!vim", 4) == 0 && strlen(ptr) > 5;
+}
+
 bool isSystemCommand(char* ptr) {
-    return isASDFCommand(ptr) || isXrandrCommand(ptr);
+    return isVimCommand(ptr) ||
+        isASDFCommand(ptr) ||
+        isXrandrCommand(ptr);
 }
 
 const int COMMAND_THROTTLE_MS = 60000;
@@ -184,6 +190,97 @@ int addCommandToFDSelect(struct syscommand_t* command) {
     printf("fileDescriptor %d\n", node->command->fd);
 
     return node->command->fd;
+}
+
+bool hasRepeatCommand(struct vimcommand_t* command) {
+    bool hasRepeat = false;
+    switch (command->navCommand) {
+        case 'j':
+        case 'k':
+        case 'l':
+        case 'h':
+            hasRepeat = true;
+            break;
+    }
+
+    return hasRepeat;
+}
+
+bool isValidVimCommand(struct vimcommand_t* command) {
+    bool isValid = false;
+    bool isLineColNav = false;
+
+    printf("isValidVimCommand %c %d\n", command->navCommand, command->times);
+    switch (command->navCommand) {
+        case 'j':
+        case 'k':
+        case 'l':
+        case 'h':
+            isLineColNav = true;
+            isValid = true;
+            break;
+        case 'g': // I will assume g == gg
+        case 'G':
+        case 'v':
+        case 'V':
+        case 'A':
+        case 'I':
+        case '~':
+        case '%':
+        case '$':
+            isValid = true;
+            break;
+
+        // Do we allow the D?
+        // and can D be equivalent, type wise, to 8?
+        // 8===D
+        // case 'x':
+        // case 's':
+    }
+
+    isValid = isValid && (
+            (isLineColNav && command->times < 50) || !isLineColNav);
+
+    return isValid;
+}
+
+void vimCommandRun(int twitchId, struct vimcommand_t* command) {
+    if (!isValidVimCommand(command)) {
+        printf("This is not a valid vim command %c\n", command->navCommand);
+        return;
+    }
+
+    // Sync execution
+    char buf[100];
+    char navBuf[5];
+    navBuf[4] = '\0';
+    char* navPtr = navBuf;
+
+    int commandLen = 0;
+    if (hasRepeatCommand(command)) {
+        commandLen += snprintf(navBuf, 3, "%d", command->times);
+    }
+
+    navPtr = navBuf + commandLen;
+    navPtr[0] = 'j'; // remove the null terminator
+
+    printf("navBuf (repeat only): %.*s\n", commandLen, navBuf);
+
+    commandLen += snprintf(navPtr, 4 - commandLen, "%c", command->navCommand);
+
+    if (command->navCommand == 'g') {
+        (navPtr + 1)[0] = 'g';
+        (navPtr + 2)[0] = '\0';
+        commandLen += 2;
+    }
+
+    printf("navBuf (after repeat only): %.*s\n", commandLen, navBuf);
+
+    int len = snprintf(buf, 100, "vim --remote-send \"<C-c>%s\"", navBuf);
+    printf("executing command: %.*s\n", len, buf);
+
+    system(buf);
+    sysCommandThrottleUser(twitchId);
 }
 
 // Pthread thing here...
