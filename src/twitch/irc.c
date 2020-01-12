@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include "twitch-irc.h"
 
 char nameParts[3] = {'@', '!', ':'};
@@ -33,6 +34,9 @@ char* twitchReadNameFromIRC(const char* ircTagInfo, char* msgStart) {
         return NULL;
     }
 
+    char* p = nameStart;
+    for ( ; *p; ++p) *p = tolower(*p);
+
     return nameStart;
 }
 
@@ -46,7 +50,6 @@ char* twitchReadNameFromIRC(const char* ircTagInfo, char* msgStart) {
  * */
 int twitchReadUserId(const char* ircTagInfo) {
     char* userId = strstr(ircTagInfo, "user-id=");
-    printf("twitchReadUserId: %.*s\n%.*s\n", 50, ircTagInfo, 25, userId);
 
     if (userId == NULL) {
         return 0;
@@ -63,7 +66,6 @@ int twitchReadUserId(const char* ircTagInfo) {
     } while ((*end) != ' ' && (*end) != ';');
 
     end[0] = '\0';
-    printf("final results: %d - %s\n", atoi(userId), userId);
 
     return atoi(userId);
 }

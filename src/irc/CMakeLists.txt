@@ -4,6 +4,7 @@ add_library(irc irc.c)
 list(APPEND EXTRA_LIBS system-commands)
 list(APPEND EXTRA_LIBS twitch)
 list(APPEND EXTRA_LIBS hashmap)
+list(APPEND EXTRA_LIBS primepoints)
 
 target_link_libraries(irc PUBLIC
     ${EXTRA_LIBS}

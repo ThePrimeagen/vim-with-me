@@ -92,6 +92,10 @@ bool sysCommandOff(struct syscommand_t* command) {
     return false;
 }
 
+bool isPointCheck(char* ptr) {
+    return strncmp(ptr, "!pc", 3) == 0;
+}
+
 bool isASDFCommand(char* ptr) {
     return strncmp(ptr, "!asdf", 5) == 0;
 }
@@ -107,10 +111,11 @@ bool isVimCommand(char* ptr) {
 bool isSystemCommand(char* ptr) {
     return isVimCommand(ptr) ||
         isASDFCommand(ptr) ||
+        isPointCheck(ptr) ||
         isXrandrCommand(ptr);
 }
 
-const int COMMAND_THROTTLE_MS = 60000;
+const int COMMAND_THROTTLE_MS = 30000;
 struct SysCommandList {
     struct syscommand_t* command;
     bool (*callBack)(struct syscommand_t*);
@@ -198,6 +203,7 @@ bool hasRepeatCommand(struct vimcommand_t* command) {
         case 'j':
         case 'k':
         case 'l':
+        case 'G':
         case 'h':
             hasRepeat = true;
             break;
@@ -216,11 +222,11 @@ bool isValidVimCommand(struct vimcommand_t* command) {
         case 'k':
         case 'l':
         case 'h':
+        case 'G':
             isLineColNav = true;
             isValid = true;
             break;
         case 'g': // I will assume g == gg
-        case 'G':
         case 'v':
         case 'V':
         case 'A':
@@ -239,26 +245,26 @@ bool isValidVimCommand(struct vimcommand_t* command) {
     }
 
     isValid = isValid && (
-            (isLineColNav && command->times < 50) || !isLineColNav);
+            (isLineColNav && command->times < 1000) || !isLineColNav);
 
     return isValid;
 }
 
-void vimCommandRun(int twitchId, struct vimcommand_t* command) {
+bool vimCommandRun(int twitchId, struct vimcommand_t* command) {
     if (!isValidVimCommand(command)) {
         printf("This is not a valid vim command %c\n", command->navCommand);
-        return;
+        return false;
     }
 
     // Sync execution
     char buf[100];
-    char navBuf[5];
+    char navBuf[6];
     navBuf[4] = '\0';
     char* navPtr = navBuf;
 
     int commandLen = 0;
     if (hasRepeatCommand(command)) {
-        commandLen += snprintf(navBuf, 3, "%d", command->times);
+        commandLen += snprintf(navBuf, 4, "%d", command->times);
     }
 
     navPtr = navBuf + commandLen;
@@ -266,7 +272,7 @@ void vimCommandRun(int twitchId, struct vimcommand_t* command) {
 
     printf("navBuf (repeat only): %.*s\n", commandLen, navBuf);
 
-    commandLen += snprintf(navPtr, 4 - commandLen, "%c", command->navCommand);
+    commandLen += snprintf(navPtr, 5 - commandLen, "%c", command->navCommand);
 
     if (command->navCommand == 'g') {
         (navPtr + 1)[0] = 'g';
@@ -281,6 +287,8 @@ void vimCommandRun(int twitchId, struct vimcommand_t* command) {
 
     system(buf);
     sysCommandThrottleUser(twitchId);
+    return true;
+
 }
 
 // Pthread thing here...

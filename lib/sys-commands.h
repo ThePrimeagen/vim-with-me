@@ -33,8 +33,9 @@ bool isASDFCommand(char* ptr);
 bool isVimCommand(char* ptr);
 bool isXrandrCommand(char* ptr);
 bool isSystemCommand(char* ptr);
+bool isPointCheck(char* ptr);
 int addCommandToFDSelect(struct syscommand_t* command);
 bool sysCommandIsThrottled(char* twitchName, int twitchId);
 void* runSysCommands(void *dat);
-void vimCommandRun(int twitchId, struct vimcommand_t* command);
+bool vimCommandRun(int twitchId, struct vimcommand_t* command);
 

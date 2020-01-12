@@ -13,6 +13,7 @@
 
 #include "irc.h"
 #include "sys-commands.h"
+#include "primepoints.h"
 
 char* get_config(char *name) {
     char* value = (char*)malloc(1024);
@@ -41,7 +42,13 @@ char* get_config(char *name) {
     return value;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+
+    if (argc != 2) {
+        printf("COME ON PRIME.... Provide the points file brahahahahahha\n");
+        exit(1);
+    }
+
     struct ircConfig* config = (struct ircConfig*)malloc(sizeof(struct ircConfig));
     config->ip = get_config((char*)"server");
     config->port = get_config((char*)"port");
@@ -53,6 +60,20 @@ int main() {
     printf("Yeah, port: %s\n", config->port);
     printf("Yeah, nick: %s\n", config->nick);
     printf("Yeah, channels: %s\n", config->channels);
+
+    printf("Getting userdata %s\n", argv[1]);
+    FILE* f = fopen(argv[1], "r");
+
+    fseek(f, 0, SEEK_END);
+    long fsize = ftell(f);
+    fseek(f, 0, SEEK_SET);  /* same as rewind(f); */
+
+    char* string = (char*)malloc(fsize + 1);
+    fread(string, 1, fsize, f);
+    fclose(f);
+
+    printf("Look at this file %d - %s\n", (int)strlen(string), string);
+    primePointInit(string, argv[1]);
 
     sem_t s;
     sem_init(&s, 0, 0);
