@@ -195,7 +195,7 @@ int addCommandToFDSelect(struct syscommand_t* command) {
 bool hasRepeatCommand(struct vimcommand_t* command) {
     bool hasRepeat = false;
     switch (command->navCommand) {
-        case 'j':
+        case 'j': 
         case 'k':
         case 'l':
         case 'h':
@@ -212,22 +212,22 @@ bool isValidVimCommand(struct vimcommand_t* command) {
 
     printf("isValidVimCommand %c %d\n", command->navCommand, command->times);
     switch (command->navCommand) {
-        case 'j':
-        case 'k':
-        case 'l':
-        case 'h':
+        case 'j': // Down
+        case 'k': // Up
+        case 'l': // Right
+        case 'h': // Left
             isLineColNav = true;
             isValid = true;
             break;
-        case 'g': // I will assume g == gg
-        case 'G':
-        case 'v':
-        case 'V':
-        case 'A':
-        case 'I':
-        case '~':
-        case '%':
-        case '$':
+        case 'g': // Top of page : I will assume g == gg
+        case 'G': // Bottom of page
+        case 'v': // Start Visual mode per character.
+        case 'V': // Start Visual mode linewise.
+        case 'A': // Append text at the end of the line [count] times.
+        case 'I': // Beginning of line and insert
+        case '~': // Switch case of the character under the cursor and move the cursor to the right [count] times.
+        case '%': // Jumps to closing of expression
+        case '$': // End of the line and [count - 1] lines downward.
             isValid = true;
             break;
 
