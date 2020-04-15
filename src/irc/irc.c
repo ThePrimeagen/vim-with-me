@@ -30,6 +30,14 @@ char* get_command(char line[]) {
 }
 
 
+void sendMessage(int sock, const char* line, int len) {
+
+    char buffer[len + 25];
+    snprintf(buffer, len + 25, "PRIVMSG theprimeagen :%s\r\n", line);
+
+    send(sock, buffer, len + 25, 0);
+}
+
 void set_nick(int sock, char nick[]) {
     char nick_packet[512];
     sprintf(nick_packet, "NICK %s\r\n", nick);
@@ -160,6 +168,10 @@ void handleHighlightedMessage(char* lineOffset, char* twitchName, int twitchId) 
     }
 }
 
+bool isStatusLine(char* line) {
+    return strstr(line, "!vimstatus") != NULL;
+}
+
 void handleIRC(int socket_desc, char* line, int bytesRead) {
     (void)bytesRead;
 
@@ -190,6 +202,12 @@ void handleIRC(int socket_desc, char* line, int bytesRead) {
         handleHighlightedMessage(lineOffset, twitchName, twitchId);
     }
 
+    /*
+    if (isStatusLine(lineOffset)) {
+        sendMessage(socket_desc, "vim-with-me is up", 17);
+    }
+    */
+
     free(command);
 }
 
@@ -203,8 +221,8 @@ void* ircRun(void* dat) {
 
     lightMeSilly = (struct syscommand_t*)malloc(sizeof(syscommand_t));
     memset(lightMeSilly, 0, sizeof(syscommand_t));
-    lightMeSilly->on = "xrandr --output HDMI-1 --brightness 0.05";
-    lightMeSilly->off = "xrandr --output HDMI-1 --brightness 1";
+    lightMeSilly->on = "xrandr --output HDMI-0 --brightness 0.05";
+    lightMeSilly->off = "xrandr --output HDMI-0 --brightness 1";
     lightMeSilly->mutex = config->system;
 
     printf("IP: %s -- Port: %s\n", config->ip, config->port);

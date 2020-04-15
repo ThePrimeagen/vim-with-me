@@ -195,7 +195,7 @@ int addCommandToFDSelect(struct syscommand_t* command) {
 bool hasRepeatCommand(struct vimcommand_t* command) {
     bool hasRepeat = false;
     switch (command->navCommand) {
-        case 'j': 
+        case 'j':
         case 'k':
         case 'l':
         case 'h':
@@ -276,7 +276,13 @@ void vimCommandRun(int twitchId, struct vimcommand_t* command) {
 
     printf("navBuf (after repeat only): %.*s\n", commandLen, navBuf);
 
-    int len = snprintf(buf, 100, "vim --remote-send \"<C-c>%s\"", navBuf);
+    int len;
+    if (strncmp(navBuf, "~", 1) == 0) {
+        len = snprintf(buf, 100, "vim --remote-send \"%s\"", navBuf);
+    } else {
+        len = snprintf(buf, 100, "vim --remote-send \"<C-c>%s\"", navBuf);
+    }
+
     printf("executing command: %.*s\n", len, buf);
 
     system(buf);

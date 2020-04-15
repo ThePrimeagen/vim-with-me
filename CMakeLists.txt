@@ -13,6 +13,9 @@ add_subdirectory(3rdparty/libwebsockets)
 add_subdirectory(src)
 
 configure_file(.config src/.config COPYONLY)
+add_custom_command(TARGET vim-with-me
+    POST_BUILD
+
 
 
 #add_library(libwebsockets SHARED IMPORTED) # or STATIC instead of SHARED
