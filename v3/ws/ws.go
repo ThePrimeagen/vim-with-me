@@ -1,7 +1,7 @@
 package ws
 
 import (
-    "time"
+    "vim-with-me/types"
     "net/url"
     "net/http"
     "io"
@@ -77,51 +77,8 @@ func createConnection(config map[string]string) *websocket.Conn {
     return c
 }
 
-type QuirkMessage struct {
-    Data struct {
-        Timestamp  time.Time `json:"timestamp"`
-        Redemption struct {
-            ID   string `json:"id"`
-            User struct {
-                ID          string `json:"id"`
-                Login       string `json:"login"`
-                DisplayName string `json:"display_name"`
-            } `json:"user"`
-            ChannelID  string    `json:"channel_id"`
-            RedeemedAt time.Time `json:"redeemed_at"`
-            Reward     struct {
-                ID                  string      `json:"id"`
-                ChannelID           string      `json:"channel_id"`
-                Title               string      `json:"title"`
-                Prompt              string      `json:"prompt"`
-                Cost                int         `json:"cost"`
-                IsUserInputRequired bool        `json:"is_user_input_required"`
-                IsSubOnly           bool        `json:"is_sub_only"`
-                Image               interface{} `json:"image"`
-                DefaultImage        struct {
-                    URL1X string `json:"url_1x"`
-                    URL2X string `json:"url_2x"`
-                    URL4X string `json:"url_4x"`
-                } `json:"default_image"`
-                BackgroundColor string `json:"background_color"`
-                IsEnabled       bool   `json:"is_enabled"`
-                IsPaused        bool   `json:"is_paused"`
-                IsInStock       bool   `json:"is_in_stock"`
-                MaxPerStream    struct {
-                    IsEnabled    bool `json:"is_enabled"`
-                    MaxPerStream int  `json:"max_per_stream"`
-                } `json:"max_per_stream"`
-                ShouldRedemptionsSkipRequestQueue bool        `json:"should_redemptions_skip_request_queue"`
-                TemplateID                        interface{} `json:"template_id"`
-            } `json:"reward"`
-            Status string `json:"status"`
-        } `json:"redemption"`
-    } `json:"data"`
-    Type string `json:"type"`
-}
-
 type WS struct {
-    Messages chan QuirkMessage
+    Messages chan types.QuirkMessage
     Close chan interface{}
     config map[string]string
 }
@@ -129,7 +86,7 @@ type WS struct {
 func CreateQuirk(config map[string]string) WS {
     c := createConnection(config)
     ws := WS{
-        make(chan QuirkMessage),
+        make(chan types.QuirkMessage),
         make(chan interface{}),
         config,
     }
@@ -155,7 +112,7 @@ func CreateQuirk(config map[string]string) WS {
 			}
 
             fmt.Printf("%s\n", message)
-            var quirkMessage QuirkMessage
+            var quirkMessage types.QuirkMessage
             err = json.Unmarshal(message, &quirkMessage)
 
             if (err != nil) {
@@ -165,24 +122,6 @@ func CreateQuirk(config map[string]string) WS {
             ws.Messages <- quirkMessage
 		}
 	}()
-
-    go func() {
-        ticker := time.NewTicker(30000 * time.Millisecond)
-        defer ticker.Stop()
-
-        for {
-            <- ticker.C
-            if closed {
-                break
-            }
-
-            log.Printf("Sending that ping baby\n");
-            c.WriteControl(
-                websocket.PingMessage,
-                []byte{},
-                time.Now().Add(time.Second * 10))
-        }
-    }()
 
     log.Println("about to send over that irc info");
     log.Println("sent that info");
