@@ -73,7 +73,7 @@ func main() {
 		switch name {
 		case "Vim Command":
 
-			// To we want to parse it better?
+			// Do we want to parse it better?
 			n.SendCommand <- nvim.NvimCommand{
 				msg.Data.Redemption.User.ID,
 				msg,
