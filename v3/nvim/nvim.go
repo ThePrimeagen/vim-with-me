@@ -36,52 +36,8 @@ type NvimExecutor struct {
     SendCommand chan interface{}
     nvim *nvim.Nvim
 }
-/*
-{
-  "data": {
-    "timestamp": "2020-04-16T01:06:04.897350104Z",
-    "redemption": {
-      "id": "b6a561b5-176b-4102-afae-6775cabd20eb",
-      "user": {
-        "id": "167160215",
-        "login": "theprimeagen",
-        "display_name": "ThePrimeagen"
-      },
-      "channel_id": "167160215",
-      "redeemed_at": "2020-04-16T01:06:04.812304698Z",
-      "reward": {
-        "id": "cc97679e-b8db-433b-86e5-6a9c1e2c76db",
-        "channel_id": "167160215",
-        "title": "Vim Command",
-        "prompt": "Send a vim command",
-        "cost": 69,
-        "is_user_input_required": true,
-        "is_sub_only": false,
-        "image": null,
-        "default_image": {
-          "url_1x": "https://static-cdn.jtvnw.net/custom-reward-images/default-1.png",
-          "url_2x": "https://static-cdn.jtvnw.net/custom-reward-images/default-2.png",
-          "url_4x": "https://static-cdn.jtvnw.net/custom-reward-images/default-4.png"
-        },
-        "background_color": "#BDA8FF",
-        "is_enabled": true,
-        "is_paused": false,
-        "is_in_stock": true,
-        "max_per_stream": {
-          "is_enabled": false,
-          "max_per_stream": 0
-        },
-        "should_redemptions_skip_request_queue": true,
-        "template_id": null
-      },
-      "user_input": "20j",
-      "status": "FULFILLED"
-    }
-  },
-  "type": "TWITCH_CHANNEL_REWARD"
-}
-*/
-func getRepeatAmount(input string) int {
+
+func getCommandStartIdx(input string) int {
     start := -1
 
     for i, c := range input {
@@ -94,6 +50,28 @@ func getRepeatAmount(input string) int {
     return start + 1
 }
 
+func isValid(s string) bool {
+    A := int('A')
+    a := int('a')
+    Z := int('Z')
+    z := int('z')
+    dunder := int('_')
+
+    valid := true
+    for _, c := range s {
+        char := int(c);
+        valid = char >= 48 && char <= 57 ||
+            char >= a && char <= z || char >= A && char <= Z ||
+            char == dunder
+
+        if !valid {
+            break;
+        }
+    }
+
+    return valid
+}
+
 func executeColor(vim *nvim.Nvim, command NvimColor) {
     input := command.Input.Data.Redemption.UserInput
 
@@ -103,13 +81,18 @@ func executeColor(vim *nvim.Nvim, command NvimColor) {
         return
     }
 
+    if !isValid(input) {
+        fmt.Printf("Not valid input ya dingus %s \n", input)
+        return
+    }
+
     fmt.Printf("Executing vim color %s\n", input)
     vim.Command(fmt.Sprintf("colorscheme %s", input))
 }
 
 func executeCommand(vim *nvim.Nvim, command NvimCommand) {
     input := command.Input.Data.Redemption.UserInput
-    start := getRepeatAmount(input)
+    start := getCommandStartIdx(input)
 
     fmt.Printf("executeCommand: %s %d\n", input, start)
 

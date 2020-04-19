@@ -50,7 +50,7 @@ func execSystemCommand(cmd system.SystemCommand) {
 }
 
 func main() {
-	THROTTLE_TIME = 1000
+	THROTTLE_TIME = 30000
 
 	asdf := system.CreateASDF()
 	xrandr := system.CreateXrandr()
