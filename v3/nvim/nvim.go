@@ -56,13 +56,14 @@ func isValid(s string) bool {
     Z := int('Z')
     z := int('z')
     dunder := int('_')
+    dash := int('-')
 
     valid := true
     for _, c := range s {
         char := int(c);
         valid = char >= 48 && char <= 57 ||
             char >= a && char <= z || char >= A && char <= Z ||
-            char == dunder
+            char == dunder || char == dash
 
         if !valid {
             break;
@@ -74,12 +75,6 @@ func isValid(s string) bool {
 
 func executeColor(vim *nvim.Nvim, command NvimColor) {
     input := command.Input.Data.Redemption.UserInput
-
-    // I feel like someone would do something naughty
-    if len(input) > 20 {
-        fmt.Printf("Error#executeCommand input was greater than 20 :: %s\n", input)
-        return
-    }
 
     if !isValid(input) {
         fmt.Printf("Not valid input ya dingus %s \n", input)
@@ -181,6 +176,7 @@ func init() {
         "gv",
         "gi",
         "Vjj",
+        "vjj",
     }
 }
 
