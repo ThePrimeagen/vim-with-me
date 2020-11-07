@@ -14,7 +14,7 @@ import (
 )
 
 type QuirkTokenRequest struct {
-    Token string `json:"token"`
+    Token string `json:"access_token"`
 }
 
 func createConnection(config map[string]string) *websocket.Conn {
@@ -24,7 +24,7 @@ func createConnection(config map[string]string) *websocket.Conn {
     var buf io.ReadWriter
     buf = new(bytes.Buffer)
     err := json.NewEncoder(buf).Encode(map[string]string{
-        "auth_token": config["quirktoken"],
+        "access_token": config["quirktoken"],
     })
 
     if err != nil {
@@ -59,7 +59,7 @@ func createConnection(config map[string]string) *websocket.Conn {
         log.Fatalf("THIS DIDNT WORK I BETS %d %+v\n", resp.StatusCode, err)
     }
 
-    wsQuery := fmt.Sprintf("token=%s", respData.Token)
+    wsQuery := fmt.Sprintf("access_token=%s", respData.Token)
 
     u := url.URL{
         Scheme: "wss",

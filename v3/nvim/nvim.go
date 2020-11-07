@@ -9,6 +9,7 @@ import (
 )
 
 var allowedVimCommands []string
+var disallowedColors []string
 
 func connect(addr string) *nvim.Nvim {
 
@@ -76,7 +77,7 @@ func isValid(s string) bool {
 func executeColor(vim *nvim.Nvim, command NvimColor) {
     input := command.Input.Data.Redemption.UserInput
 
-    if !isValid(input) {
+    if !isValid(input) || contains(disallowedColors, input) {
         fmt.Printf("Not valid input ya dingus %s \n", input)
         return
     }
@@ -178,5 +179,45 @@ func init() {
         "Vjj",
         "vjj",
     }
+
+	disallowedColors = []string{
+		"peachpuff",
+		"white",
+		"shine",
+		"peach",
+		"google",
+		"simplewhite",
+		"MountainDew",
+		"PapayaWhip",
+		"sol",
+		"buttercream",
+		"LightDefaultGrey",
+		"github",
+		"nuvola",
+		"python",
+		"basic-light",
+		"bclear",
+		"White2",
+		"biogoo",
+		"tolerable",
+		"emacs",
+		"greygull",
+		"whitedust",
+		"seagull",
+		"summerfruit256",
+		"zellner",
+		"visualstudio",
+		"Light",
+		"cleanphp",
+		"base16-unikitty-light",
+		"base16-atelier-seaside-light",
+		"delek",
+		"morning",
+		"athoritarianism",
+		"pleasant",
+		"tutticolori",
+		"mohammad",
+		"bubblegum-256-light",
+	}
 }
 
