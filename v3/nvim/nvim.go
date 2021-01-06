@@ -179,6 +179,7 @@ func init() {
         "gi",
         "Vjj",
         "vjj",
+        "xp",
     }
 
     disallowedColors = []string{
