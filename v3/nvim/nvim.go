@@ -13,11 +13,11 @@ var disallowedColors []string
 
 func connect(addr string) *nvim.Nvim {
 
-	// Dial with default options.
-	v, err := nvim.Dial(addr)
-	if err != nil {
-		log.Fatal(err)
-	}
+    // Dial with default options.
+    v, err := nvim.Dial(addr)
+    if err != nil {
+        log.Fatal(err)
+    }
 
     return v
 }
@@ -46,7 +46,7 @@ func getCommandStartIdx(input string) int {
             break
         }
         start = i
-	}
+    }
 
     return start + 1
 }
@@ -118,9 +118,9 @@ func contains(arr []string, str string) bool {
 
 func CreateVimWithMe() NvimExecutor {
     addr := os.Getenv("NVIM_LISTEN_ADDRESS")
-	if addr == "" {
-		log.Fatal("NVIM_LISTEN_ADDRESS not set")
-	}
+    if addr == "" {
+        log.Fatal("NVIM_LISTEN_ADDRESS not set")
+    }
 
     v := connect(addr)
 
@@ -129,7 +129,7 @@ func CreateVimWithMe() NvimExecutor {
         v,
     }
 
-	go func() {
+    go func() {
         for {
             command := <- nvimExec.SendCommand
 
@@ -181,44 +181,44 @@ func init() {
         "vjj",
     }
 
-	disallowedColors = []string{
-		"peachpuff",
-		"white",
-		"shine",
-		"peach",
-		"google",
-		"simplewhite",
-		"MountainDew",
-		"PapayaWhip",
-		"sol",
-		"buttercream",
-		"LightDefaultGrey",
-		"github",
-		"nuvola",
-		"python",
-		"basic-light",
-		"bclear",
-		"White2",
-		"biogoo",
-		"tolerable",
-		"emacs",
-		"greygull",
-		"whitedust",
-		"seagull",
-		"summerfruit256",
-		"zellner",
-		"visualstudio",
-		"Light",
-		"cleanphp",
-		"base16-unikitty-light",
-		"base16-atelier-seaside-light",
-		"delek",
-		"morning",
-		"athoritarianism",
-		"pleasant",
-		"tutticolori",
-		"mohammad",
-		"bubblegum-256-light",
-	}
+    disallowedColors = []string{
+        "peachpuff",
+        "white",
+        "shine",
+        "peach",
+        "google",
+        "simplewhite",
+        "MountainDew",
+        "PapayaWhip",
+        "sol",
+        "buttercream",
+        "LightDefaultGrey",
+        "github",
+        "nuvola",
+        "python",
+        "basic-light",
+        "bclear",
+        "White2",
+        "biogoo",
+        "tolerable",
+        "emacs",
+        "greygull",
+        "whitedust",
+        "seagull",
+        "summerfruit256",
+        "zellner",
+        "visualstudio",
+        "Light",
+        "cleanphp",
+        "base16-unikitty-light",
+        "base16-atelier-seaside-light",
+        "delek",
+        "morning",
+        "athoritarianism",
+        "pleasant",
+        "tutticolori",
+        "mohammad",
+        "bubblegum-256-light",
+    }
 }
 
