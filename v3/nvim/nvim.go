@@ -220,6 +220,7 @@ func init() {
         "tutticolori",
         "mohammad",
         "bubblegum-256-light",
+        "random"
     }
 }
 
