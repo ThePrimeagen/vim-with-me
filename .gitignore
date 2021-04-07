@@ -1,9 +1,4 @@
-.config
-bin
-builds
-build2
 node_modules
-v3/.config
 .zsh*
 
 
