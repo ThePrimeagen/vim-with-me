@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+docker kill theprimeagen
+git pull origin master
+docker build . -t theprimeagen
+docker run --name theprimeagen -d --restart always -p 42069:42069 theprimeagen
+
