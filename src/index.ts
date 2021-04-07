@@ -5,7 +5,7 @@ const server = new ws.Server({
 });
 
 server.on('connection', function connection(ws) {
-    ws.send('Hello, world2');
+    ws.send('Hello, world3');
     ws.close();
 });
 
