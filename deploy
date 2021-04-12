@@ -3,5 +3,4 @@ docker kill theprimeagen
 git pull origin master
 docker rm theprimeagen
 docker build . -t theprimeagen
-docker run --env QUIRK --name theprimeagen -d --restart always -p 42069:42069 theprimeagen
-
+docker run --env QUIRK_TOKEN --name theprimeagen -d --restart always -p 42069:42069 theprimeagen
