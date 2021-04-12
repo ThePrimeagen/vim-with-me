@@ -13,5 +13,4 @@ jobs:
         username: ${{ secrets.USERNAME }}
         password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT }}
-        script: cd vim-with-me && git pull origin master && ./deploy
-
+        script: cd vim-with-me && git pull origin master && QUIRK_TOKEN=${{ secrets.QUIRK_TOKEN }} ./deploy

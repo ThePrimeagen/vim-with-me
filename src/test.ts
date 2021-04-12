@@ -1,11 +1,13 @@
-import * as WebSocket from "ws";
+import * as net from "net"
 
-const ws = new WebSocket("ws://vwm.theprimeagen.tv:42069");
+const socket = new net.Socket();
 
-ws.on("message", function(data) {
-    console.log("Data", data.toString());
+socket.on("connect", function() {
+    console.log("connected");
 });
 
+socket.on("data", function(data: Buffer) {
+    console.log("data", data.toString());
+});
 
-
-
+socket.connect(42069);

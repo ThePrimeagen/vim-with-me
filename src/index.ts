@@ -1,58 +1,41 @@
-import * as ws from "ws";
-/*
-const server = new ws.Server({
-    port: +process.env.PORT
-});
+import * as net from "net";
 
-server.on('connection', function connection(ws) {
-    ws.send('Hello, world3');
-    ws.close();
-});
-*/
+import Quirk, { Redemption } from "./quirk";
+import { getString } from "./env";
 
-type Video = {
-    id: number;
-    title: string;
-    rating: number;
-    description: string;
-};
+async function run() {
+    if (!process.env.QUIRK_TOKEN) {
+        console.error("NO ENVIRONMENT (please provide QUIRK_TOKEN)");
+        process.exit(1);
+    }
 
-const video: Video = {
-    id: 69,
-    title: "Foo Bar",
-    rating: 7,
-    description: "This is about foo bar",
+    const quirk = await Quirk.create(getString("QUIRK_TOKEN"));
+    const connections: net.Socket[] = [];
+    const server = net.createServer(function(socket): void {
+        connections.push(socket);
+        console.log("New Connection!!!");
+
+        socket.on("close", function(): void {
+            connections.splice(connections.indexOf(socket), 1);
+        });
+    });
+
+    quirk.on("message", (data: Redemption) => {
+        console.log("quirk redemption", data);
+        connections.forEach(c => {
+            c.write("Redemption: " + JSON.stringify(data));
+        });
+    });
+
+
+    server.on("error", function(e) {
+        console.error("Server Error: ", e);
+        process.exit(1);
+    });
+
+    console.log("Listening too", process.env.PORT);
+    server.listen(process.env.PORT);
 }
 
-console.log(JSON.stringify(video, null, 4));
-
-
-class VideoImpl {
-    constructor(private data: (string | number)[], private offset: number) { }
-
-    getTitle() {
-        this.data[this.offset + 1];
-    }
-
-    getId() {
-        this.data[this.offset + 0];
-    }
-
-    getRating() {
-        this.data[this.offset + 2];
-    }
-
-    getDescription() {
-        this.data[this.offset + 3];
-    }
-
-    static toArray(video: Video): (string | number)[] {
-        return [
-            video.id,
-            video.title,
-            video.rating,
-            video.description,
-        ];
-    }
-}
+run();
 
