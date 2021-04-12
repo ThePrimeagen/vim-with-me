@@ -10,4 +10,4 @@ socket.on("data", function(data: Buffer) {
     console.log("data", data.toString());
 });
 
-socket.connect(42069);
+socket.connect(42069, "vwm.theprimeagen.tv");
