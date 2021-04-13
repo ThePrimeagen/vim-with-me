@@ -15,7 +15,7 @@ async function run() {
     }
 
     const quirk = await Quirk.create(getString("QUIRK_TOKEN"));
-    const tcp = new TCP(getInt("PORT");
+    const tcp = new TCP(getInt("PORT"));
 
     quirk.on("message", (data: Redemption) => {
         console.log("quirk redemption", data);
