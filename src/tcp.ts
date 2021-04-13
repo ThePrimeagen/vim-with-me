@@ -21,9 +21,11 @@ export default class TCPSocket extends EventEmitter {
     }
 
     write(data: Buffer | string): void {
+        const d = TCPSocket.createEnv(data);
+
         this.connections.forEach(c => {
             try {
-                c.write(data, (e: Error | undefined) => {
+                c.write(d, (e: Error | undefined) => {
                     if (e) {
                         this.emit("connection-error", e);
                     }
@@ -32,6 +34,17 @@ export default class TCPSocket extends EventEmitter {
                 this.emit("connection-error", e);
             }
         });
+    }
+
+    static createEnv(data: Buffer | string): Buffer {
+        // using to much data copying... stop
+        const d = data instanceof Buffer ? data : Buffer.from(data);
+        const len = d.length;
+        const env = Buffer.alloc(len + 2);
+        env.writeUInt16BE(len, 0);
+        env.copy(d, 0, 2);
+
+        return env;
     }
 };
 
