@@ -89,7 +89,6 @@ function EnvelopeClient:_parse(bytes)
     local idx = 1
 
     repeat
-        print("EnvelopeClient:_parse", self._state, idx)
         local bytes_remaining = #bytes - (idx - 1)
 
         if self._state == States.WaitingForHeader then

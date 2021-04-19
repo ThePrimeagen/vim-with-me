@@ -13,6 +13,70 @@ local function create()
 end
 
 describe("", function()
+    it("should get 1 byte and go into processing header", function()
+        local tcpMock, env = create()
+        local called = false
+        local data = nil
+        env:on("data", function(line)
+            called = true
+            data = line
+        end)
+
+        tcpMock:emit("data", {
+            69,
+        })
+
+        ass.same(called, false)
+        ass.same(data, nil)
+        ass.same(env._current_length, 69)
+        ass.same(env._current_env, nil)
+        ass.same(env._state, States.ParsingHeader)
+    end)
+
+    it("should get 2 bytes and go into processing body", function()
+        local tcpMock, env = create()
+        local called = false
+        local data = nil
+        env:on("data", function(line)
+            called = true
+            data = line
+        end)
+
+        tcpMock:emit("data", {
+            0,
+            69
+        })
+
+        ass.same(called, false)
+        ass.same(data, nil)
+        ass.same(env._current_length, 69)
+        ass.same(env._current_env, nil)
+        ass.same(env._state, States.ParsingBody)
+    end)
+
+    it("should get a frame from two packets", function()
+        local tcpMock, env = create()
+        local called = false
+        local data = nil
+        env:on("data", function(line)
+            called = true
+            data = line
+        end)
+
+        local outData = {0, 3, 1, 2, 3}
+
+        for idx = 1, #outData do
+            tcpMock:emit("data", {outData[idx]})
+        end
+
+        ass.same(called, true)
+        ass.same(data, {1, 2, 3})
+
+        ass.same(env._current_length, 0)
+        ass.same(env._current_env, nil)
+        ass.same(env._state, States.WaitingForHeader)
+    end)
+
     it("should be able to parse a single payload packet.", function()
         local tcpMock, env = create()
         local called = false
@@ -84,5 +148,6 @@ describe("", function()
         ass.same(env._current_env, nil)
         ass.same(env._state, States.WaitingForHeader)
     end)
+
 end)
 
