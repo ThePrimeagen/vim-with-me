@@ -23,6 +23,7 @@ async function run() {
         console.log("quirk redemption", data);
         const statusline = getStatusline(data);
 
+        console.log("Status line:", statusline);
         tcp.write(
             new Command().reset().
                 setStatusLine(statusline).
