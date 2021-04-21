@@ -1,6 +1,8 @@
 import Quirk, { Redemption } from "./quirk";
 import TCP from "./tcp";
 import { getString, getInt } from "./env";
+import getStatusline from "./statusline";
+import Command, { CommandType } from "./cmd";
 
 async function run() {
 
@@ -19,7 +21,13 @@ async function run() {
 
     quirk.on("message", (data: Redemption) => {
         console.log("quirk redemption", data);
-        tcp.write("Redemption: " + JSON.stringify(data));
+        const statusline = getStatusline(data);
+
+        tcp.write(
+            new Command().reset().
+                setStatusLine(statusline).
+                setType(CommandType.StatusUpdate).buffer
+        );
     });
 }
 

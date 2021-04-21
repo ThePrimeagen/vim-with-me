@@ -11,6 +11,7 @@ export enum CommandType {
     VimCommand = 0,
     ASDF = 1,
     Xrandr = 2,
+    StatusUpdate = 3,
 }
 
 const typeIdx = 0;
