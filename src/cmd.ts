@@ -14,10 +14,27 @@ export enum CommandType {
     StatusUpdate = 3,
 }
 
+const typeToString: Map<CommandType, string> = new Map([
+    [CommandType.VimCommand, "VimCommand"],
+    [CommandType.ASDF, "ASDF"],
+    [CommandType.Xrandr, "Xrandr"],
+    [CommandType.StatusUpdate, "StatusUpdate"],
+]);
+
+export function commandToString(type: CommandType): string {
+    console.log("WHAT THEU HELL", type);
+    return typeToString.get(type);
+}
+
 const typeIdx = 0;
 const statuslineIdx = 1;
 const costIdx = 51;
 const dataIdx = 53;
+
+export function validInput(input: string): boolean {
+    // starting simple
+    return input === "gg";
+}
 
 export default class Command {
     private _buffer: Buffer;
