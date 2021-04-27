@@ -52,7 +52,12 @@ export default class Command {
         return this;
     }
 
-    setData(data: Buffer): Command {
+    setData(data: Buffer | null): Command {
+        if (data === null) {
+            return this;
+
+        }
+
         if (data.length > 200) {
             throw new Error("PRIME... AGAIN????? How could you do this to me (future prime)?");
         }

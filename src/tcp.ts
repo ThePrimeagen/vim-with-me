@@ -14,11 +14,6 @@ export default class TCPSocket extends EventEmitter {
             socket.on("close", () => {
                 this.connections.splice(this.connections.indexOf(socket), 1);
             });
-
-            console.log("sending hello");
-            await this.write("Hello");
-            await this.write(",");
-            await this.write(" World");
         });
 
         server.on("error", this.emit.bind(this, "error"));
