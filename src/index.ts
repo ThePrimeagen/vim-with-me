@@ -26,6 +26,7 @@ async function run(): Promise<void> {
         console.log("quirk redemption", data);
         const type = getType(data);
 
+        //if (type === CommandType.VimCommand && !validInput(data.userInput)) {
         if (type === CommandType.VimCommand && !validInput(data.userInput)) {
             tcp.write(
                 new Command().reset().

@@ -12,6 +12,7 @@ export enum CommandType {
     ASDF = 1,
     Xrandr = 2,
     StatusUpdate = 3,
+    GiveawayEnter = 4,
 }
 
 const typeToString: Map<CommandType, string> = new Map([
@@ -19,10 +20,10 @@ const typeToString: Map<CommandType, string> = new Map([
     [CommandType.ASDF, "ASDF"],
     [CommandType.Xrandr, "Xrandr"],
     [CommandType.StatusUpdate, "StatusUpdate"],
+    [CommandType.GiveawayEnter, "GiveAwayEnter"],
 ]);
 
 export function commandToString(type: CommandType): string {
-    console.log("WHAT THEU HELL", type);
     return typeToString.get(type);
 }
 

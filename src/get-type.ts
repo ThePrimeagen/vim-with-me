@@ -5,6 +5,7 @@ const map: {[key: string]: CommandType} = {
     "Vim Command": CommandType.VimCommand,
     "ASDF": CommandType.ASDF,
     "Xrandr": CommandType.Xrandr,
+    "Giveaway FEM": CommandType.GiveawayEnter,
 };
 
 export default function getType(data: Redemption): CommandType {

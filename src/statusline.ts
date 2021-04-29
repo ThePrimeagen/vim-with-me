@@ -1,5 +1,5 @@
 import { Redemption } from "./quirk";
-import { commandToString } from "./cmd";
+import { commandToString, CommandType } from "./cmd";
 import getType from "./get-type";
 
 export default function statusLine(data: Redemption, validInput: boolean = true): string {
@@ -10,6 +10,10 @@ export default function statusLine(data: Redemption, validInput: boolean = true)
     }
 
     const type = getType(data);
+    if (type === CommandType.GiveawayEnter) {
+        return `${name}: Thanks for entering the giveaway`;
+    }
+
     return `${name}: ${commandToString(type).substr(0, 1)} with ${data.userInput}`;
 }
 

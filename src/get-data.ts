@@ -11,7 +11,11 @@ export default function getData(data: Redemption): null | Buffer {
     // instead of using a map.  AMIRIGHT??? SWITCH STATEMENTS ARE BAE
     switch (type) {
         case CommandType.VimCommand:
-            out = Buffer.from(data.userInput);
+            // TODO: Probably need to think about this one... huh?
+            out = Buffer.from(`norm ${data.userInput}`);
+            break;
+        case CommandType.GiveawayEnter:
+            out = Buffer.from(data.username);
             break;
     }
 
