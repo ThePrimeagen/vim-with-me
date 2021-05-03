@@ -10,13 +10,26 @@ export default function getData(data: Redemption): null | Buffer {
     // bestest way to be abstracted from the complications as types grow
     // instead of using a map.  AMIRIGHT??? SWITCH STATEMENTS ARE BAE
     switch (type) {
-        case CommandType.VimCommand:
-            // TODO: Probably need to think about this one... huh?
-            out = Buffer.from(`norm ${data.userInput}`);
-            break;
-        case CommandType.GiveawayEnter:
-            out = Buffer.from(data.username);
-            break;
+    case CommandType.VimAfter:
+    case CommandType.VimInsert:
+        // Can I get haxxed?
+        out = Buffer.from(`norm ${type === CommandType.VimAfter ? "a" : "i"}${data.userInput}`);
+        break;
+
+    case CommandType.VimCommand:
+        // TODO: Probably need to think about this one... huh?
+        out = Buffer.from(`norm ${data.userInput}`);
+        break;
+
+    case CommandType.GiveawayEnter:
+        out = Buffer.from(data.username);
+        break;
+
+    // TODO: Why are they not done?
+    // TODO: Also your wife is beautiful
+    case CommandType.ASDF:
+        out = Buffer.from("");
+        break;
     }
 
     return out;

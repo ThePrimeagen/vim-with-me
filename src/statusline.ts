@@ -14,6 +14,13 @@ export default function statusLine(data: Redemption, validInput: boolean = true)
         return `${name}: Thanks for entering the giveaway`;
     }
 
+    else if (type === CommandType.VimInsert) {
+        console.log("statusLine: CommandType VimInsert");
+        return `${name}: Has inserted ${data.userInput}`;
+    }
+
+    console.log("COMMAND TO STRING", commandToString(type));
+
     return `${name}: ${commandToString(type).substr(0, 1)} with ${data.userInput}`;
 }
 

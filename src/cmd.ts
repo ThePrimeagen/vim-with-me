@@ -1,4 +1,3 @@
-
 const bufferLength = 1 + 50 + 2 + 200;
 const zeroBuf = Buffer.alloc(bufferLength).fill(0);
 
@@ -13,10 +12,14 @@ export enum CommandType {
     Xrandr = 2,
     StatusUpdate = 3,
     GiveawayEnter = 4,
+    VimInsert = 5,
+    VimAfter = 6,
 }
 
 const typeToString: Map<CommandType, string> = new Map([
     [CommandType.VimCommand, "VimCommand"],
+    [CommandType.VimInsert, "VimInsert"],
+    [CommandType.VimAfter, "VimAfter"],
     [CommandType.ASDF, "ASDF"],
     [CommandType.Xrandr, "Xrandr"],
     [CommandType.StatusUpdate, "StatusUpdate"],
@@ -31,11 +34,6 @@ const typeIdx = 0;
 const statuslineIdx = 1;
 const costIdx = 51;
 const dataIdx = 53;
-
-export function validInput(input: string): boolean {
-    // starting simple
-    return input === "gg";
-}
 
 export default class Command {
     private _buffer: Buffer;

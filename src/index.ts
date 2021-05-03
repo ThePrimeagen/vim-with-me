@@ -2,10 +2,11 @@ import Quirk, { Redemption } from "./quirk";
 import TCP from "./tcp";
 import { getString, getInt } from "./env";
 import getStatusline from "./statusline";
-import getType from "./get-type";
 import getData from "./get-data";
 import getCost from "./get-cost";
-import Command, { CommandType, validInput } from "./cmd";
+import validateVimCommand from "./vim-commands"
+import Command, { CommandType } from "./cmd";
+import getType from "./get-type";
 
 async function run(): Promise<void> {
 
@@ -23,14 +24,14 @@ async function run(): Promise<void> {
     const tcp = new TCP(getInt("PORT"));
 
     quirk.on("message", (data: Redemption): void => {
-        console.log("quirk redemption", data);
-        const type = getType(data);
 
-        //if (type === CommandType.VimCommand && !validInput(data.userInput)) {
-        if (type === CommandType.VimCommand && !validInput(data.userInput)) {
+        const validationResult = validateVimCommand(data);
+
+        if (!validationResult.success) {
+
             tcp.write(
                 new Command().reset().
-                    setStatusLine(getStatusline(data, false)).
+                    setStatusLine(validationResult.error).
                     setType(CommandType.StatusUpdate).buffer
             );
 
@@ -42,7 +43,7 @@ async function run(): Promise<void> {
                 setCost(getCost(data)).
                 setData(getData(data)).
                 setStatusLine(getStatusline(data)).
-                setType(type).buffer
+                setType(getType(data)).buffer
         );
 
     });

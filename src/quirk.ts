@@ -70,8 +70,9 @@ export default class Quirk extends EventEmitter {
         super();
 
         socket.on("message", (data: Buffer) => {
-            const parsedData: TwitchRedemption = JSON.parse(data.toString());
             try {
+                const parsedData: TwitchRedemption = JSON.parse(data.toString());
+
                 if (parsedData.source === "TWITCH_EVENTSUB" &&
                     parsedData.type === "TWITCH_CHANNEL_REWARD" &&
                     parsedData.data.reward && parsedData.data.reward.title) {
@@ -83,7 +84,7 @@ export default class Quirk extends EventEmitter {
                     });
                 }
             } catch (e) {
-                console.log("ERRROR", e.message);
+                console.log("ERRROR", e.message, e.stack, data);
             }
         });
 
