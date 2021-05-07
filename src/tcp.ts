@@ -25,7 +25,6 @@ export default class TCPSocket extends EventEmitter {
     write(data: Buffer | string): Promise<void> {
         return new Promise((res, rej) => {
             const d = TCPSocket.createEnv(data);
-            console.log(d);
 
             this.connections.forEach(c => {
                 try {

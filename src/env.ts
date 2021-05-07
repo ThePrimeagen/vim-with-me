@@ -1,5 +1,5 @@
-
 import * as dotenv from "dotenv";
+
 dotenv.config();
 
 function getString(key: string): string {

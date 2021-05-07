@@ -1,6 +1,7 @@
 import { Redemption } from "../quirk";
 import getType from "../get-type";
 import { CommandType } from "../cmd";
+import { ValidationResult } from "../validation";
 
 // T1 commands?
 const t1Commands = [
@@ -34,11 +35,6 @@ function convertEscapeCharacters(str: string): string {
     return str.split("\\n").join("\r").split("\\r").join("\r");
 }
 
-export type ValidationResult = {
-    success: boolean;
-    error?: string | null;
-}
-
 function insert(data: Redemption): string {
     printCharacters(data);
     if (hasBadCharacters(data.userInput)) {
@@ -47,8 +43,8 @@ function insert(data: Redemption): string {
 
     data.userInput = convertEscapeCharacters(data.userInput);
 
-    if (data.userInput.length > 5 || data.userInput.length === 0) {
-        return "Insert requires 1 - 5 characters";
+    if (data.userInput.length > 5) {
+        data.userInput = data.userInput.substr(0, 5);
     }
 
     return "";
@@ -80,7 +76,6 @@ export default function validateVimCommand(data: Redemption): ValidationResult {
     case CommandType.VimCommand:
         error = vimCommand(data);
         break;
-
     case CommandType.VimInsert:
     case CommandType.VimAfter:
         error = insert(data);

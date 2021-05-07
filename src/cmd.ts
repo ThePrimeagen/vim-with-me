@@ -14,6 +14,7 @@ export enum CommandType {
     GiveawayEnter = 4,
     VimInsert = 5,
     VimAfter = 6,
+    ProgramWithMeEnter = 7,
 }
 
 const typeToString: Map<CommandType, string> = new Map([
@@ -24,6 +25,7 @@ const typeToString: Map<CommandType, string> = new Map([
     [CommandType.Xrandr, "Xrandr"],
     [CommandType.StatusUpdate, "StatusUpdate"],
     [CommandType.GiveawayEnter, "GiveAwayEnter"],
+    [CommandType.ProgramWithMeEnter, "ProgrammWithMeEnter"],
 ]);
 
 export function commandToString(type: CommandType): string {

@@ -15,11 +15,13 @@ export default function statusLine(data: Redemption, validInput: boolean = true)
     }
 
     else if (type === CommandType.VimInsert) {
-        console.log("statusLine: CommandType VimInsert");
         return `${name}: Has inserted ${data.userInput}`;
     }
 
-    console.log("COMMAND TO STRING", commandToString(type));
+    else if (type === CommandType.ProgramWithMeEnter) {
+        console.log(`statusLine: CommandType ProgramWithMeEnter ${name}`);
+        return `${name}: is now PWM`;
+    }
 
     return `${name}: ${commandToString(type).substr(0, 1)} with ${data.userInput}`;
 }

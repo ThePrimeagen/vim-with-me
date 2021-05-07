@@ -7,6 +7,11 @@ import getCost from "./get-cost";
 import validateVimCommand from "./vim-commands"
 import Command, { CommandType } from "./cmd";
 import getType from "./get-type";
+import validate, { addValidator } from "./validation";
+import IrcClient from "./irc";
+import { MessageFromPrime, PrimeMessage } from "./irc/prime-commands";
+import ProgramWithMe from "./program-with-me";
+import bus from "./message-bus";
 
 async function run(): Promise<void> {
 
@@ -22,10 +27,24 @@ async function run(): Promise<void> {
 
     const quirk = await Quirk.create(getString("QUIRK_TOKEN"));
     const tcp = new TCP(getInt("PORT"));
+    const irc = new IrcClient(getString("OAUTH_NAME"), getString("OAUTH_TOKEN"));
+    const pwm = new ProgramWithMe();
+
+    addValidator(validateVimCommand);
+    addValidator(pwm.validateFunction);
+
+    irc.on("from-theprimeagen", (message: MessageFromPrime) => {
+        if (message.type === PrimeMessage.StartYourEngines) {
+            pwm.enableProgramWithMe();
+        }
+        else if (message.type === PrimeMessage.PumpTheBreaks) {
+            pwm.disableProgramWithMe();
+        }
+    });
 
     quirk.on("message", (data: Redemption): void => {
 
-        const validationResult = validateVimCommand(data);
+        const validationResult = validate(data);
 
         if (!validationResult.success) {
 
@@ -38,6 +57,7 @@ async function run(): Promise<void> {
             return;
         }
 
+        bus.emit("quirk-message", data);
         tcp.write(
             new Command().reset().
                 setCost(getCost(data)).
