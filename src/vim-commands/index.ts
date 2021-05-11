@@ -2,8 +2,9 @@ import { Redemption } from "../quirk";
 import getType from "../get-type";
 import { CommandType } from "../cmd";
 import { ValidationResult } from "../validation";
+import { PrimeMessage } from "../irc/prime-commands";
 
-// T1 commands?
+// T1 commands? -- what is the cost?
 const t1Commands = [
     "h",
     "j",
@@ -20,6 +21,40 @@ const t2Commands = [
     "w",
     "b",
 ]
+
+const pwmCommands = [
+    "S",
+    "dd",
+    "dw",
+    "db",
+    "w",
+    "h",
+    "j",
+    "k",
+    "l",
+    "b",
+    "o",
+    "O",
+    "cc",
+    "ciw",
+    "ci{",
+    "ci\"",
+    "ci[",
+    "ci(",
+    "diw",
+    "di{",
+    "di\"",
+    "di[",
+    "di(",
+    "dap",
+    "cap",
+    "gg",
+    "G",
+    "$",
+    "_",
+    "==",
+    "=ap",
+];
 
 function printCharacters(data: Redemption): void {
     console.log(`${data.username}:`, data.userInput.split("").map(x => x.charCodeAt(0)));
@@ -63,12 +98,28 @@ function vimCommand(data: Redemption): string {
         return "";
     } else if (~name.indexOf("Tier 3")) {
         return "";
+    } else if (~name.indexOf("PWM") && pwmCommands.includes(input)) {
+        return "";
     }
 
     return `You cannot use ${data.userInput} at this tier cost.`;
 }
 
+// TODO: Think about this better
+let mode = PrimeMessage.FFA;
+export function vimChangeMode(m: PrimeMessage): void {
+    mode = m;
+}
+
 export default function validateVimCommand(data: Redemption): ValidationResult {
+    if (mode === PrimeMessage.PrimeOnly &&
+        data.username !== "ThePrimeagen") {
+        return {
+            success: false,
+            error: `Sorry ${data.username} its prime only mode`,
+        };
+    }
+
     const type = getType(data);
 
     let error: string = "";

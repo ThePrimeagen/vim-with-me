@@ -4,7 +4,7 @@ import { getString, getInt } from "./env";
 import getStatusline from "./statusline";
 import getData from "./get-data";
 import getCost from "./get-cost";
-import validateVimCommand from "./vim-commands"
+import validateVimCommand, { vimChangeMode } from "./vim-commands"
 import Command, { CommandType } from "./cmd";
 import getType from "./get-type";
 import validate, { addValidator } from "./validation";
@@ -39,6 +39,10 @@ async function run(): Promise<void> {
         }
         else if (message.type === PrimeMessage.PumpTheBreaks) {
             pwm.disableProgramWithMe();
+        }
+        else if (message.type === PrimeMessage.PrimeOnly ||
+                 message.type === PrimeMessage.FFA) {
+            vimChangeMode(message.type);
         }
     });
 

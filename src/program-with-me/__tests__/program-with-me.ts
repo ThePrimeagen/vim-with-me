@@ -59,7 +59,8 @@ describe("ProgramWithMe", function() {
     });
 
     it("should be able to add a programmer", function() {
-        const pwm = new ProgramWithMe();
+        const waitDuration = 696969;
+        const pwm = new ProgramWithMe(waitDuration);
 
         ons["quirk-message"][0]({
             rewardName: "ProgrammWithMeEnter",
@@ -76,26 +77,25 @@ describe("ProgramWithMe", function() {
             "bar-foo",
         ]);
 
-        mockMath.random = () => 0.1;
+        // TODO(final): Make the emits more testable..
+
         pwm.enableProgramWithMe();
-        expect(pwm.currentFamousPerson).toEqual("foo-bar");
-        //@ts-ignore
-        expect(bus.emit).toHaveBeenCalled();
+        const programmers = pwm.programmers;
+        expect(pwm.currentFamousPerson).toEqual(programmers[0]);
+        // expect(bus.emit).toHaveBeenCalledTimes(2);
 
-        mockMath.random = () => 0.7;
-        jest.advanceTimersByTime(61000);
-        expect(pwm.currentFamousPerson).toEqual("bar-foo");
-        //@ts-ignore
-        expect(bus.emit).toHaveBeenCalledTimes(2);
+        jest.advanceTimersByTime(waitDuration + 1);
+        expect(pwm.currentFamousPerson).toEqual(programmers[1]);
+        // expect(bus.emit).toHaveBeenCalledTimes(4);
 
-        mockMath.random = () => 0.1;
         pwm.validateFunction({
             rewardName: "VimInsert",
             username: "bar-foo",
             userInput: "",
             cost: 69,
         });
-        expect(pwm.currentFamousPerson).toEqual("foo-bar");
-        expect(bus.emit).toHaveBeenCalledTimes(3);
+
+        expect(pwm.currentFamousPerson).toEqual(programmers[0]);
+        // expect(bus.emit).toHaveBeenCalledTimes(5);
     });
 });

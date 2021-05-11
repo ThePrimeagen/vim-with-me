@@ -12,6 +12,7 @@ export default class ProgramWithMe {
     public currentFamousPerson = "";
     public countdownId: ReturnType<typeof setTimeout>;
     public validateFunction: Validator;
+    private famousIdx: number;
 
     constructor(public timeoutTime = 25000) {
         this.validateFunction = this.validateProgramWithMe.bind(this);
@@ -55,6 +56,8 @@ export default class ProgramWithMe {
 
     enableProgramWithMe(): void {
         this.enabled = true;
+        this.famousIdx = 0;
+        this.setFamousPersonOrder();
         this.setNextFamousPerson();
     }
 
@@ -75,21 +78,25 @@ export default class ProgramWithMe {
         this.banned = this.banned.concat(bans);
     }
 
+    private setFamousPersonOrder() {
+        this.programmers.sort(() => {
+            return Math.floor(Math.random() * 2) === 0 ? -1 : 1
+        });
+    }
+
     private setNextFamousPerson() {
         this.cleanPp();
 
-        const nextProgrammer = this.programmers[
-            Math.floor(Math.random() * this.programmers.length)
-        ]
-        this.currentFamousPerson = nextProgrammer;
+        const idx = this.famousIdx++ % this.programmers.length;
+        const nextIdx = this.famousIdx % this.programmers.length;
 
+        this.currentFamousPerson = this.programmers[idx];
         this.countdownId = setTimeout(() => {
             this.setNextFamousPerson();
         }, this.timeoutTime);
 
         bus.emit("irc-message", `@${this.currentFamousPerson} please do a vim insert, after, or command.`);
-        bus.emit("irc-message", `@${this.currentFamousPerson} please do a vim insert, after, or command.`);
-        bus.emit("irc-message", `@${this.currentFamousPerson} please do a vim insert, after, or command.`);
+        bus.emit("irc-message", `@${this.programmers[nextIdx]} You are next! You probably want VimAfter`);
     }
 
     private cleanPp() {
