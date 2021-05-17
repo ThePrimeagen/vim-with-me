@@ -1,7 +1,6 @@
 import getType from "../get-type";
 import { CommandType } from "../cmd";
 import { ValidationResult } from "../validation";
-import { PrimeMessage } from "../irc/prime-commands";
 import { Redemption } from "../quirk";
 
 type TieredCommand = {
@@ -188,21 +187,7 @@ function vimCommand(data: Redemption): string {
     return `You cannot use ${data.userInput} at this tier cost.`;
 }
 
-// TODO: Think about this better
-let mode = PrimeMessage.FFA;
-export function vimChangeMode(m: PrimeMessage): void {
-    mode = m;
-}
-
 export default function validateVimCommand(data: Redemption): ValidationResult {
-    if (mode === PrimeMessage.PrimeOnly &&
-        data.username !== "ThePrimeagen") {
-        return {
-            success: false,
-            error: `Sorry ${data.username} its prime only mode`,
-        };
-    }
-
     const type = getType(data);
 
     let error: string = "";

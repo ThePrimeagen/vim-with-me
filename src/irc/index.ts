@@ -22,6 +22,8 @@ interface IrcClient extends EventEmitter {
 }
 
 const channel = '#theprimeagen';
+// TODO: Really do the thing... you know.  That one thing that makes this way
+// less crappy
 export default class IrcClientImpl extends EventEmitter implements IrcClient {
     private client: tmi.Client;
     private state: IrcState;
@@ -49,11 +51,11 @@ export default class IrcClientImpl extends EventEmitter implements IrcClient {
 
         this.client.connect().then(() => {
             this.state = IrcState.Connected;
-            this.emit("connected");
+            bus.emit("connected");
         }).catch((e: Error) => {
             this.state = IrcState.Errored;
             console.log("IRC Failed", e);
-            this.emit("error", e);
+            bus.emit("error", e);
         });
 
         bus.on("irc-message", (msg: string) => {
@@ -62,7 +64,7 @@ export default class IrcClientImpl extends EventEmitter implements IrcClient {
         });
 
         this.client.on("message", (_: string, tags: IrcTags, message: string) => {
-            this.emitters.forEach(e => e(this, tags, message));
+            this.emitters.forEach(e => e(bus, tags, message));
         });
     }
 

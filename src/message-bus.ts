@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 
-type Listener = (...args: any[]) => void;
+type Listener = (event: string | symbol, ...args: any[]) => void;
 class MessageBus extends EventEmitter {
     private toAll: Listener[];
 

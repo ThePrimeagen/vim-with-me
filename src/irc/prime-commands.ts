@@ -6,10 +6,21 @@ export enum PrimeMessage {
     PumpTheBreaks = 2,
     PrimeOnly = 3,
     FFA = 4,
-
 }
+
+const toStringMap = new Map<PrimeMessage, string>([
+    [PrimeMessage.StartYourEngines, "StartYourEngines"],
+    [PrimeMessage.PumpTheBreaks, "PumpTheBreaks"],
+    [PrimeMessage.PrimeOnly, "PrimeOnly"],
+    [PrimeMessage.FFA, "FFA"],
+]);
+
 export type MessageFromPrime = {
     type: PrimeMessage,
+}
+
+export function toStringMessageFromPrime(message: MessageFromPrime): string {
+    return toStringMap.get(message.type);
 }
 
 const msgToEmit: {[key: string]: PrimeMessage} = {

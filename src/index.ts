@@ -4,7 +4,8 @@ import { getString, getInt } from "./env";
 import getStatusline from "./statusline";
 import getData from "./get-data";
 import getCost from "./get-cost";
-import validateVimCommand, { vimChangeMode } from "./vim-commands"
+import validateVimCommand from "./vim-commands"
+import primeOnlyCommand, { primeOnlyMode } from "./validation/prime-only"
 import Command, { CommandType } from "./cmd";
 import getType from "./get-type";
 import validate, { addValidator } from "./validation";
@@ -30,13 +31,19 @@ async function run(): Promise<void> {
 
     const quirk = await Quirk.create(getString("QUIRK_TOKEN"));
     const tcp = new TCP(getInt("PORT"));
+
+    // TODO: something....
+    // TODO: Maybe we should only emit from this entry point the IRC messages
+    // from prime and not from the whole dang irc client...
+    // @ts-ignore
     const irc = new IrcClient(getString("OAUTH_NAME"), getString("OAUTH_TOKEN"));
     const pwm = new ProgramWithMe();
 
+    addValidator(primeOnlyCommand);
     addValidator(validateVimCommand);
     addValidator(pwm.validateFunction);
 
-    irc.on("from-theprimeagen", (message: MessageFromPrime) => {
+    bus.on("from-theprimeagen", (message: MessageFromPrime) => {
         if (message.type === PrimeMessage.StartYourEngines) {
             pwm.enableProgramWithMe();
         }
@@ -45,7 +52,7 @@ async function run(): Promise<void> {
         }
         else if (message.type === PrimeMessage.PrimeOnly ||
                  message.type === PrimeMessage.FFA) {
-            vimChangeMode(message.type);
+            primeOnlyMode(message.type);
         }
     });
 
