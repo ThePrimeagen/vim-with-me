@@ -8,8 +8,11 @@ const zeroBuf = Buffer.alloc(bufferLength).fill(0);
 
 export enum CommandType {
     VimCommand = 0,
+    /*
     ASDF = 1,
     Xrandr = 2,
+    */
+    SystemCommand = 1,
     StatusUpdate = 3,
     GiveawayEnter = 4,
     VimInsert = 5,
@@ -21,8 +24,7 @@ const typeToString: Map<CommandType, string> = new Map([
     [CommandType.VimCommand, "VimCommand"],
     [CommandType.VimInsert, "VimInsert"],
     [CommandType.VimAfter, "VimAfter"],
-    [CommandType.ASDF, "ASDF"],
-    [CommandType.Xrandr, "Xrandr"],
+    [CommandType.SystemCommand, "SystemCommand"],
     [CommandType.StatusUpdate, "StatusUpdate"],
     [CommandType.GiveawayEnter, "GiveAwayEnter"],
     [CommandType.ProgramWithMeEnter, "ProgrammWithMeEnter"],

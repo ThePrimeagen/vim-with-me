@@ -12,6 +12,9 @@ import IrcClient from "./irc";
 import { MessageFromPrime, PrimeMessage } from "./irc/prime-commands";
 import ProgramWithMe from "./program-with-me";
 import bus from "./message-bus";
+import { enable } from "./debug";
+
+enable();
 
 async function run(): Promise<void> {
 

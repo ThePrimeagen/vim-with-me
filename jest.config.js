@@ -3,7 +3,10 @@ module.exports = function() {
         rootDir: "src",
         testRegex: "/__tests__/.*",
         preset: "ts-jest",
-        transform: {"\\.ts$": ["ts-jest"]}
+        transform: {"\\.ts$": ["ts-jest"]},
+        moduleNameMapper: {
+            "~/(.*)": "<rootDir>/$1",
+        }
     };
 };
 

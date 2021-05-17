@@ -77,7 +77,7 @@ describe("ProgramWithMe", function() {
             "bar-foo",
         ]);
 
-        // TODO(final): Make the emits more testable..
+        // TODO(fin): I don't really care to fix this... but emit needs better.
 
         pwm.enableProgramWithMe();
         const programmers = pwm.programmers;

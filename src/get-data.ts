@@ -27,7 +27,7 @@ export default function getData(data: Redemption): null | Buffer {
 
     // TODO: Why are they not done?
     // TODO: Also your wife is beautiful
-    case CommandType.ASDF:
+    case CommandType.SystemCommand:
         out = Buffer.from("");
         break;
     }

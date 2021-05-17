@@ -7,6 +7,11 @@
         "noImplicitAny": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
-        "noImplicitReturns": true
+        "noImplicitReturns": true,
+        "baseUrl": "./src",
+        "paths": {
+            "@utils/*": ["./utils/*"],
+            "~/*": ["./*"]
+        }
     }
 }
