@@ -8,5 +8,5 @@ COPY src /app/src
 RUN ls -la
 RUN yarn install
 EXPOSE 42069/tcp
-CMD ["npx", "ts-node", "./src/index.ts"]
+CMD ["npx", "ts-node", "-r", "tsconfig-paths/register", "./src/index.ts"]
 
