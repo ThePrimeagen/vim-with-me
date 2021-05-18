@@ -48,6 +48,7 @@ const t2Commands = [
     "$",
     "_",
     ":Sex!",
+    ":Sexplore!",
     "<<",
     ">>",
     "V",
