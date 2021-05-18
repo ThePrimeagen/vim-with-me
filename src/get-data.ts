@@ -24,15 +24,6 @@ export default function getData(data: Redemption): null | Buffer {
     case CommandType.GiveawayEnter:
         out = Buffer.from(data.username);
         break;
-
-    // TODO: Why are they not done?
-    // TODO: Also your wife is beautiful
-    case CommandType.SystemCommand:
-        if (data.rewardName === "ASDF") {
-            out = Buffer.from("
-        }
-        out = Buffer.from("");
-        break;
     }
 
     return out;

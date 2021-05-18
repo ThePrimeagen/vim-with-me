@@ -14,8 +14,14 @@ import { MessageFromPrime, PrimeMessage } from "./irc/prime-commands";
 import ProgramWithMe from "./program-with-me";
 import bus from "./message-bus";
 import { enable } from "./debug";
+import SystemCommand from "./system-commands";
 
 enable();
+
+const systemCommands: {[key: string]: SystemCommand} = {
+    "asdf": new SystemCommand("setxkbmap us", "setxkbmap us real-prog-dvorak", 3000),
+    "Xrandr": new SystemCommand("xrandr --output HDMI-0 --brightness 0.05", "xrandr --output HDMI-0 --brightness 1", 5000),
+};
 
 async function run(): Promise<void> {
 
@@ -56,9 +62,25 @@ async function run(): Promise<void> {
         }
     });
 
+    bus.on("system-command", function(command: string) {
+
+        console.log("System Command", command);
+        tcp.write(
+            new Command().reset().
+                setCost(0).
+                setData(Buffer.from(command)).
+                setStatusLine(``).
+                setType(CommandType.SystemCommand).buffer
+        );
+
+    });
+
     quirk.on("message", (data: Redemption): void => {
 
         const validationResult = validate(data);
+
+        console.log("quirk-message", data, validationResult);
+        bus.emit("quirk-message", data, validationResult);
 
         if (!validationResult.success) {
 
@@ -71,15 +93,20 @@ async function run(): Promise<void> {
             return;
         }
 
-        bus.emit("quirk-message", data);
-        tcp.write(
-            new Command().reset().
-                setCost(getCost(data)).
-                setData(getData(data)).
-                setStatusLine(getStatusline(data)).
-                setType(getType(data)).buffer
-        );
+        const type = getType(data);
+        if (type === CommandType.SystemCommand &&
+            systemCommands[data.rewardName]) {
 
+            systemCommands[data.rewardName].add();
+        } else {
+            tcp.write(
+                new Command().reset().
+                    setCost(getCost(data)).
+                    setData(getData(data)).
+                    setStatusLine(getStatusline(data)).
+                    setType(getType(data)).buffer
+            );
+        }
     });
 }
 

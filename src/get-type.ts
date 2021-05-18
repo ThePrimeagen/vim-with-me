@@ -2,7 +2,7 @@ import { CommandType } from "./cmd";
 import { Redemption } from "./quirk";
 
 const map: {[key: string]: CommandType} = {
-    "ASDF": CommandType.SystemCommand,
+    "asdf": CommandType.SystemCommand,
     "Xrandr": CommandType.SystemCommand,
     "Giveaway FEM": CommandType.GiveawayEnter,
     "VimInsert": CommandType.VimInsert,
