@@ -5,8 +5,7 @@ local Pobo = require("vim-with-me.pobo");
 
 local CommandTypes = Enum({
     VimCommand = 0,
-    ASDF = 1,
-    Xrandr = 2,
+    SystemCommand = 1,
     StatusLineUpdate = 3,
     GiveawayEnter = 4,
     VimInsert = 5,
@@ -22,7 +21,7 @@ env:on("connect", function()
     print("Connected to the server")
 end)
 
-giveaway_entries = {}
+VWM_giveaway_entries = {}
 
 local function tablelength(T)
     local count = 0
@@ -31,13 +30,13 @@ local function tablelength(T)
 end
 
 function reset_giveaway()
-    giveaway_entries = {}
+    VWM_giveaway_entries = {}
 end
 
 function pick_an_entry()
     --local length = tablelength(giveaway_entries)
-    local pick = math.ceil(math.random() * #giveaway_entries)
-    return giveaway_entries[pick]
+    local pick = math.ceil(math.random() * #VWM_giveaway_entries)
+    return VWM_giveaway_entries[pick]
 
     --[[
     local count = 0
@@ -56,7 +55,6 @@ env:on("data", function(line)
     local pobo = Pobo:new(line, 1)
     local status = pobo:get_status()
 
-    print("STATUS", status);
     require("theprimeagen.statusline").set_status(status)
 
     if line[1] == CommandTypes.VimCommand or
@@ -64,9 +62,11 @@ env:on("data", function(line)
        line[1] == CommandTypes.VimInsert then
         local cmd = pobo:get_data()
         vim.cmd(cmd)
+    elseif line[1] == CommandTypes.SystemCommand then
+        vim.cmd(string.format("silent! !%s", pobo:get_data()))
     elseif line[1] == CommandTypes.GiveawayEnter then
         local name = pobo:get_data()
-        table.insert(giveaway_entries, name)
+        table.insert(VWM_giveaway_entries, name)
     end
 end)
 

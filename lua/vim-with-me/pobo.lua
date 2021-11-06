@@ -9,14 +9,6 @@ Pobo.cost_idx = 51;
 Pobo.data_idx = 53;
 Pobo.data_length = 200;
 
-local function slice(t, start, stop)
-    local out = {}
-    for idx = start, stop do
-        table.insert(out, t[idx])
-    end
-    return out
-end
-
 -- stackoverflow, though dangerous behind the wheel can still serve a purpose
 local function utf8_from(t, start, length)
     local bytearr = {}
