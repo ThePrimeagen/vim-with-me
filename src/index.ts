@@ -53,6 +53,7 @@ async function run(): Promise<void> {
         if (message.type === PrimeMessage.StartYourEngines) {
             pwm.enableProgramWithMe();
         }
+
         else if (message.type === PrimeMessage.PumpTheBreaks) {
             pwm.disableProgramWithMe();
         }

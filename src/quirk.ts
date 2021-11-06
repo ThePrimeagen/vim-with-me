@@ -24,7 +24,7 @@ export type Redemption = {
 }
 
 async function connectToQuirk(token: string): Promise<WebSocket> {
-    const domain = "websocket.quirk.gg";
+    const domain = "websocket.quirk.tools";
     const body = {
         access_token: token,
     };
@@ -40,7 +40,7 @@ async function connectToQuirk(token: string): Promise<WebSocket> {
     const { access_token } = data;
 
     return new WebSocket(
-        `wss://websocket.quirk.gg?access_token=${access_token}`
+        `wss://websocket.quirk.tools?access_token=${access_token}`
     );
 }
 

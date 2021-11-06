@@ -23,6 +23,7 @@
     "dependencies": {
         "dotenv": "^8.2.0",
         "node-fetch": "^2.6.1",
+        "npkill": "^0.8.0",
         "tmi.js": "^1.8.3",
         "tsconfig-paths": "^3.9.0",
         "ws": "^7.4.4"

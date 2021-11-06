@@ -36,6 +36,8 @@ const t2Commands = [
     "O",
     "~",
     "gg",
+    "vjj",
+    "Vjj",
     "G",
     "zt",
     "zz",
