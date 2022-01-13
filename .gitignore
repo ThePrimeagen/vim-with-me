@@ -3,3 +3,8 @@ node_modules
 
 .env
 .log
+
+
+# Added by cargo
+
+/target
