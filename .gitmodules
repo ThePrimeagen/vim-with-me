@@ -1,6 +1,0 @@
-[submodule "3rdparty/json-c"]
-	path = 3rdparty/json-c
-	url = git@github.com:json-c/json-c.git
-[submodule "3rdparty/libwebsockets"]
-	path = 3rdparty/libwebsockets
-	url = git@github.com:warmcat/libwebsockets.git
