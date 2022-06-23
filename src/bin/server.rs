@@ -1,7 +1,5 @@
 use anyhow::{Result, anyhow};
-use futures::StreamExt;
 use log::debug;
-use tokio_tungstenite::connect_async;
 use serde::{Deserialize, Serialize};
 use vim_with_me::quirk::{Quirk, QuirkMessage};
 
