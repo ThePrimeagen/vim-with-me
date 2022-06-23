@@ -1,5 +1,4 @@
-use clap::Parser
-
+use clap::Parser;
 
 #[derive(Debug, Parser)]
 #[clap(name = "me daddy")]
