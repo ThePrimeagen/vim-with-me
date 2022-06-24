@@ -1,12 +1,12 @@
 use anyhow::{Result};
 use futures::{StreamExt, stream::SplitStream};
-use log::error;
-use tokio::{net::TcpStream, sync::mpsc};
+use log::{error, warn};
+use tokio::{net::TcpStream, sync::mpsc, time};
 use tokio_tungstenite::{connect_async, MaybeTlsStream, WebSocketStream};
 use serde::{Deserialize, Serialize};
 
-type Receiver = mpsc::Receiver<QuirkMessage>;
-type Sender = mpsc::Sender<QuirkMessage>;
+pub type Receiver = mpsc::Receiver<QuirkMessage>;
+pub type Sender = mpsc::Sender<QuirkMessage>;
 type Read = SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>;
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -122,5 +122,35 @@ impl Quirk {
 
     pub fn get_receiver(&mut self) -> Option<Receiver> {
         return self.rx.take();
+    }
+}
+
+pub async fn run_forver_quirky(tx: Sender) -> Result<()> {
+    loop {
+        let mut quirk = Quirk::new();
+        match quirk.connect("wss://websocket.quirk.tools/").await {
+            Ok(_) => {
+                let mut rx = quirk.get_receiver().unwrap();
+
+                while let Some(msg) = rx.recv().await {
+                    match msg {
+                        QuirkMessage::Close => {
+                            break;
+                        },
+
+                        msg => {
+                            if let Err(e) = tx.send(msg).await {
+                                error!("error'd or emitting quirk message {}", e);
+                            }
+                        }
+                    }
+                }
+
+            },
+            _ => {},
+        }
+
+        warn!("Disconnected from quirk, reconnecting in 5");
+        tokio::time::sleep(time::Duration::from_secs(5)).await;
     }
 }

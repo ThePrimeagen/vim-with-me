@@ -1,7 +1,8 @@
 use anyhow::{Result, anyhow};
 use log::debug;
 use serde::{Deserialize, Serialize};
-use vim_with_me::quirk::{Quirk, QuirkMessage};
+use tokio::sync::mpsc::channel;
+use vim_with_me::quirk::{Quirk, QuirkMessage, run_forver_quirky};
 
 #[derive(Deserialize, Serialize, Debug)]
 struct RequestBody {
@@ -42,24 +43,8 @@ async fn main() -> Result<()> {
         return Err(anyhow!("Dotenv really didn't make it"));
     }
 
-    loop {
-        let mut quirk = Quirk::new();
-        quirk.connect("wss://websocket.quirk.tools/").await?;
+    let (tx, rx) = channel(10);
+    tokio::spawn(run_forver_quirky(tx));
 
-        let mut rx = quirk.get_receiver().unwrap();
-
-        while let Some(msg) = rx.recv().await {
-            match msg {
-                QuirkMessage::Close => {
-                    break;
-                },
-
-                QuirkMessage::Message(msg) => {
-                    println!("got message");
-                    println!("message {:?}", msg);
-                    println!("done printing message");
-                }
-            }
-        }
-    }
+    return Ok(());
 }
