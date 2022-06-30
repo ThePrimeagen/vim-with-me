@@ -34,15 +34,20 @@ pub struct TwitchData {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct TwitchRedeem {
-  pub data: TwitchData,
-  pub source: String,
-  pub r#type: String
+    pub data: TwitchData,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct TwitchSubEvent {
+    pub data: TwitchRedeem,
+    pub source: String,
+    pub r#type: String
 }
 
 #[derive(Debug)]
 pub enum QuirkMessage {
     Close,
-    Message(TwitchRedeem),
+    Message(TwitchSubEvent),
 }
 
 pub struct Quirk {
@@ -80,9 +85,13 @@ pub async fn get_quirk_token() -> Result<String> {
 }
 
 async fn run_quirk(tx: Sender, mut read: Read) {
+    println!("run_quirk#waiting for message");
     while let Some(Ok(msg)) = read.next().await {
+        println!("run_quirk#message: {:?}", msg);
         if let Ok(msg) = msg.to_text() {
+            println!("it is text");
             if let Ok(msg) = serde_json::from_str(msg) {
+                println!("Attempting to emit twitch redeem");
                 match tx.send(QuirkMessage::Message(msg)).await {
                     Err(_) => break,
                     _ => {}
@@ -128,17 +137,23 @@ impl Quirk {
 pub async fn run_forver_quirky(tx: Sender) -> Result<()> {
     loop {
         let mut quirk = Quirk::new();
+        println!("connecting to quirk");
         match quirk.connect("wss://websocket.quirk.tools/").await {
             Ok(_) => {
+                println!("setting up receiver");
                 let mut rx = quirk.get_receiver().unwrap();
 
+                println!("waiting for message");
                 while let Some(msg) = rx.recv().await {
+                    println!("recived message {:?}", msg);
                     match msg {
                         QuirkMessage::Close => {
+                            println!("it was a close");
                             break;
                         },
 
                         msg => {
+                            println!("sending message");
                             if let Err(e) = tx.send(msg).await {
                                 error!("error'd or emitting quirk message {}", e);
                             }

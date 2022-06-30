@@ -1,8 +1,9 @@
 use anyhow::{Result, anyhow};
+use futures::future::join;
 use log::debug;
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc::channel;
-use vim_with_me::quirk::{Quirk, QuirkMessage, run_forver_quirky};
+use vim_with_me::{quirk::run_forver_quirky, prime::ws::server};
 
 #[derive(Deserialize, Serialize, Debug)]
 struct RequestBody {
@@ -44,7 +45,14 @@ async fn main() -> Result<()> {
     }
 
     let (tx, rx) = channel(10);
-    tokio::spawn(run_forver_quirky(tx));
+
+    let res = join(
+        tokio::spawn(server("0.0.0.0:42069", rx)),
+        tokio::spawn(run_forver_quirky(tx))
+    ).await;
+
+    res.0??;
+    res.1??;
 
     return Ok(());
 }
