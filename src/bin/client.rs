@@ -6,7 +6,7 @@ use futures_util::StreamExt;
 use log::error;
 use tokio_tungstenite::connect_async;
 use url::Url;
-use vim_with_me::client::handle_message;
+use vim_with_me::client::{handle_message, self};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -17,10 +17,11 @@ async fn main() -> Result<()> {
 
     let (socket, _) = connect_async(Url::parse(url).unwrap()).await?;
     let (_, mut incoming) = socket.split();
+    let sender = client::handle_tcp_to_vim("0.0.0.0:6969");
 
     // So far, we don't need async beyond simple async await
     while let Some(Ok(msg)) = incoming.next().await {
-        match handle_message(msg).await {
+        match handle_message(msg, sender.clone()).await {
             Err(e) => {
                 error!("error from handle_message {}", e);
             },

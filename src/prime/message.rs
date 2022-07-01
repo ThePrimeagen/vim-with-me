@@ -8,7 +8,7 @@ pub enum PrimeMessageContent {
     StatusLineUpdate(String, String),
 
     // TODO: we don't even know yet
-    VimCommand(),
+    VimCommand(String),
     VimColorScheme(),
 }
 
