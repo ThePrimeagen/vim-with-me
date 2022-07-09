@@ -22,6 +22,14 @@ impl TryFrom<QuirkMessage> for PrimeMessage {
                     });
                 },
 
+                "VimMotion" => {
+                    println!("HELP ME {:?}", msg.data);
+
+                    return Ok(PrimeMessage {
+                        content: PrimeMessageContent::VimMotion(msg.data.data.user_input),
+                    });
+                },
+
                 "Giveaway FEMboi" => {
                     return Err(anyhow!("unsupported"));
                 },
@@ -71,10 +79,9 @@ pub async fn server(addr: &str, mut rx: Receiver) -> Result<()> {
                 let out_msg = serde_json::to_string(&msg).expect("there should never be an error");
 
                 for (idx, out) in outgoing.iter_mut().enumerate() {
-                    println!("Message received server: {:?}: {}", idx, out_msg);
                     match out.send(Message::Text(out_msg.clone())).await {
                         Err(e) => {
-                            println!("sending to client, but error'd {:?}", e);
+                            error!("sending to client, but error'd {:?}", e);
                             errs.push(idx);
                         },
                         _ => {}

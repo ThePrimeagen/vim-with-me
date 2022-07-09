@@ -17,7 +17,7 @@ async fn handle_system_command(command: String) -> Result<()> {
                 .arg("--output")
                 .arg("DP-0")
                 .arg("--brightness")
-                .arg("0.05")
+                .arg("0.02")
                 .spawn()?;
 
             tokio::time::sleep(tokio::time::Duration::from_millis(5000)).await;
@@ -47,7 +47,13 @@ pub async fn handle_message(msg: Message, sender: VimSender) -> Result<()> {
             handle_system_command(s).await?;
         },
 
-        PrimeMessageContent::VimCommand(cmd) => {
+        PrimeMessageContent::VimMotion(cmd) => {
+            match sender.send(VimMessage::motion(cmd)).await {
+                Err(e) => {
+                    error!("got an error from sending vim command {}", e);
+                },
+                _ => {}
+            }
         }
 
         _ => {
