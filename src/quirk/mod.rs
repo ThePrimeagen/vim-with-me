@@ -1,6 +1,6 @@
 use anyhow::{Result};
 use futures::{StreamExt, stream::SplitStream};
-use log::{error, warn};
+use log::{error, warn, info};
 use tokio::{net::TcpStream, sync::mpsc, time};
 use tokio_tungstenite::{connect_async, MaybeTlsStream, WebSocketStream};
 use serde::{Deserialize, Serialize};
@@ -85,13 +85,10 @@ pub async fn get_quirk_token() -> Result<String> {
 }
 
 async fn run_quirk(tx: Sender, mut read: Read) {
-    println!("run_quirk#waiting for message");
     while let Some(Ok(msg)) = read.next().await {
-        println!("run_quirk#message: {:?}", msg);
         if let Ok(msg) = msg.to_text() {
-            println!("it is text");
             if let Ok(msg) = serde_json::from_str(msg) {
-                println!("Attempting to emit twitch redeem");
+                info!("received message from quirk {:?}", msg);
                 match tx.send(QuirkMessage::Message(msg)).await {
                     Err(_) => break,
                     _ => {}
@@ -137,26 +134,33 @@ impl Quirk {
 pub async fn run_forver_quirky(tx: Sender) -> Result<()> {
     loop {
         let mut quirk = Quirk::new();
-        println!("connecting to quirk");
+        warn!("about to (re)connect to quirk");
         match quirk.connect("wss://websocket.quirk.tools/").await {
             Ok(_) => {
-                println!("setting up receiver");
-                let mut rx = quirk.get_receiver().unwrap();
+                let mut rx = quirk.get_receiver().expect("quirk should always have an rx to give");
+                loop {
+                    tokio::select! {
+                        msg = rx.recv() => {
+                            match msg {
+                                Some(QuirkMessage::Close) => {
+                                    warn!("quirk has closed");
+                                    break;
+                                },
 
-                println!("waiting for message");
-                while let Some(msg) = rx.recv().await {
-                    println!("recived message {:?}", msg);
-                    match msg {
-                        QuirkMessage::Close => {
-                            println!("it was a close");
-                            break;
+                                Some(msg) => {
+                                    if let Err(e) = tx.send(msg).await {
+                                        error!("error'd or emitting quirk message {}", e);
+                                        break;
+                                    }
+                                },
+
+                                None => break,
+                            }
                         },
 
-                        msg => {
-                            println!("sending message");
-                            if let Err(e) = tx.send(msg).await {
-                                error!("error'd or emitting quirk message {}", e);
-                            }
+                        _ = tokio::time::sleep(tokio::time::Duration::from_secs(60 * 30)) => {
+                            error!("reconnecting to quirk (forceful disconnect)");
+                            break;
                         }
                     }
                 }

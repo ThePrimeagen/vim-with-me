@@ -22,9 +22,13 @@ impl TryFrom<QuirkMessage> for PrimeMessage {
                     });
                 },
 
-                "VimMotion" => {
-                    println!("HELP ME {:?}", msg.data);
+                "RTL" => {
+                    return Ok(PrimeMessage {
+                        content: PrimeMessageContent::VimRTL,
+                    });
+                },
 
+                "VimMotion" => {
                     return Ok(PrimeMessage {
                         content: PrimeMessageContent::VimMotion(msg.data.data.user_input),
                     });
@@ -95,5 +99,3 @@ pub async fn server(addr: &str, mut rx: Receiver) -> Result<()> {
         }
     }
 }
-
-

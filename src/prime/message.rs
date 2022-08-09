@@ -1,7 +1,5 @@
 use serde::{Serialize, Deserialize};
 
-use crate::quirk::QuirkMessage;
-
 #[derive(Debug, Serialize, Deserialize)]
 pub enum PrimeMessageContent {
     SystemCommand(String),
@@ -9,6 +7,7 @@ pub enum PrimeMessageContent {
 
     // TODO: we don't even know yet
     VimMotion(String),
+    VimRTL,
     VimColorScheme(),
 }
 

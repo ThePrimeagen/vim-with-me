@@ -17,7 +17,7 @@ async fn main() -> Result<()> {
 
     let (socket, _) = connect_async(Url::parse(url).unwrap()).await?;
     let (_, mut incoming) = socket.split();
-    let sender = client::handle_tcp_to_vim("0.0.0.0:6969");
+    let sender = client::vim::handle_tcp_to_vim("0.0.0.0:6969");
 
     // So far, we don't need async beyond simple async await
     while let Some(Ok(msg)) = incoming.next().await {
