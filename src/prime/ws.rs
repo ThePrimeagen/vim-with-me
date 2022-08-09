@@ -34,6 +34,18 @@ impl TryFrom<QuirkMessage> for PrimeMessage {
                     });
                 },
 
+                "ChatQNo" => {
+                    return Ok(PrimeMessage {
+                        content: PrimeMessageContent::VimChat(String::from("no")),
+                    });
+                },
+
+                "ChatQYes" => {
+                    return Ok(PrimeMessage {
+                        content: PrimeMessageContent::VimChat(String::from("yes")),
+                    });
+                },
+
                 "Giveaway FEMboi" => {
                     return Err(anyhow!("unsupported"));
                 },

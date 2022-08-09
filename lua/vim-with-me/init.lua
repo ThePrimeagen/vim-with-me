@@ -13,6 +13,28 @@ local function rtl()
     end, 5000)
 end
 
+local point_count = 0;
+local point_expected = 1000;
+local function chat_yes_or_no(cmd)
+    if cmd == "yes" then
+        point_count = point_count + 10;
+    else
+        point_count = point_count - 10;
+    end
+
+    if point_count < 0 then
+        point_count = 0
+    end
+
+    if point_count >= point_expected then
+        vim.cmd(":q!")
+    end
+end
+
+function M.get_points()
+    return point_count, point_expected
+end
+
 local function parse_message(chunk)
     print("chunk", chunk)
 
@@ -33,6 +55,8 @@ local function handle_message(type, cmd)
         vim.cmd(string.format("norm! %s", cmd))
     elseif type == 1 then
         rtl();
+    elseif type == 2 then
+        chat_yes_or_no(cmd)
     end
 end
 
@@ -48,7 +72,14 @@ function M.StartVimWithMe()
         vim.loop.read_start(VWMClient, function (inner_err, chunk)
             assert(not inner_err, inner_err)
 
+            -- disconnect
+            if chunk == nil then
+                M.StopVimWithMe()
+                return
+            end
+
             vim.schedule(function()
+
                 handle_message(parse_message(chunk))
             end)
         end)
@@ -62,6 +93,8 @@ function M.StopVimWithMe()
     VWMClient = nil
 end
 
+M.ClientStopped = "Client Stopped"
+M.ClientRunning = "Client Running"
 function M.StatusVimWithMe()
     if VWMClient ~= nil then
         return "Client Running"

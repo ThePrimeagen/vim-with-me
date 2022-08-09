@@ -7,6 +7,7 @@ pub enum PrimeMessageContent {
 
     // TODO: we don't even know yet
     VimMotion(String),
+    VimChat(String),
     VimRTL,
     VimColorScheme(),
 }

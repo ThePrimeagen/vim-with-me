@@ -44,13 +44,29 @@ pub async fn handle_message(msg: Message, sender: VimSender) -> Result<()> {
                 },
                 _ => {}
             }
-        }
+        },
 
-        _ => {
-            info!("please handle this arm immediately {:?}", msg);
-        }
+        PrimeMessageContent::VimChat(yes_or_no) => {
+
+            let cmd = VimMessage::chat(yes_or_no);
+            info!("VimChat {:?}", cmd);
+
+            if !cmd.is_valid() {
+                error!("invalid vim chat {:?}", cmd);
+                return Ok(());
+            }
+
+            match sender.send(cmd).await {
+                Err(e) => {
+                    error!("got an error from sending vim command {}", e);
+                },
+                _ => {}
+            }
+        },
+
+        PrimeMessageContent::StatusLineUpdate(_, _) => {},
+        PrimeMessageContent::VimColorScheme() => {},
     }
 
     return Ok(());
 }
-

@@ -3,7 +3,7 @@ use dotenv::dotenv;
 
 use futures_util::StreamExt;
 
-use log::error;
+use log::{error, warn};
 use tokio_tungstenite::connect_async;
 use url::Url;
 use vim_with_me::client::{handle_message, self};
@@ -21,6 +21,7 @@ async fn main() -> Result<()> {
 
     // So far, we don't need async beyond simple async await
     while let Some(Ok(msg)) = incoming.next().await {
+        warn!("incoming message {:?}", msg);
         match handle_message(msg, sender.clone()).await {
             Err(e) => {
                 error!("error from handle_message {}", e);
