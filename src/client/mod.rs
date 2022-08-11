@@ -46,9 +46,9 @@ pub async fn handle_message(msg: Message, sender: VimSender) -> Result<()> {
             }
         },
 
-        PrimeMessageContent::VimChat(yes_or_no) => {
+        PrimeMessageContent::VimChat(yes_or_no, user_name) => {
 
-            let cmd = VimMessage::chat(yes_or_no);
+            let cmd = VimMessage::chat(yes_or_no, user_name);
             info!("VimChat {:?}", cmd);
 
             if !cmd.is_valid() {
