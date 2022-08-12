@@ -6,7 +6,7 @@ use futures_util::StreamExt;
 use log::{error, warn};
 use tokio_tungstenite::connect_async;
 use url::Url;
-use vim_with_me::client::{handle_message, self};
+use vim_with_me::{client::{handle_message, self}, arduino::Arduino};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -19,9 +19,20 @@ async fn main() -> Result<()> {
     let (_, mut incoming) = socket.split();
     let sender = client::vim::handle_tcp_to_vim("0.0.0.0:6969");
 
+    /*
     std::thread::spawn(move || {
-        let arduino = Arduino::create("/dev");
+        let _arduino = match Arduino::create("/dev/ttyACM1") {
+            Err(e) => {
+                error!("unable to init arduino {}", e);
+                return;
+            },
+            Ok(a) => {
+                warn!("arduino is initialized");
+                a
+            }
+        };
     });
+    */
 
     // So far, we don't need async beyond simple async await
     while let Some(Ok(msg)) = incoming.next().await {
