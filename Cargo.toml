@@ -17,8 +17,10 @@ ipipe = "0.11.7"
 log = "0.4.17"
 num_enum = "0.5.7"
 reqwest = { version = "0.11.11", features = ["json"] }
+robust-arduino-serial = "0.1.1"
 serde = { version = "1.0.137", features = ["derive"] }
 serde_json = "1.0.81"
+serial = "0.4.0"
 systemstat = "0.1.11"
 tokio = { version = "1.19.2", features = ["full"] }
 tokio-tungstenite = { version = "0.17.1", features = ["native-tls"] }

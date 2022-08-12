@@ -36,7 +36,7 @@ impl TryFrom<QuirkMessage> for PrimeMessage {
 
                 "CloseVim" => {
                     return Ok(PrimeMessage {
-                        content: PrimeMessageContent::VimChat(msg.data.data.user_input, msg.data.data.user_name),
+                        content: PrimeMessageContent::VimChat(String::from("yes"), msg.data.data.user_name),
                     });
                 },
 

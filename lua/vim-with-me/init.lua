@@ -24,7 +24,7 @@ local function rtl()
 end
 
 local point_count = 0;
-local point_expected = 250;
+local point_expected = 750;
 local function chat_yes_or_no(cmd_and_name)
     if point_count >= point_expected then
         return
