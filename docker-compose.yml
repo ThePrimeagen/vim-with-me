@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  chat_writes:
+    build: ./chat_is_dumb
+    # command: mix run --no-halt
+    environment:
+      TWITCH_USER: ${TWITCH_USER}
+      TWITCH_OAUTH_TOKEN: ${TWITCH_OAUTH_TOKEN}
+      TCP_SERVER: ${TCP_SERVER:-false}
+      CHAT_INTERVAL: ${CHAT_INTERVAL}
+      LOG_LEVEL: ${LOG_LEVEL}
+      PORT: ${PORT:-42069}
+    ports:
+      - ${PORT:-42069}:${PORT:-42069}
