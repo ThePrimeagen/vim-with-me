@@ -61,6 +61,16 @@ func createTCPServer() chan string {
     return out
 }
 
+var allowableChars = []string{"<space>", "<esc>", "<cr>"};
+func contains(arr []string, str string) bool {
+    for _, a := range arr {
+        if a == str {
+            return true
+        }
+    }
+    return false
+}
+
 func main() {
     // read from standard in line by line
     stdin := readFromStdin()
@@ -75,7 +85,17 @@ func main() {
             if len(parts) != 2 {
                 continue
             }
-            msg := parts[1]
+            msg := strings.TrimSpace(parts[1])
+
+            if msg[0] == '<' {
+                msg = strings.ToLower(msg)
+                if !contains(allowableChars, msg) {
+                    continue
+                }
+            } else if len(msg) != 1 {
+                continue
+            }
+
             counts[msg]++
 
         case <-ticker.C:
@@ -89,9 +109,14 @@ func main() {
                 }
             }
 
+            if len(maxMsg) == 0 {
+                fmt.Println("No messages to send")
+                continue
+            }
+
             fmt.Printf("Out of %d, the most common message: %s\n", len(counts), maxMsg)
 
-            tcpOut <- fmt.Sprintf("Out of %d, the most common message: %s\n", len(counts), maxMsg)
+            tcpOut <- maxMsg
 
             clear(counts)
         }
