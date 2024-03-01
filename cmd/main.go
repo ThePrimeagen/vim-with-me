@@ -7,7 +7,8 @@ import (
 	"net"
 	"os"
 	"strings"
-	"time"
+
+	"chat.theprimeagen.com/pkg/processors"
 )
 
 
@@ -61,64 +62,31 @@ func createTCPServer() chan string {
     return out
 }
 
-var allowableChars = []string{"<space>", "<esc>", "<cr>"};
-func contains(arr []string, str string) bool {
-    for _, a := range arr {
-        if a == str {
-            return true
-        }
-    }
-    return false
-}
-
+//var allowableChars = []string{"<dot>", "<backspace>", "<space>", "<esc>", "<cr>", "<tab>"};
+//func contains(arr []string, str string) bool {
+//    for _, a := range arr {
+//        if a == str {
+//            return true
+//        }
+//    }
+//    return false
+//}
+//
 func main() {
     // read from standard in line by line
     stdin := readFromStdin()
-    ticker := time.NewTicker(5 * time.Second)
-    tcpOut := createTCPServer()
+    //tcpOut := createTCPServer()
 
-    counts := make(map[string]int)
+    processor := processors.NewTDProcessor(5)
+
     for {
         select {
         case s := <-stdin:
-            parts := strings.SplitN(s, ":", 2)
-            if len(parts) != 2 {
-                continue
-            }
-            msg := strings.TrimSpace(parts[1])
+            processor.Process(strings.TrimSpace(s))
 
-            if msg[0] == '<' {
-                msg = strings.ToLower(msg)
-                if !contains(allowableChars, msg) {
-                    continue
-                }
-            } else if len(msg) != 1 {
-                continue
-            }
-
-            counts[msg]++
-
-        case <-ticker.C:
-
-            max := 0
-            maxMsg := ""
-            for k, v := range counts {
-                if v > max {
-                    max = v
-                    maxMsg = k
-                }
-            }
-
-            if len(maxMsg) == 0 {
-                fmt.Println("No messages to send")
-                continue
-            }
-
-            fmt.Printf("Out of %d, the most common message: %s\n", len(counts), maxMsg)
-
-            tcpOut <- maxMsg
-
-            clear(counts)
+        case point := <-processor.Out():
+            fmt.Printf("Got a point: %s\n", point)
+            //tcpOut <- point
         }
     }
 
