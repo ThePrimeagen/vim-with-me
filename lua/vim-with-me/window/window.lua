@@ -9,7 +9,10 @@
 ---@field buffer number
 ---@field win_id number
 
-local group = vim.api.nvim_create_augroup(false, "vim-with-me.window")
+local group = vim.api.nvim_create_augroup("vim-with-me.window", {
+    clear = true
+})
+
 local M = {}
 
 ---@param width number
