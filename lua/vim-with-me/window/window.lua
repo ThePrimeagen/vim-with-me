@@ -9,6 +9,7 @@
 ---@field buffer number
 ---@field win_id number
 
+local group = vim.api.nvim_create_augroup(false, "vim-with-me.window")
 local M = {}
 
 ---@param width number
@@ -90,13 +91,53 @@ function M.create_window(pos)
 end
 
 ---@param details WindowDetails
+---@return boolean
+local function clear_if_invalid(details)
+    if not vim.api.nvim_win_is_valid(details.win_id) then
+        vim.api.nvim_clear_autocmds({
+            group = group
+        })
+        return true
+    end
+    return false
+end
+
+---@param details WindowDetails
+---@param pos WindowPosition | nil
+function M.resize(details, pos)
+    pos = pos or M.create_window_offset(2, 2)
+    if clear_if_invalid(details) then
+        return
+    end
+
+    details.dim = M.get_window_dim(pos)
+    local config = M.create_window_config(details.dim)
+    vim.api.nvim_win_set_config(details.win_id, config)
+end
+
+---@param details WindowDetails
 ---@param cb function
 function M.on_close(details, cb)
     vim.api.nvim_create_autocmd("BufUnload", {
-        group = M.vim_apm_group_id(),
+        group = group,
         buffer = details.buffer,
         callback = function()
+            if clear_if_invalid(details) then
+                return
+            end
             cb()
+        end,
+    })
+end
+
+function M.refocus(details)
+    vim.api.nvim_create_autocmd("BufEnter", {
+        group = group,
+        callback = function()
+            if clear_if_invalid(details) then
+                return
+            end
+            vim.api.nvim_set_current_win(details.win_id)
         end,
     })
 end
