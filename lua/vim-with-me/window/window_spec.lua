@@ -1,3 +1,4 @@
+-- luacheck: globals describe it assert
 local eq = assert.are.same
 local window = require("vim-with-me.window.window")
 
@@ -14,4 +15,3 @@ describe("vim with me :: window", function()
         eq(false, vim.api.nvim_buf_is_valid(details.buffer))
     end)
 end)
-

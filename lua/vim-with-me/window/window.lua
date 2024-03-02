@@ -10,7 +10,7 @@
 ---@field win_id number
 
 local group = vim.api.nvim_create_augroup("vim-with-me.window", {
-    clear = true
+    clear = true,
 })
 
 local M = {}
@@ -98,7 +98,7 @@ end
 local function clear_if_invalid(details)
     if not vim.api.nvim_win_is_valid(details.win_id) then
         vim.api.nvim_clear_autocmds({
-            group = group
+            group = group,
         })
         return true
     end

@@ -5,4 +5,3 @@ return {
     TowerDefense = TD,
     Window = window,
 }
-

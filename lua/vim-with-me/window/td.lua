@@ -11,7 +11,7 @@ function TowerOffenseWindow.new()
     local self = setmetatable({
         _window_details = nil,
         _closing = false,
-        _offset = window.create_window_offset(2, 2)
+        _offset = window.create_window_offset(2, 2),
     }, TowerOffenseWindow)
     return self
 end
@@ -47,12 +47,9 @@ function TowerOffenseWindow:toggle()
             self._closing = false
         end)
         window.refocus(self._window_details)
-
     else
         self:close()
     end
 end
 
 return TowerOffenseWindow
-
-

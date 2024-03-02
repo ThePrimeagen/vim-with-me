@@ -1,4 +1,3 @@
-
 local M = {}
 local namespace = vim.api.nvim_create_namespace("vim-with-me.colors")
 
@@ -7,4 +6,3 @@ function M.color(color, x, y)
 end
 
 return M
-

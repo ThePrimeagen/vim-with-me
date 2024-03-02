@@ -1,3 +1,4 @@
+-- luacheck: ignore 111
 local uv = vim.loop
 
 local function key(k)
@@ -6,18 +7,22 @@ local function key(k)
 end
 
 local function read(client)
-    uv.read_start(client, vim.schedule_wrap(function(e, chunk)
-        if chunk == "<dot>" then
-            chunk = "."
-        end
-        key(chunk)
-    end))
+    uv.read_start(
+        client,
+        vim.schedule_wrap(function(_, chunk)
+            if chunk == "<dot>" then
+                chunk = "."
+            end
+            key(chunk)
+        end)
+    )
 end
 
 local client = nil
+
 function START()
     client = uv.new_tcp()
-    client:connect("127.0.0.1", 42069, function(err)
+    client:connect("127.0.0.1", 42069, function(_)
         read(client)
     end)
 end
