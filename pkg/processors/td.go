@@ -60,15 +60,17 @@ func NewTDProcessor(seconds int) *TDProcessor {
 
 				if processor.points[p] > processor.maxOccCount {
 					processor.maxOcc = p
-                    processor.maxOccCount = processor.points[p]
+					processor.maxOccCount = processor.points[p]
 				}
 
 			case <-ticker.C:
 				x := processor.maxOcc % 1000
 				y := processor.maxOcc / 1000
 
+				if x != 0 && y != 0 {
+					processor.out <- "t:" + strconv.Itoa(x) + ":" + strconv.Itoa(y)
+				}
 
-				processor.out <- "t:" + strconv.Itoa(x) + ":" + strconv.Itoa(y)
 				processor.points = make(map[int]int)
 				processor.maxOcc = 0
 				processor.maxOccCount = 0

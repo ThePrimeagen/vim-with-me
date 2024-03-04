@@ -3,7 +3,6 @@ local cache = require("vim-with-me.window.cache")
 
 ---@class TowerOffense
 ---@field _window_details WindowDetails | nil
----@field _closing boolean
 ---@field _offset WindowPosition
 ---@field _display_cache DisplayCache
 ---@field _window_cache DisplayCache
@@ -19,7 +18,6 @@ function TowerOffense.new(width, height)
 
     local self = setmetatable({
         _window_details = nil,
-        _closing = false,
         _display_cache = cache.new(width, height),
         _offset = window.create_window_offset(2, 2),
     }, TowerOffense)
