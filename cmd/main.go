@@ -48,6 +48,7 @@ func createTCPServer() chan string {
                 defer c.Close()
                 for {
                     str := <-out
+                    log.Printf("to client: %s\n", str)
                     _, err := c.Write([]byte(str))
                     fmt.Printf("Wrote to client: %s\n", str)
                     if err != nil {
@@ -75,7 +76,7 @@ func createTCPServer() chan string {
 func main() {
     // read from standard in line by line
     stdin := readFromStdin()
-    //tcpOut := createTCPServer()
+    tcpOut := createTCPServer()
 
     processor := processors.NewTDProcessor(5)
 
@@ -86,7 +87,7 @@ func main() {
 
         case point := <-processor.Out():
             fmt.Printf("Got a point: %s\n", point)
-            //tcpOut <- point
+            tcpOut <- point
         }
     }
 

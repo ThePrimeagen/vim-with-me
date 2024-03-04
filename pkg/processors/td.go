@@ -1,7 +1,6 @@
 package processors
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -39,7 +38,7 @@ func tdPointFromString(str string) *TDPoint {
 		return nil
 	}
 
-	if x < 0 || y < 0 || x > 80 || y > 40 {
+	if x < 1 || y < 1 || x > 80 || y > 40 {
 		return nil
 	}
 
@@ -68,10 +67,11 @@ func NewTDProcessor(seconds int) *TDProcessor {
 				x := processor.maxOcc % 1000
 				y := processor.maxOcc / 1000
 
-                fmt.Printf("map: %v\n", processor.points)
+
 				processor.out <- "t:" + strconv.Itoa(x) + ":" + strconv.Itoa(y)
 				processor.points = make(map[int]int)
 				processor.maxOcc = 0
+				processor.maxOccCount = 0
 			}
 		}
 	}()

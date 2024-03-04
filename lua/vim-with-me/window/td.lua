@@ -1,22 +1,22 @@
 local window = require("vim-with-me.window.window")
 
----@class TowerOffenseWindow
+---@class TowerOffense
 ---@field _window_details WindowDetails | nil
 ---@field _closing boolean
 ---@field _offset WindowPosition
-local TowerOffenseWindow = {}
-TowerOffenseWindow.__index = TowerOffenseWindow
+local TowerOffense = {}
+TowerOffense.__index = TowerOffense
 
-function TowerOffenseWindow.new()
+function TowerOffense.new()
     local self = setmetatable({
         _window_details = nil,
         _closing = false,
         _offset = window.create_window_offset(2, 2),
-    }, TowerOffenseWindow)
+    }, TowerOffense)
     return self
 end
 
-function TowerOffenseWindow:resize()
+function TowerOffense:resize()
     if self._window_details == nil then
         return
     end
@@ -29,7 +29,7 @@ function TowerOffenseWindow:resize()
     window.resize(self._window_details)
 end
 
-function TowerOffenseWindow:close()
+function TowerOffense:close()
     if self._window_details ~= nil and not self._closing then
         self.closing = true
         window.close_window(self._window_details)
@@ -38,18 +38,56 @@ function TowerOffenseWindow:close()
     end
 end
 
-function TowerOffenseWindow:toggle()
-    if self._window_details == nil then
-        self._window_details = window.create_window(self._offset)
-
-        window.on_close(self._window_details, function()
-            self._window_details = nil
-            self._closing = false
-        end)
-        window.refocus(self._window_details)
-    else
-        self:close()
+function TowerOffense:start()
+    if self._window_details ~= nil then
+        return
     end
+    self._window_details = window.create_window(self._offset)
+
+    local buf = {}
+    for _ = 1, self._window_details.dim.height do
+        table.insert(buf, self:create_row(0))
+    end
+
+    vim.api.nvim_buf_set_lines(self._window_details.buffer, 0, -1, false, buf)
+    vim.api.nvim_set_current_win(self._window_details.win_id)
 end
 
-return TowerOffenseWindow
+---@param x number
+---@return string
+function TowerOffense:create_row(x)
+    local str = ""
+    for i = 1, self._window_details.dim.width do
+        if i == x then
+            str = str .. "X"
+        else
+            str = str .. " "
+        end
+    end
+
+    return str
+end
+
+
+function TowerOffense:place(x, y)
+    if type(x) ~= "number" or type(y) ~= "number" then
+        print("invalid point")
+        return
+    end
+
+    assert(self._window_details ~= nil, "please call #open first before placing a tower")
+    if self._window_details.dim.width < x or self._window_details.dim.height < y then
+        print("point ignored since it is too girthy")
+        return
+    end
+
+    if x == 0 or y == 0 then
+        print("point ignored since it is too small, growl")
+        return
+    end
+
+    local str = self:create_row(x)
+    vim.api.nvim_buf_set_lines(self._window_details.buffer, y, y + 1, false, {str})
+end
+
+return TowerOffense
