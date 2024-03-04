@@ -1,5 +1,5 @@
 --- TERRIBLE NAME
-local TD = require("vim-with-me.window")
+local TD = require("vim-with-me.td")
 
 -- luacheck: ignore 111
 local uv = vim.loop
@@ -9,7 +9,7 @@ local function key(k)
     vim.api.nvim_feedkeys(k, "t", false)
 end
 
----@param client uv.TCP
+---@param client any
 ---@param td TowerOffense
 local function read(client, td)
     uv.read_start(
@@ -50,7 +50,7 @@ function START()
     assert(client == nil, "client already started")
     assert(td == nil, "td already started")
 
-    td = TD.TowerDefense:new()
+    td = TD:new()
     td:start()
 
     print(vim.inspect(td._window_details))

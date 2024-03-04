@@ -1,6 +1,6 @@
 -- luacheck: globals describe it assert
 local eq = assert.are.same
-local window = require("vim-with-me.window.window")
+local window = require("vim-with-me.window")
 
 describe("vim with me :: window", function()
     it("should be able to open and close a float", function()
