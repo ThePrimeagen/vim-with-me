@@ -21,20 +21,73 @@ local default_opts = {
     retry_count = 3,
 }
 
+local function parse(chunk, start, len)
+    local remaining = string.sub(chunk, start + len)
+    local idx = string.find(chunk, ":", start)
+
+    local command = string.sub(chunk, start, idx - 1)
+    local data = string.sub(chunk, idx + 1, start + len - 1)
+
+    return remaining, command, data
+end
+
+local function process_packets()
+    local previous_chunk = ""
+
+    ---@param chunk string | nil
+    ---@return string | nil, string | nil
+    return function(chunk)
+        chunk = chunk or ""
+
+        -- split by :
+        chunk = previous_chunk .. chunk
+        previous_chunk = ""
+
+        local idx = string.find(chunk, ":")
+
+        -- what about keeping previous chunks?
+        if idx == nil then
+            previous_chunk = chunk
+            return nil, nil
+        end
+
+        local len = tonumber(string.sub(chunk, 1, idx - 1))
+        if len + idx > #chunk then
+            previous_chunk = chunk
+            return nil, nil
+        end
+
+        local next_chunk, command, data = parse(chunk, idx + 1, len)
+
+        previous_chunk = next_chunk
+        return command, data
+    end
+end
+
+
 -- luacheck: ignore 111
 local uv = vim.loop
 
 Existing_TCP_Connection = Existing_TCP_Connection or nil
 
----@type (fun(chunk: string): nil)[]
+---@type (fun(command: string, data: string): nil)[]
 Existing_TCP_Listeners = Existing_TCP_Listeners or {}
 
 local function read(client)
+    local process = process_packets()
     uv.read_start(
         client,
         vim.schedule_wrap(function(_, chunk)
-            for _, listener in ipairs(Existing_TCP_Listeners) do
-                listener(chunk)
+            while true do
+                local command, data = process(chunk)
+                chunk = ""
+                if command == nil or data == nil then
+                    break
+                end
+
+                for _, listener in ipairs(Existing_TCP_Listeners) do
+                    listener(command, data)
+                end
             end
         end)
     )
@@ -80,17 +133,6 @@ local function tcp_stop()
     Existing_TCP_Connection = nil
 end
 
-local function parse(chunk, start, len)
-    local remaining = string.sub(chunk, start + len)
-    local idx = string.find(chunk, ":", start)
-
-    local command = string.sub(chunk, start, idx - 1)
-    local data = string.sub(chunk, idx + 1, start + len - 1)
-
-    return remaining, command, data
-end
-
-
 return {
     tcp_start = tcp_start,
     tcp_stop = tcp_stop,
@@ -98,8 +140,6 @@ return {
     tcp_connected = function()
         return Existing_TCP_Connection ~= nil
     end,
-
-    parse = parse,
 
     listen = function(listener)
         table.insert(Existing_TCP_Listeners, listener)

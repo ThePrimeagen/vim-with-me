@@ -41,24 +41,24 @@ function M.close_window(details)
     end
 end
 
----@param offset WindowPosition
----@return WindowPosition
-function M.get_window_dim(offset)
-    offset = offset or M.create_window_offset(2, 2)
+---@param dim WindowPosition
+function M.center_window_dimension(dim)
+    dim = dim or M.create_window_offset(80, 24)
     local ui = vim.api.nvim_list_uis()[1]
-    local width = 40
-    local height = 20
+
+    local x_offset = 80
+    local y_offset = 24
+
     if ui ~= nil then
-        width = math.max(ui.width, 0)
-        height = math.max(ui.height, 0)
+        local w_diff = math.floor((ui.width - dim.width) / 2)
+        local h_diff = math.floor((ui.height - dim.height) / 2)
+
+        x_offset = math.max(w_diff, 0)
+        y_offset = math.max(h_diff, 0)
     end
 
-    return {
-        width = math.max(width - offset.width, 0),
-        height = math.max(height - offset.height, 0),
-        row = offset.row,
-        col = offset.col,
-    }
+    dim.row = y_offset
+    dim.col = x_offset
 end
 
 ---@param pos WindowPosition
@@ -77,9 +77,16 @@ function M.create_window_config(pos)
 end
 
 ---@param dim WindowPosition | nil
+---@param center boolean | nil defaults true
 ---@return WindowDetails
-function M.create_window(dim)
+function M.create_window(dim, center)
+    center = center == nil or center
     dim = dim or M.create_window_offset(80, 24)
+
+    if center then
+        M.center_window_dimension(dim)
+    end
+
     local buffer = vim.api.nvim_create_buf(false, true)
     local config = M.create_window_config(dim)
     local win_id = vim.api.nvim_open_win(buffer, false, config)
@@ -104,14 +111,12 @@ local function clear_if_invalid(details)
 end
 
 ---@param details WindowDetails
----@param pos WindowPosition | nil
-function M.resize(details, pos)
-    pos = pos or M.create_window_offset(2, 2)
+function M.resize(details)
     if clear_if_invalid(details) then
         return
     end
 
-    details.dim = M.get_window_dim(pos)
+    M.center_window_dimension(details.dim)
     local config = M.create_window_config(details.dim)
     vim.api.nvim_win_set_config(details.win_id, config)
 end
