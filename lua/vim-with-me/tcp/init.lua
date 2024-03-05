@@ -40,9 +40,9 @@ local function read(client)
     )
 end
 
----@param opts TCPOptions
+---@param opts TCPOptions | nil
 local function tcp_start(opts)
-    assert(Existing_TCP_Connection ~= nil, "client already started")
+    assert(Existing_TCP_Connection == nil, "client already started")
 
     opts = opts or copy_opts(default_opts)
     if opts.retry_count <= 0 then
@@ -62,7 +62,7 @@ local function tcp_start(opts)
             return
         end
 
-        read()
+        read(Existing_TCP_Connection)
     end)
 end
 
@@ -80,9 +80,27 @@ local function tcp_stop()
     Existing_TCP_Connection = nil
 end
 
+local function parse(chunk, start, len)
+    local remaining = string.sub(chunk, start + len)
+    local idx = string.find(chunk, ":", start)
+
+    local command = string.sub(chunk, start, idx - 1)
+    local data = string.sub(chunk, idx + 1, start + len - 1)
+
+    return remaining, command, data
+end
+
+
 return {
     tcp_start = tcp_start,
     tcp_stop = tcp_stop,
+
+    tcp_connected = function()
+        return Existing_TCP_Connection ~= nil
+    end,
+
+    parse = parse,
+
     listen = function(listener)
         table.insert(Existing_TCP_Listeners, listener)
     end

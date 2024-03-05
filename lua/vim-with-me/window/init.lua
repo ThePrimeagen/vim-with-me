@@ -22,8 +22,8 @@ function M.create_window_offset(width, height)
     return {
         width = width,
         height = height,
-        row = math.floor(height / 2),
-        col = math.floor(width / 2),
+        row = 0,
+        col = 0,
     }
 end
 
@@ -76,13 +76,11 @@ function M.create_window_config(pos)
     }
 end
 
----@param pos WindowPosition | nil
+---@param dim WindowPosition | nil
 ---@return WindowDetails
-function M.create_window(pos)
-    pos = pos or M.create_window_offset(2, 2)
+function M.create_window(dim)
+    dim = dim or M.create_window_offset(80, 24)
     local buffer = vim.api.nvim_create_buf(false, true)
-    local dim = M.get_window_dim(pos)
-
     local config = M.create_window_config(dim)
     local win_id = vim.api.nvim_open_win(buffer, false, config)
 

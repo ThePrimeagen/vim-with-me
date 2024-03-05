@@ -6,9 +6,7 @@ import (
 	"log"
 	"net"
 	"os"
-	"strings"
-
-	"chat.theprimeagen.com/pkg/processors"
+	"time"
 )
 
 
@@ -48,9 +46,8 @@ func createTCPServer() chan string {
                 defer c.Close()
                 for {
                     str := <-out
-                    log.Printf("to client: %s\n", str)
+                    str = fmt.Sprintf("%d:%s", len(str), str)
                     _, err := c.Write([]byte(str))
-                    fmt.Printf("Wrote to client: %s\n", str)
                     if err != nil {
                         fmt.Printf("Error writing to client: %s\n", err)
                         break
@@ -75,9 +72,10 @@ func createTCPServer() chan string {
 //
 func main() {
     // read from standard in line by line
-    stdin := readFromStdin()
+    // stdin := readFromStdin()
     tcpOut := createTCPServer()
 
+    /*
     processor := processors.NewTDProcessor(5)
 
     for {
@@ -88,6 +86,31 @@ func main() {
         case point := <-processor.Out():
             fmt.Printf("Got a point: %s\n", point)
             tcpOut <- point
+        }
+    }
+    */
+
+    ticker := time.NewTicker(16 * time.Millisecond)
+
+    // create an 80x24 grid string arrays
+    length := 80 * 24
+    grid := make([]byte, length)
+    count := 0
+
+    for {
+        select {
+        case <-ticker.C:
+            for i := 0; i < length; i++ {
+                if (i + count) % 4 == 0 {
+                    grid[i] = 'X'
+                } else {
+                    grid[i] = ' '
+                }
+            }
+
+            str := fmt.Sprintf("r:%s", string(grid))
+            tcpOut <- str
+            count++
         }
     }
 
