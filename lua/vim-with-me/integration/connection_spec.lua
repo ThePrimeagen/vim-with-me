@@ -1,8 +1,5 @@
 local eq = assert.are.same
-local utils = require("vim-with-me.tcp.utils")
 local int_utils = require("vim-with-me.integration.int_utils")
-local Commands = require("vim-with-me.app.commands")
-local theprimeagen = int_utils.theprimeagen
 
 local PORT = 42073
 
