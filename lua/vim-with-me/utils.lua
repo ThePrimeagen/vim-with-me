@@ -4,7 +4,5 @@ local function key(k)
 end
 
 return {
-    key = key
+    key = key,
 }
-
-

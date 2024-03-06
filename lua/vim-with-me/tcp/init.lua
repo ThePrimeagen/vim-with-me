@@ -64,7 +64,6 @@ local function process_packets()
     end
 end
 
-
 -- luacheck: ignore 111
 local uv = vim.loop
 
@@ -143,6 +142,5 @@ return {
 
     listen = function(listener)
         table.insert(Existing_TCP_Listeners, listener)
-    end
+    end,
 }
-

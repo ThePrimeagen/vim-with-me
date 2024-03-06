@@ -10,4 +10,3 @@ describe("vim with me :: cache", function()
         eq({ "1234567890", "abcdefghij" }, cache:to_string_rows())
     end)
 end)
-

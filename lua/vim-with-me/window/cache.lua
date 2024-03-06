@@ -74,14 +74,21 @@ end
 
 ---@param str string
 function DisplayCache:from_string(str)
-    assert(#str == self.width * self.height, "string must be the same length as the cache")
+    assert(
+        #str == self.width * self.height,
+        "string must be the same length as the cache"
+    )
 
     local y = 1
     while y <= self.height do
         local line = string.sub(str, y, y + self.width - 1)
 
         for x = 1, #line do
-            local char = string.sub(str, (y - 1) * self.width + x, (y - 1) * self.width + x)
+            local char = string.sub(
+                str,
+                (y - 1) * self.width + x,
+                (y - 1) * self.width + x
+            )
             self.data[y][x] = char
         end
 

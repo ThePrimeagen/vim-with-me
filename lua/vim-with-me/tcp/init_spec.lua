@@ -12,4 +12,3 @@ describe("vim with me :: tcp", function()
         eq(data, "hel")
     end)
 end)
-

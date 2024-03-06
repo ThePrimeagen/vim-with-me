@@ -39,7 +39,3 @@ function CLOSE()
     assert(tcp.tcp_connected(), "client must be connected")
     tcp.tcp_stop()
 end
-
-
-
-

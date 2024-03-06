@@ -49,14 +49,23 @@ end
 
 function TowerOffense:_render()
     self._window_cache:map(self._display_cache)
-    vim.api.nvim_buf_set_lines(self._window_details.buffer, 0, -1, false, self._window_cache:to_string_rows())
+    vim.api.nvim_buf_set_lines(
+        self._window_details.buffer,
+        0,
+        -1,
+        false,
+        self._window_cache:to_string_rows()
+    )
 end
 
 function TowerOffense:start()
     assert(self._window_details == nil, "window already started")
 
     self._window_details = window.create_window(self._offset)
-    self._window_cache = cache.new(self._window_details.dim.width, self._window_details.dim.height)
+    self._window_cache = cache.new(
+        self._window_details.dim.width,
+        self._window_details.dim.height
+    )
 
     self._display_cache:clear()
     self:_render()
@@ -71,9 +80,18 @@ function TowerOffense:place(mark, x, y)
     assert(#mark == 1, "mark must be a single character")
     assert(type(x) == "number", "x must be a number")
     assert(type(y) == "number", "y must be a number")
-    assert(self._window_details ~= nil, "please call #open first before placing a tower")
-    assert(self._window_details.dim.width >= x, "x must be less than or equal to the width")
-    assert(self._window_details.dim.height >= y, "y must be less than or equal to the height")
+    assert(
+        self._window_details ~= nil,
+        "please call #open first before placing a tower"
+    )
+    assert(
+        self._window_details.dim.width >= x,
+        "x must be less than or equal to the width"
+    )
+    assert(
+        self._window_details.dim.height >= y,
+        "y must be less than or equal to the height"
+    )
     assert(x > 0, "x must be greater than 0")
     assert(y > 0, "y must be greater than 0")
 
