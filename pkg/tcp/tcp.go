@@ -62,10 +62,10 @@ var malformedTCPCommand = TCPCommand{
 }
 
 func versionMismatch(v1, v2 int) *TCPCommand {
-    return &TCPCommand{
-        Command: "e",
-        Data:    fmt.Sprintf("Version Mismatch %d %d", v1, v2),
-    }
+	return &TCPCommand{
+		Command: "e",
+		Data:    fmt.Sprintf("Version Mismatch %d %d", v1, v2),
+	}
 }
 
 var tcpClosedCommand = TCPCommand{
@@ -74,8 +74,8 @@ var tcpClosedCommand = TCPCommand{
 }
 
 func (t *TCPCommand) Bytes() []byte {
-    str := fmt.Sprintf("%s:%s", t.Command, t.Data)
-    str = fmt.Sprintf("%d:%d:%s", VERSION, len(str), str)
+	str := fmt.Sprintf("%s:%s", t.Command, t.Data)
+	str = fmt.Sprintf("%d:%d:%s", VERSION, len(str), str)
 	return []byte(str)
 }
 
@@ -85,20 +85,20 @@ func CommandFromBytes(b string) (string, *TCPCommand) {
 		return b, nil
 	}
 
-    versionStr := parts[0]
-    lengthStr := parts[1]
-    dataStr := parts[2]
+	versionStr := parts[0]
+	lengthStr := parts[1]
+	dataStr := parts[2]
 
 	version, err := strconv.Atoi(versionStr)
 	if err != nil {
 		return b, &malformedTCPCommand
 	}
 
-    if version != VERSION {
-        return b, versionMismatch(version, VERSION)
-    }
+	if version != VERSION {
+		return b, versionMismatch(version, VERSION)
+	}
 
-    length, err := strconv.Atoi(lengthStr)
+	length, err := strconv.Atoi(lengthStr)
 	if err != nil {
 		return b, &malformedTCPCommand
 	}
@@ -125,6 +125,7 @@ func CommandFromBytes(b string) (string, *TCPCommand) {
 type TCP struct {
 	FromSockets chan TCPCommand
 	ToSockets   TCPStream
+	listener    net.Listener
 }
 
 func (t *TCP) Send(cmd TCPCommand) {
@@ -135,14 +136,14 @@ func CommandParser(r io.Reader) chan TCPCommand {
 	out := make(chan TCPCommand)
 
 	go func() {
-        defer close(out)
+		defer close(out)
 
 		buffer := make([]byte, 1024)
 		previous := ""
 		for {
 			n, err := r.Read(buffer)
 			if err != nil {
-                out <- tcpClosedCommand
+				out <- tcpClosedCommand
 				return
 			}
 			current := previous + string(buffer[:n])
@@ -159,12 +160,10 @@ func CommandParser(r io.Reader) chan TCPCommand {
 	return out
 }
 
-func (t *TCP) listen(listener net.Listener) {
-	defer listener.Close()
-
+func (t *TCP) listen() {
 	for {
 
-		conn, err := listener.Accept()
+		conn, err := t.listener.Accept()
 		if err != nil {
 			// true and factual
 			log.Fatal("You like amouranth", err)
@@ -175,7 +174,7 @@ func (t *TCP) listen(listener net.Listener) {
 
 		go func(c net.Conn) {
 
-            defer t.ToSockets.removeListen(toTcp)
+			defer t.ToSockets.removeListen(toTcp)
 			defer c.Close()
 
 		OuterLoop:
@@ -188,8 +187,8 @@ func (t *TCP) listen(listener net.Listener) {
 						break OuterLoop
 					}
 				case cmd := <-cmds:
-                    // NOTE: i am sure there is a better way to do this
-                    // TODO: Figure out that better way
+					// NOTE: i am sure there is a better way to do this
+					// TODO: Figure out that better way
 					if cmd.Command == "c" {
 						break OuterLoop
 					}
@@ -206,6 +205,10 @@ func (t *TCP) listen(listener net.Listener) {
 	}
 }
 
+func (t *TCP) Close() {
+	t.listener.Close()
+}
+
 func NewTCPServer(port uint16) (*TCP, error) {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
@@ -215,9 +218,10 @@ func NewTCPServer(port uint16) (*TCP, error) {
 	tcps := &TCP{
 		FromSockets: make(chan TCPCommand, 10),
 		ToSockets:   createTCPCommandSpread(),
+		listener:    listener,
 	}
 
-	go func() { tcps.listen(listener) }()
+	go func() { tcps.listen() }()
 
 	return tcps, nil
 

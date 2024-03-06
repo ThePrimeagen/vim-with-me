@@ -1,8 +1,8 @@
 ---@class TCPOptions
 ---@field host string
 ---@field port number
----@field retry_wait_ms number
----@field retry_count number
+---@field retry_wait_ms? number
+---@field retry_count? number
 
 ---@param opts TCPOptions
 ---@return TCPOptions
@@ -105,7 +105,9 @@ local function read(client)
 end
 
 ---@param opts TCPOptions | nil
-local function tcp_start(opts)
+---@param cb fun(): nil
+local function tcp_start(opts, cb)
+    cb = cb or function() end
     assert(Existing_TCP_Connection == nil, "client already started")
 
     opts = opts or copy_opts(default_opts)
@@ -115,18 +117,19 @@ local function tcp_start(opts)
 
     Existing_TCP_Connection = uv.new_tcp()
     Existing_TCP_Listeners = {}
-    Existing_TCP_Connection:connect("127.0.0.1", 42069, function(err)
+    Existing_TCP_Connection:connect(opts.host, opts.port, function(err)
         if err then
             Existing_TCP_Connection = nil
             vim.defer_fn(function()
                 local next_opts = copy_opts(opts)
                 next_opts.retry_count = next_opts.retry_count - 1
-                tcp_start(next_opts)
+                tcp_start(next_opts, cb)
             end, 10000)
             return
         end
 
         read(Existing_TCP_Connection)
+        cb()
     end)
 end
 
