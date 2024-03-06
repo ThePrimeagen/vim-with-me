@@ -14,6 +14,8 @@ local function copy_opts(opts)
     return out
 end
 
+local VERSION = 1
+
 local default_opts = {
     host = "127.0.0.1",
     port = 42069,
@@ -44,15 +46,25 @@ local function process_packets()
         previous_chunk = ""
 
         local idx = string.find(chunk, ":")
-
         -- what about keeping previous chunks?
         if idx == nil then
             previous_chunk = chunk
             return nil, nil
         end
 
-        local len = tonumber(string.sub(chunk, 1, idx - 1))
-        if len + idx > #chunk then
+        local version = tonumber(string.sub(chunk, 1, idx - 1))
+        assert(version == VERSION, "version mismatch")
+
+        local prev_idx = idx
+        idx = string.find(chunk, ":", prev_idx + 1)
+        -- what about keeping previous chunks?
+        if idx == nil then
+            previous_chunk = chunk
+            return nil, nil
+        end
+
+        local len = tonumber(string.sub(chunk, prev_idx + 1, idx - 1))
+        if len + idx > string.len(chunk) then
             previous_chunk = chunk
             return nil, nil
         end
@@ -139,6 +151,9 @@ return {
     tcp_connected = function()
         return Existing_TCP_Connection ~= nil
     end,
+
+    parse = parse,
+    process_packets = process_packets,
 
     listen = function(listener)
         table.insert(Existing_TCP_Listeners, listener)
