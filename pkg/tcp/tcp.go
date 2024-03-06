@@ -10,6 +10,8 @@ import (
 	"sync"
 )
 
+var VERSION = 1
+
 type TCPStream struct {
 	outs []chan TCPCommand
 	lock sync.RWMutex
@@ -59,6 +61,13 @@ var malformedTCPCommand = TCPCommand{
 	Data:    "Malformed TCP Command",
 }
 
+func versionMismatch(v1, v2 int) *TCPCommand {
+    return &TCPCommand{
+        Command: "e",
+        Data:    fmt.Sprintf("Version Mismatch %d %d", v1, v2),
+    }
+}
+
 var tcpClosedCommand = TCPCommand{
 	Command: "c",
 	Data:    "Connection Closed",
@@ -66,27 +75,39 @@ var tcpClosedCommand = TCPCommand{
 
 func (t *TCPCommand) Bytes() []byte {
     str := fmt.Sprintf("%s:%s", t.Command, t.Data)
-    str = fmt.Sprintf("%d:%s", len(str), str)
+    str = fmt.Sprintf("%d:%d:%s", VERSION, len(str), str)
 	return []byte(str)
 }
 
 func CommandFromBytes(b string) (string, *TCPCommand) {
-	parts := strings.SplitN(b, ":", 2)
-	if len(parts) != 2 {
+	parts := strings.SplitN(b, ":", 3)
+	if len(parts) != 3 {
 		return b, nil
 	}
 
-	length, err := strconv.Atoi(parts[0])
+    versionStr := parts[0]
+    lengthStr := parts[1]
+    dataStr := parts[2]
+
+	version, err := strconv.Atoi(versionStr)
 	if err != nil {
 		return b, &malformedTCPCommand
 	}
 
-	if len(parts[1]) < length {
+    if version != VERSION {
+        return b, versionMismatch(version, VERSION)
+    }
+
+    length, err := strconv.Atoi(lengthStr)
+	if err != nil {
+		return b, &malformedTCPCommand
+	}
+	if len(dataStr) < length {
 		return b, nil
 	}
 
-	remaining := parts[1][length:]
-	commandStr := parts[1][:length]
+	remaining := dataStr[length:]
+	commandStr := dataStr[:length]
 	commandParts := strings.SplitN(commandStr, ":", 2)
 
 	if len(commandParts) != 2 {
@@ -153,6 +174,8 @@ func (t *TCP) listen(listener net.Listener) {
 		cmds := CommandParser(conn)
 
 		go func(c net.Conn) {
+
+            defer t.ToSockets.removeListen(toTcp)
 			defer c.Close()
 
 		OuterLoop:
@@ -178,7 +201,6 @@ func (t *TCP) listen(listener net.Listener) {
 					}
 				}
 			}
-			t.ToSockets.removeListen(toTcp)
 
 		}(conn)
 	}
