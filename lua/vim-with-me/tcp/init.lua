@@ -150,9 +150,19 @@ end
 return {
     tcp_start = tcp_start,
     tcp_stop = tcp_stop,
-
     tcp_connected = function()
         return Existing_TCP_Connection ~= nil
+    end,
+
+    ---@param command string
+    ---@param data string
+    tcp_send = function(command, data)
+        assert(Existing_TCP_Connection, "client not started")
+        local tcp_data = string.format("%s:%s", command, data)
+        local len = string.len(tcp_data)
+        local header = string.format("%d:%d:", VERSION, len)
+
+        Existing_TCP_Connection:write(header .. tcp_data)
     end,
 
     parse = parse,
