@@ -56,4 +56,11 @@ describe("vim with me :: tcp", function()
         eq(command, "r")
         eq(data, "lo world")
     end)
+
+    it("process packets multiple in one chunk", function()
+        local chunks = "2:5:r:hel1:10:r:lo world"
+        local packets = tcp.process_packets()
+        local ok, _, _ = pcall(packets, chunks)
+        eq(ok, false)
+    end)
 end)
