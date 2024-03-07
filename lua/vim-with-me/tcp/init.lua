@@ -26,15 +26,62 @@ local default_opts = {
 -- luacheck: ignore 111
 local uv = vim.loop
 
-Existing_TCP_Connection = Existing_TCP_Connection or nil
+---@param opts TCPOptions | nil
+local function get_opts(opts)
+    return vim.tbl_extend("force", {}, copy_opts(default_opts), opts or {})
+end
 
----@type (fun(command: string, data: string): nil)[]
-Existing_TCP_Listeners = Existing_TCP_Listeners or {}
 
-local function read(client)
+---@class TCP
+---@field _connection any | nil
+---@field _listeners (fun(command: string, data: string): nil)[]
+---@field opts TCPOptions
+local TCP = {}
+TCP.__index = TCP
+
+---@param opts TCPOptions
+function TCP:new(opts)
+    opts = get_opts(opts)
+    return setmetatable({
+        _connection = nil,
+        _listeners = {},
+        opts = opts,
+    }, self)
+end
+
+---@param cb fun(err: string | nil): nil
+---@param opts TCPOptions | nil
+function TCP:start(cb, opts)
+    opts = get_opts(opts or self.opts)
+
+    assert(self._connection == nil, "client already started")
+    assert(opts.retry_count > 0, "could not connect to server")
+
+    cb = cb or function() end
+
+    self._connection = uv.new_tcp()
+    self._connection:connect(self.opts.host, self.opts.port, function(err)
+        if err then
+            self._connection = nil
+            vim.defer_fn(function()
+                local next_opts = copy_opts(opts)
+                next_opts.retry_count = next_opts.retry_count - 1
+                self:start(cb, opts)
+            end, opts.retry_wait_ms)
+            return
+        end
+
+        self:_read()
+        cb()
+    end)
+end
+
+function TCP:_read()
+    assert(self._connection, "client not started")
+
     local process = TcpProcess.process_packets()
     uv.read_start(
-        client,
+        self._connection,
         vim.schedule_wrap(function(_, chunk)
             while true do
                 local command, data = process(chunk)
@@ -43,7 +90,7 @@ local function read(client)
                     break
                 end
 
-                for _, listener in ipairs(Existing_TCP_Listeners) do
+                for _, listener in ipairs(self._listeners) do
                     listener(command, data)
                 end
             end
@@ -51,64 +98,32 @@ local function read(client)
     )
 end
 
----@param opts TCPOptions | nil
----@param cb fun(): nil
-local function tcp_start(opts, cb)
-    cb = cb or function() end
-    assert(Existing_TCP_Connection == nil, "client already started")
-
-    opts = opts or copy_opts(default_opts)
-    if opts.retry_count <= 0 then
-        error("Failed to connect to server")
-    end
-
-    Existing_TCP_Connection = uv.new_tcp()
-    Existing_TCP_Listeners = {}
-    Existing_TCP_Connection:connect(opts.host, opts.port, function(err)
-        if err then
-            Existing_TCP_Connection = nil
-            vim.defer_fn(function()
-                local next_opts = copy_opts(opts)
-                next_opts.retry_count = next_opts.retry_count - 1
-                tcp_start(next_opts, cb)
-            end, 10000)
-            return
-        end
-
-        read(Existing_TCP_Connection)
-        cb()
-    end)
-end
-
-local function tcp_stop()
-    Existing_TCP_Listeners = {}
+function TCP:stop()
+    self._listeners = {}
 
     --- no assert here as i am going to call this a lot when devving and
     --- i may or may not have a running server
-    if Existing_TCP_Connection == nil then
+    if self._connection == nil then
         return
     end
 
-    Existing_TCP_Connection:shutdown()
-    Existing_TCP_Connection:close()
-    Existing_TCP_Connection = nil
+    self._connection:shutdown()
+    self._connection:close()
+    self._connection = nil
 end
 
-return {
-    tcp_start = tcp_start,
-    tcp_stop = tcp_stop,
-    tcp_connected = function()
-        return Existing_TCP_Connection ~= nil
-    end,
+---@return boolean
+function TCP:connected()
+    return self._connection ~= nil
+end
 
-    ---@param command string
-    ---@param data string
-    tcp_send = function(command, data)
-        assert(Existing_TCP_Connection, "client not started")
-        Existing_TCP_Connection:write(TcpProcess.create_tcp_command(command, data))
-    end,
+function TCP:send(command, data)
+    assert(self._connection, "client not started")
+    self._connection:write(TcpProcess.create_tcp_command(command, data))
+end
 
-    listen = function(listener)
-        table.insert(Existing_TCP_Listeners, listener)
-    end,
-}
+function TCP:listen(cb)
+    table.insert(self._listeners, cb)
+end
+
+return TCP
