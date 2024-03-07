@@ -1,8 +1,8 @@
 -- luacheck: globals describe it assert
 local eq = assert.are.same
-local tcp = require("vim-with-me.tcp")
+local tcp = require("vim-with-me.tcp.process")
 
-describe("vim with me :: tcp", function()
+describe("vim with me :: tcp.process", function()
     it("parse", function()
         local str = "1:5:r:hel"
         local next_chunk, command, data = tcp.parse(str, 5, 5)
