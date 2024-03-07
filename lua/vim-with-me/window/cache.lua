@@ -8,7 +8,7 @@ DisplayCache.__index = DisplayCache
 ---@param width number
 ---@param height number
 ---@return DisplayCache
-function DisplayCache.new(width, height)
+function DisplayCache:new(width, height)
     local data = {}
     for _ = 1, height do
         local row = {}
@@ -18,12 +18,11 @@ function DisplayCache.new(width, height)
         table.insert(data, row)
     end
 
-    local self = setmetatable({
+    return setmetatable({
         data = data,
         width = width,
         height = height,
-    }, DisplayCache)
-    return self
+    }, self)
 end
 
 ---@param x number

@@ -1,12 +1,21 @@
 --- TERRIBLE NAME
 -- local TD = require("vim-with-me.td")
 local window = require("vim-with-me.window")
-local tcp = require("vim-with-me.tcp")
+local TCP = require("vim-with-me.tcp")
 local DisplayCache = require("vim-with-me.window.cache")
 
----@param w WindowDetails
-local function on_read(w)
-    local cache = DisplayCache.new(80, 24)
+---@type WindowDetails | nil
+local w = nil
+
+---@type TCP | nil
+local conn = nil
+
+---@type DisplayCache | nil
+local cache = nil
+
+---@param win WindowDetails
+---@param cache DisplayCache
+local function on_read(win, cache)
 
     ---@param command string
     ---@param data string
@@ -21,21 +30,42 @@ local function on_read(w)
             cache:from_string(data)
 
             local rows = cache:to_string_rows()
-            vim.api.nvim_buf_set_lines(w.buffer, 0, -1, false, rows)
+            vim.api.nvim_buf_set_lines(win.buffer, 0, -1, false, rows)
         end
     end
 end
 
 function START()
-    assert(not tcp.tcp_connected(), "client already started")
+    assert(conn == nil, "client already started")
+    assert(w == nil, "window already created")
+    assert(cache == nil, "cache already created")
 
-    tcp.tcp_start()
-    local w = window.create_window()
+    conn = TCP:new()
+    conn:start(function()
+        print("connected")
+    end)
 
-    tcp.listen(on_read(w))
+    w = window.create_window(
+        window.create_window_dimensions(80, 24),
+        true
+    )
+    cache = DisplayCache:new(80, 24)
+    conn:listen(on_read(w, cache))
 end
 
 function CLOSE()
-    assert(tcp.tcp_connected(), "client must be connected")
-    tcp.tcp_stop()
+    assert(conn ~= nil, "client not started")
+    assert(w ~= nil, "window not created")
+
+    conn:close()
+    window.close_window(w)
+
+    conn = nil
+    w = nil
+    cache = nil
+end
+
+function SEND()
+    assert(conn ~= nil, "client not started")
+    conn:send("render", "")
 end

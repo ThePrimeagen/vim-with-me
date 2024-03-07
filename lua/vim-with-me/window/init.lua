@@ -18,7 +18,7 @@ local M = {}
 ---@param width number
 ---@param height number
 ---@return WindowPosition
-function M.create_window_offset(width, height)
+function M.create_window_dimensions(width, height)
     return {
         width = width,
         height = height,
@@ -43,7 +43,7 @@ end
 
 ---@param dim WindowPosition
 function M.center_window_dimension(dim)
-    dim = dim or M.create_window_offset(80, 24)
+    dim = dim or M.create_window_dimensions(80, 24)
     local ui = vim.api.nvim_list_uis()[1]
 
     local x_offset = 80
@@ -81,7 +81,7 @@ end
 ---@return WindowDetails
 function M.create_window(dim, center)
     center = center == nil or center
-    dim = dim or M.create_window_offset(80, 24)
+    dim = dim or M.create_window_dimensions(80, 24)
 
     if center then
         M.center_window_dimension(dim)

@@ -19,7 +19,7 @@ function TowerOffense.new(width, height)
     local self = setmetatable({
         _window_details = nil,
         _display_cache = cache.new(width, height),
-        _offset = window.create_window_offset(2, 2),
+        _offset = window.create_window_dimensions(2, 2),
     }, TowerOffense)
 
     return self

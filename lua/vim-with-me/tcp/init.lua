@@ -39,7 +39,7 @@ end
 local TCP = {}
 TCP.__index = TCP
 
----@param opts TCPOptions
+---@param opts TCPOptions | nil
 function TCP:new(opts)
     opts = get_opts(opts)
     return setmetatable({
@@ -98,7 +98,7 @@ function TCP:_read()
     )
 end
 
-function TCP:stop()
+function TCP:close()
     self._listeners = {}
 
     --- no assert here as i am going to call this a lot when devving and
@@ -119,10 +119,12 @@ end
 
 function TCP:send(command, data)
     assert(self._connection, "client not started")
-    self._connection:write(TcpProcess.create_tcp_command(command, data))
+    local ok, _ = pcall(self._connection.write, self._connection, TcpProcess.create_tcp_command(command, data))
+    assert(ok, "could not send data")
 end
 
 function TCP:listen(cb)
+    print("listening", self._listeners, cb)
     table.insert(self._listeners, cb)
 end
 
