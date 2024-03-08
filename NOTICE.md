@@ -1,0 +1,2 @@
+This product bundles parts of the following third-party software. Any file that is sourced in this manner includes a notice at the top of the file.
+- NeoVim, available under Apache 2.0 license. For details see legal/neovim.txt.
