@@ -1,6 +1,7 @@
 /node_modules/
 test_server
 main
+echo_server
 
 
 # Added by cargo

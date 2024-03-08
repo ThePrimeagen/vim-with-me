@@ -4,8 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
-	"chat.theprimeagen.com/pkg/commands"
 	"chat.theprimeagen.com/pkg/tcp"
 )
 
@@ -31,24 +31,15 @@ func main() {
 
     defer server.Close()
 
-    count := 0
-    for {
-        cmd := <-server.FromSockets
-        if cmd.Command == "c" {
-            break
-        }
+	fmt.Printf("server started and waiting for command\n")
+	cmd := <-server.FromSockets
+	fmt.Printf("Command: %v\n", cmd)
 
-        str := ""
-        for i := 0; i < 1920; i++ {
-            if (i + count) % 4 == 0 {
-                str += "X"
-            } else {
-                str += " "
-            }
-        }
+    server.Send(tcp.TCPCommand{
+        Command: cmd.Data,
+        Data: cmd.Command,
+    })
 
-        count++
-        server.Send(commands.Render(str))
-    }
+    time.Sleep(1 * time.Second)
 }
 
