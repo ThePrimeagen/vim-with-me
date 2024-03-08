@@ -1,6 +1,10 @@
 local VERSION = 1
 
 local function parse(chunk, start, len)
+    assert(type(chunk) == "string", "chunk must be a string")
+    assert(start > 0, "start must be greater than 0")
+    assert(len > 0, "len must be greater than 0")
+
     local remaining = string.sub(chunk, start + len)
     local idx = string.find(chunk, ":", start)
 
@@ -41,6 +45,8 @@ local function process_packets()
         end
 
         local len = tonumber(string.sub(chunk, prev_idx + 1, idx - 1))
+        assert(type(len) == "number", "len must be a number")
+
         if len + idx > string.len(chunk) then
             previous_chunk = chunk
             return nil, nil
@@ -57,6 +63,9 @@ end
 ---@param data string
 ---@return string
 local function create_tcp_command(command, data)
+    assert(type(command) == "string", "command must be a string")
+    assert(type(data) == "string", "data must be a string")
+
     local tcp_data = string.format("%s:%s", command, data)
     local len = string.len(tcp_data)
     local header = string.format("%d:%d:", VERSION, len)

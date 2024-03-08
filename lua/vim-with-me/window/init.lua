@@ -122,8 +122,17 @@ function M.resize(details)
 end
 
 ---@param details WindowDetails
+local function validate_details(details)
+    assert(vim.api.nvim_win_is_valid(details.win_id), "window must be valid")
+    assert(vim.api.nvim_buf_is_valid(details.buffer), "buffer must be valid")
+end
+
+---@param details WindowDetails
 ---@param cb function
 function M.on_close(details, cb)
+    assert(cb ~= nil, "callback must be provided")
+    validate_details(details)
+
     vim.api.nvim_create_autocmd("BufUnload", {
         group = group,
         buffer = details.buffer,
@@ -137,6 +146,8 @@ function M.on_close(details, cb)
 end
 
 function M.refocus(details)
+    validate_details(details)
+
     vim.api.nvim_create_autocmd("BufEnter", {
         group = group,
         callback = function()
