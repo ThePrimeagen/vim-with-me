@@ -1,6 +1,6 @@
 local system = vim.system or require("vim-with-me.system")
 local eq = assert.are.same
-local TCP = require("vim-with-me.tcp")
+local TCP = require("vim-with-me.tcp").TCP
 
 describe("vim with me", function()
     it("integartion testing", function()
