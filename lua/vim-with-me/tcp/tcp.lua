@@ -72,7 +72,7 @@ function TCP:start(cb, opts)
         end
 
         self:_read()
-        cb()
+        vim.schedule(cb)
     end)
 end
 

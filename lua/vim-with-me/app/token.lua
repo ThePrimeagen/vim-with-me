@@ -52,9 +52,12 @@ local function write_file(path, data)
     vim.loop.fs_close(fh)
 end
 
----@return AuthDetails | nil
+---@return AuthDetails
 local function get_token()
-    return read_file(path)
+    return read_file(path) or {
+        token = "",
+        twitch_name = "",
+    }
 end
 
 ---@param token AuthDetails
