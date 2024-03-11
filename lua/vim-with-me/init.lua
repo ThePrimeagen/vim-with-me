@@ -1,6 +1,3 @@
---- TERRIBLE NAME
--- local TD = require("vim-with-me.td")
-local window = require("vim-with-me.window")
 local TCP = require("vim-with-me.tcp").TCP
 local App = require("vim-with-me.app")
 
