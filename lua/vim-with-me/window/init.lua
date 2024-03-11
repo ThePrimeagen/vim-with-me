@@ -146,11 +146,13 @@ function M.on_close(details, cb)
     })
 end
 
+---@param details WindowDetails
 function M.focus(details)
     validate_details(details)
     vim.api.nvim_set_current_win(details.win_id)
 end
 
+---@param details WindowDetails
 function M.refocus(details)
     validate_details(details)
 
