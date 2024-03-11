@@ -30,7 +30,9 @@ function App:new(conn, unhandled_commands)
 end
 
 function App:_process(command, data)
-    if command == "r" and self.window and self.cache then
+    if command == "pr" and self.window and self.cache then
+
+    elseif command == "r" and self.window and self.cache then
         -- check to see if last character is a new line
         if string.sub(data, -1) == "\n" then
             data = string.sub(data, 1, -2)
@@ -42,6 +44,10 @@ function App:_process(command, data)
         return
     elseif command == "c" then
         self:close()
+        return
+    elseif command == "open-window" then
+        local dim = window.parse_command_data(data)
+        self:with_window(dim.width, dim.height, true)
         return
     elseif command == "e" then
         -- TODO: error and then close
@@ -74,8 +80,12 @@ end
 ---@param center boolean | nil
 ---@return VWMApp
 function App:with_window(width, height, center)
+    assert(not self.window, "window already open")
+
     center = center or center == nil
     self.window = window.create_window(window.create_window_dimensions(80, 24), center);
+    window.focus(self.window)
+
     self.cache = DisplayCache:new(width, height)
     return self
 end

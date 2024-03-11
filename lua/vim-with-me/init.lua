@@ -12,10 +12,7 @@ function START()
         local function handle_commands(cmd, data)
             print("unhandled command", cmd, data)
         end
-        app = App:new(conn, handle_commands):with_window(80, 24)
-
-        assert(app.window)
-        assert(app.cache)
+        app = App:new(conn, handle_commands)
 
         local function run()
             if app == nil then

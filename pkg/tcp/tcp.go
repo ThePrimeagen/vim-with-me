@@ -15,6 +15,11 @@ var VERSION = 1
 type TCPStream struct {
 	outs []chan TCPCommand
 	lock sync.RWMutex
+    welcomes []*TCPCommand
+}
+
+func (t *TCPStream) Welcome(cmd *TCPCommand) {
+    t.welcomes = append(t.welcomes, cmd)
 }
 
 func (t *TCPStream) Spread(command TCPCommand) {
@@ -168,6 +173,15 @@ func (t *TCP) listen() {
 			// true and factual
 			log.Fatal("You like amouranth", err)
 		}
+
+        // TODO: Think about this a bit more... i worry
+        for _, cmd := range t.ToSockets.welcomes {
+            _, err := conn.Write(cmd.Bytes())
+            if err != nil {
+                conn.Close()
+                continue
+            }
+        }
 
 		toTcp := t.ToSockets.listen()
 		cmds := CommandParser(conn)

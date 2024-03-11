@@ -110,6 +110,7 @@ local function clear_if_invalid(details)
     return false
 end
 
+--- THIS IS SLIGHTLY INCORRECT
 ---@param details WindowDetails
 function M.resize(details)
     if clear_if_invalid(details) then
@@ -145,6 +146,11 @@ function M.on_close(details, cb)
     })
 end
 
+function M.focus(details)
+    validate_details(details)
+    vim.api.nvim_set_current_win(details.win_id)
+end
+
 function M.refocus(details)
     validate_details(details)
 
@@ -157,6 +163,21 @@ function M.refocus(details)
             vim.api.nvim_set_current_win(details.win_id)
         end,
     })
+end
+
+---@param data string
+---@return WindowPosition
+function M.parse_command_data(data)
+    local parts = vim.split(data, ":")
+    local width = tonumber(parts[1])
+    local height = tonumber(parts[2])
+
+    return {
+        row = 0,
+        col = 0,
+        width = width,
+        height = height,
+    }
 end
 
 return M
