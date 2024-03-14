@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 var VERSION = 1
@@ -22,15 +23,18 @@ func (t *TCPStream) Welcome(cmd *TCPCommand) {
     t.welcomes = append(t.welcomes, cmd)
 }
 
-func (t *TCPStream) Spread(command TCPCommand) {
+func (t *TCPStream) Spread(command *TCPCommand) {
 	t.lock.RLock()
-	for _, listener := range t.outs {
-		listener <- command
+	for i, listener := range t.outs {
+        fmt.Printf("sending command to listener: %d\n", i)
+		listener <- *command
+        fmt.Printf("   sent command: %d\n", i)
 	}
 	t.lock.RUnlock()
 }
 
 func (t *TCPStream) listen() <-chan TCPCommand {
+    fmt.Println("adding listener")
 	t.lock.Lock()
 	listener := make(chan TCPCommand, 10)
 	t.outs = append(t.outs, listener)
@@ -39,6 +43,7 @@ func (t *TCPStream) listen() <-chan TCPCommand {
 }
 
 func (t *TCPStream) removeListen(rm <-chan TCPCommand) {
+    fmt.Println("removing listener")
 	t.lock.Lock()
 	for i, listener := range t.outs {
 		if listener == rm {
@@ -133,7 +138,7 @@ type TCP struct {
 	listener    net.Listener
 }
 
-func (t *TCP) Send(cmd TCPCommand) {
+func (t *TCP) Send(cmd *TCPCommand) {
 	t.ToSockets.Spread(cmd)
 }
 
@@ -148,6 +153,7 @@ func CommandParser(r io.Reader) chan TCPCommand {
 		for {
 			n, err := r.Read(buffer)
 			if err != nil {
+                fmt.Printf("Error reading from connection: %s\n", err)
 				out <- tcpClosedCommand
 				return
 			}
@@ -183,13 +189,18 @@ func (t *TCP) listen() {
             }
         }
 
-		toTcp := t.ToSockets.listen()
-		cmds := CommandParser(conn)
-
 		go func(c net.Conn) {
+            defer c.Close()
 
-			defer t.ToSockets.removeListen(toTcp)
-			defer c.Close()
+            toTcp := t.ToSockets.listen()
+            defer t.ToSockets.removeListen(toTcp)
+
+            fromTcp := CommandParser(conn)
+            defer func() {
+                fmt.Println("connection has closed")
+            }()
+
+            timer := time.NewTicker(1 * time.Second)
 
 		OuterLoop:
 			for {
@@ -200,10 +211,12 @@ func (t *TCP) listen() {
 						fmt.Printf("Error writing to client: %s\n", err)
 						break OuterLoop
 					}
-				case cmd := <-cmds:
+
+				case cmd := <-fromTcp:
 					// NOTE: i am sure there is a better way to do this
 					// TODO: Figure out that better way
 					if cmd.Command == "c" {
+                        fmt.Println("closing connection")
 						break OuterLoop
 					}
 
@@ -212,8 +225,12 @@ func (t *TCP) listen() {
 					if cmd.Command == "e" {
 						break OuterLoop
 					}
+
+                case <-timer.C:
+                    fmt.Println("tick")
 				}
 			}
+            fmt.Println("I AM DONE WITH THIS SHIT")
 
 		}(conn)
 	}

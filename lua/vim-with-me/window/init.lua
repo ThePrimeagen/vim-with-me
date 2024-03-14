@@ -1,3 +1,8 @@
+---@class PartialRender
+---@field row number
+---@field col number
+---@field value string
+
 ---@class WindowPosition
 ---@field width number
 ---@field height number
@@ -179,6 +184,28 @@ function M.parse_command_data(data)
         col = 0,
         width = width,
         height = height,
+    }
+end
+--
+---@param data string
+---@return PartialRender
+function M.parse_partial_render(data)
+    local parts = vim.split(data, ":")
+
+    assert(#parts == 3, "invalid partial render data")
+
+    local row = tonumber(parts[1])
+    local col = tonumber(parts[2])
+    local value = parts[3]
+
+    assert(row ~= nil, "row must be a number")
+    assert(col ~= nil, "col must be a number")
+    assert(#value == 1, "value must be a single character")
+
+    return {
+        row = row + 1,
+        col = col,
+        value = value,
     }
 end
 

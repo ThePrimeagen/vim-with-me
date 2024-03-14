@@ -24,6 +24,11 @@ function DisplayCache:new(width, height)
         height = height,
     }, self)
 end
+---@param partial PartialRender
+function DisplayCache:partial(partial)
+    self:place(partial.col, partial.row, partial.value)
+end
+
 
 ---@param x number
 ---@param y number

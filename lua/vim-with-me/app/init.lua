@@ -29,9 +29,22 @@ function App:new(conn, unhandled_commands)
     return app
 end
 
-function App:_process(command, data)
-    if command == "pr" and self.window and self.cache then
+local function print_command(command, data)
+    print("command", command, "data", data)
+end
 
+function App:_process(command, data)
+
+    print_command(command, data)
+    if command == "p" and self.window and self.cache then
+        local partial = window.parse_partial_render(data)
+        print("partial", vim.inspect(partial))
+        self.cache:partial(partial)
+
+        --- TODO: Create it so that i only get back partial row updates
+        --- Consider some sort of debounce here too
+        local rows = self.cache:to_string_rows()
+        vim.api.nvim_buf_set_lines(self.window.buffer, 0, -1, false, rows)
     elseif command == "r" and self.window and self.cache then
         -- check to see if last character is a new line
         if string.sub(data, -1) == "\n" then
@@ -41,27 +54,23 @@ function App:_process(command, data)
 
         local rows = self.cache:to_string_rows()
         vim.api.nvim_buf_set_lines(self.window.buffer, 0, -1, false, rows)
-        return
     elseif command == "c" then
         self:close()
-        return
     elseif command == "open-window" then
         local dim = window.parse_command_data(data)
         self:with_window(dim.width, dim.height, true)
-        return
     elseif command == "e" then
         -- TODO: error and then close
         self:close()
-        return
     elseif command == "auth" then
         assert(self._auth_cb, "no auth callback")
         self._auth_cb()
         self._auth_cb = nil
-        return
+    else
+        assert(self._unhandled_commands, "no unhandled commands function")
+        self._unhandled_commands(command, data)
     end
 
-    assert(self._unhandled_commands, "no unhandled commands function")
-    self._unhandled_commands(command, data)
 end
 
 function App:close()

@@ -58,7 +58,11 @@ func (w *Window) SetString(row int, value string) error {
     for i, r := range value {
         if w.cache[row][i] != r {
             w.cache[row][i] = r
-            w.changes = append(w.changes, commands.Change{row, i, r})
+            w.changes = append(w.changes, commands.Change{
+                Row: row,
+                Col: i,
+                Value: r,
+            })
         }
     }
 
