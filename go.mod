@@ -1,4 +1,4 @@
-module github.com/theprimeagen/vim_with_me
+module github.com/theprimeagen/vim-with-me
 
 go 1.21.0
 

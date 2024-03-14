@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/theprimeagen/vim_with_me/pkg/tcp"
-	"github.com/theprimeagen/vim_with_me/pkg/window"
+	"github.com/theprimeagen/vim-with-me/pkg/tcp"
+	"github.com/theprimeagen/vim-with-me/pkg/window"
 )
 
 func main() {

@@ -3,8 +3,8 @@ package window
 import (
 	"fmt"
 
-	"github.com/theprimeagen/vim_with_me/pkg/commands"
-	"github.com/theprimeagen/vim_with_me/pkg/tcp"
+	"github.com/theprimeagen/vim-with-me/pkg/commands"
+	"github.com/theprimeagen/vim-with-me/pkg/tcp"
 )
 
 type Window struct {
