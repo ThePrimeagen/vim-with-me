@@ -22,7 +22,9 @@ function App:new(conn, unhandled_commands)
     local app = setmetatable({
         conn = conn,
         _unhandled_commands = unhandled_commands,
-        _auth_cb = nil
+        _auth_cb = nil,
+        window = nil,
+        cache = nil,
     }, self)
 
     conn:listen(function(command, data) app:_process(command, data) end)
@@ -58,6 +60,7 @@ function App:_process(command, data)
         self:close()
     elseif command == "open-window" then
         local dim = window.parse_command_data(data)
+        print("open-window", vim.inspect(data), vim.inspect(dim))
         self:with_window(dim.width, dim.height, true)
     elseif command == "e" then
         -- TODO: error and then close
@@ -89,7 +92,9 @@ end
 ---@param center boolean | nil
 ---@return VWMApp
 function App:with_window(width, height, center)
-    assert(not self.window, "window already open")
+
+    print("with_window", vim.inspect(self.window), width, height, center)
+    assert(self.window == nil, "window already open")
 
     center = center or center == nil
     self.window = window.create_window(window.create_window_dimensions(80, 24), center);

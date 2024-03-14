@@ -13,17 +13,6 @@ function START()
             print("unhandled command", cmd, data)
         end
         app = App:new(conn, handle_commands)
-
-        local function run()
-            if app == nil then
-                return
-            end
-
-            app.conn:send("render", "")
-
-            vim.defer_fn(run, 500)
-        end
-        run()
     end)
 
 end

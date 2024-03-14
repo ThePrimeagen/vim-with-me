@@ -11,18 +11,18 @@ import (
 )
 
 func main() {
-    server, win, err := testies.CreateServerFromArgs()
+    server, err := testies.CreateServerFromArgs()
     if err != nil {
         log.Fatalf("Error creating server: %s", err)
     }
 
+    win := window.NewWindow(80, 24)
     ticker := time.NewTicker(500 * time.Millisecond)
     server.ToSockets.Welcome(window.OpenCommand(win))
 
     count := 0
     for {
         count++
-        fmt.Printf("Count: %d -- waiting for ticker\n", count)
         Outer:
         for {
             select {
@@ -47,9 +47,7 @@ func main() {
 
         renders := win.Flush()
         for _, render := range renders {
-            fmt.Printf("Sending: %+v\n", render.Command())
             server.ToSockets.Spread(render.Command())
-            fmt.Printf("   sent\n")
         }
 
     }

@@ -204,7 +204,7 @@ function M.parse_partial_render(data)
 
     return {
         row = row + 1,
-        col = col,
+        col = col + 1,
         value = value,
     }
 end

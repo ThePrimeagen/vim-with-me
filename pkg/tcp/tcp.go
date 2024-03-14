@@ -181,7 +181,9 @@ func (t *TCP) listen() {
 		}
 
         // TODO: Think about this a bit more... i worry
+        fmt.Printf("sending welcome commands: %+v\n", t.ToSockets.welcomes)
         for _, cmd := range t.ToSockets.welcomes {
+            fmt.Printf("   welcome: %v\n", cmd)
             _, err := conn.Write(cmd.Bytes())
             if err != nil {
                 conn.Close()
