@@ -59,7 +59,7 @@ func TestTCPServer(t *testing.T) {
         Data: "69:420",
     }
 
-    server.Send(cmd2)
+    server.Send(&cmd2)
 
     clientCmd := CommandParser(client)
     clientCmd2 := CommandParser(client2)
@@ -72,7 +72,7 @@ func TestTCPServer(t *testing.T) {
 
     client.Close()
 
-    server.Send(cmd)
+    server.Send(&cmd)
     out2 = <- clientCmd2
     assert.Equal(t, out2, cmd)
 }

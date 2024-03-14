@@ -3,7 +3,7 @@ package processors_test
 import (
 	"testing"
 
-	"chat.theprimeagen.com/pkg/processors"
+	"github.com/theprimeagen/vim-with-me/pkg/processors"
 )
 
 func TestTDProcessor(t *testing.T) {

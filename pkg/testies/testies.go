@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 
-	"chat.theprimeagen.com/pkg/tcp"
+	"github.com/theprimeagen/vim-with-me/pkg/tcp"
 )
 
 func CreateServerFromArgs() (*tcp.TCP, error) {

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"chat.theprimeagen.com/pkg/commands"
-	"chat.theprimeagen.com/pkg/tcp"
+	"github.com/theprimeagen/vim-with-me/pkg/commands"
+	"github.com/theprimeagen/vim-with-me/pkg/tcp"
 )
 
 func main() {

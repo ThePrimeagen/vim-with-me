@@ -1,4 +1,4 @@
-module chat.theprimeagen.com
+module github.com/theprimeagen/vim-with-me
 
 go 1.21.0
 

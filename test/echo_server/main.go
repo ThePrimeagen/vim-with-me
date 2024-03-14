@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"chat.theprimeagen.com/pkg/tcp"
+	"github.com/theprimeagen/vim-with-me/pkg/tcp"
 )
 
 func main() {
@@ -35,7 +35,7 @@ func main() {
 	cmd := <-server.FromSockets
 	fmt.Printf("Command: %v\n", cmd)
 
-    server.Send(tcp.TCPCommand{
+    server.Send(&tcp.TCPCommand{
         Command: cmd.Data,
         Data: cmd.Command,
     })

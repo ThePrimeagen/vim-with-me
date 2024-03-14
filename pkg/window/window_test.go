@@ -3,8 +3,8 @@ package window
 import (
 	"testing"
 
-	"chat.theprimeagen.com/pkg/commands"
 	"github.com/stretchr/testify/assert"
+	"github.com/theprimeagen/vim-with-me/pkg/commands"
 )
 
 func TestWindowChangeSetOnly(t *testing.T) {

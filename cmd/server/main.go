@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"chat.theprimeagen.com/pkg/tcp"
-	"chat.theprimeagen.com/pkg/window"
+	"github.com/theprimeagen/vim-with-me/pkg/tcp"
+	"github.com/theprimeagen/vim-with-me/pkg/window"
 )
 
 func main() {
@@ -30,7 +30,8 @@ func main() {
     }
 
     w := window.NewWindow(80, 24)
-    server.ToSockets.Welcome(window.OpenCommand(w))
+    cmd := window.OpenCommand(w)
+    server.ToSockets.Welcome(cmd)
 
     for {
         time.Sleep(1 * time.Second)
