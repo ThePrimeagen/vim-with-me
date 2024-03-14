@@ -31,10 +31,6 @@ function App:new(conn, unhandled_commands)
     return app
 end
 
-local function print_command(command, data)
-    print("command", command, "data", data)
-end
-
 function App:_process(command, data)
     if command == "p" and self.window and self.cache then
         local partial = window.parse_partial_render(data)
