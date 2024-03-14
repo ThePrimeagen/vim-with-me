@@ -1,18 +1,18 @@
 ---@class DisplayCache
 ---@field data string[][]
----@field width number
----@field height number
+---@field rows number
+---@field cols number
 local DisplayCache = {}
 DisplayCache.__index = DisplayCache
 
----@param width number
----@param height number
+---@param rows number
+---@param cols number
 ---@return DisplayCache
-function DisplayCache:new(width, height)
+function DisplayCache:new(rows, cols)
     local data = {}
-    for _ = 1, height do
+    for _ = 1, cols do
         local row = {}
-        for _ = 1, width do
+        for _ = 1, rows do
             table.insert(row, " ")
         end
         table.insert(data, row)
@@ -20,8 +20,8 @@ function DisplayCache:new(width, height)
 
     return setmetatable({
         data = data,
-        width = width,
-        height = height,
+        rows = rows,
+        cols = cols,
     }, self)
 end
 ---@param partial PartialRender
@@ -30,19 +30,19 @@ function DisplayCache:partial(partial)
 end
 
 
----@param x number
----@param y number
+---@param row number
+---@param col number
 ---@param item string
-function DisplayCache:place(x, y, item)
-    assert(type(x) == "number", "x must be a number")
-    assert(type(y) == "number", "y must be a number")
+function DisplayCache:place(row, col, item)
+    assert(type(row) == "number", "x must be a number")
+    assert(type(col) == "number", "y must be a number")
     assert(type(item) == "string", "item must be a string")
     assert(#item == 1, "item must be a single character")
-    assert(x >= 1, "x must be greater than or equal to 1")
-    assert(y >= 1, "y must be greater than or equal to 1")
-    assert(x <= self.width, "x must be less than or equal to the width")
-    assert(y <= self.height, "y must be less than or equal to the height")
-    self.data[y][x] = item
+    assert(row >= 1, "x must be greater than or equal to 1")
+    assert(col >= 1, "y must be greater than or equal to 1")
+    assert(row <= self.rows, "row must be less than or equal to the rows")
+    assert(col <= self.cols, "col must be less than or equal to the cols")
+    self.data[col][row] = item
 end
 
 ---@return string[]
@@ -69,8 +69,8 @@ function DisplayCache:map(other, x_start, y_start)
 end
 
 function DisplayCache:clear()
-    for y = 1, self.height do
-        for x = 1, self.width do
+    for y = 1, self.cols do
+        for x = 1, self.rows do
             self:place(x, y, " ")
         end
     end
@@ -79,19 +79,19 @@ end
 ---@param str string
 function DisplayCache:from_string(str)
     assert(
-        #str == self.width * self.height,
+        #str == self.rows * self.cols,
         "string must be the same length as the cache"
     )
 
     local y = 1
-    while y <= self.height do
-        local line = string.sub(str, y, y + self.width - 1)
+    while y <= self.cols do
+        local line = string.sub(str, y, y + self.rows - 1)
 
         for x = 1, #line do
             local char = string.sub(
                 str,
-                (y - 1) * self.width + x,
-                (y - 1) * self.width + x
+                (y - 1) * self.rows + x,
+                (y - 1) * self.rows + x
             )
             self.data[y][x] = char
         end
