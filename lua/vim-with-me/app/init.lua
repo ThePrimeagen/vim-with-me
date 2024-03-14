@@ -36,11 +36,8 @@ local function print_command(command, data)
 end
 
 function App:_process(command, data)
-
-    print_command(command, data)
     if command == "p" and self.window and self.cache then
         local partial = window.parse_partial_render(data)
-        print("partial", vim.inspect(partial))
         self.cache:partial(partial)
 
         --- TODO: Create it so that i only get back partial row updates
@@ -60,8 +57,7 @@ function App:_process(command, data)
         self:close()
     elseif command == "open-window" then
         local dim = window.parse_command_data(data)
-        print("open-window", vim.inspect(data), vim.inspect(dim))
-        self:with_window(dim.width, dim.height, true)
+        self:with_window(dim, true)
     elseif command == "e" then
         -- TODO: error and then close
         self:close()
@@ -87,20 +83,18 @@ function App:close()
     end
 end
 
----@param width number
----@param height number
+---@param dim WindowPosition
 ---@param center boolean | nil
 ---@return VWMApp
-function App:with_window(width, height, center)
+function App:with_window(dim, center)
 
-    print("with_window", vim.inspect(self.window), width, height, center)
     assert(self.window == nil, "window already open")
 
     center = center or center == nil
-    self.window = window.create_window(window.create_window_dimensions(80, 24), center);
+    self.window = window.create_window(dim, center);
     window.focus(self.window)
 
-    self.cache = DisplayCache:new(width, height)
+    self.cache = DisplayCache:new(dim)
     return self
 end
 

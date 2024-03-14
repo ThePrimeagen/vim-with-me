@@ -5,14 +5,13 @@
 local DisplayCache = {}
 DisplayCache.__index = DisplayCache
 
----@param rows number
----@param cols number
+---@param dim WindowPosition
 ---@return DisplayCache
-function DisplayCache:new(rows, cols)
+function DisplayCache:new(dim)
     local data = {}
-    for _ = 1, cols do
+    for _ = 1, dim.height do
         local row = {}
-        for _ = 1, rows do
+        for _ = 1, dim.width do
             table.insert(row, " ")
         end
         table.insert(data, row)
@@ -20,8 +19,8 @@ function DisplayCache:new(rows, cols)
 
     return setmetatable({
         data = data,
-        rows = rows,
-        cols = cols,
+        rows = dim.height,
+        cols = dim.width,
     }, self)
 end
 ---@param partial PartialRender
@@ -40,8 +39,8 @@ function DisplayCache:place(row, col, item)
     assert(#item == 1, "item must be a single character")
     assert(row >= 1, "x must be greater than or equal to 1")
     assert(col >= 1, "y must be greater than or equal to 1")
-    assert(row <= self.rows, "row must be less than or equal to the rows")
-    assert(col <= self.cols, "col must be less than or equal to the cols")
+    assert(row <= self.rows, "row must be less than or equal to the rows: " .. row .. " " .. self.rows)
+    assert(col <= self.cols, "col must be less than or equal to the cols: " .. col .. " " .. self.cols)
     self.data[row][col] = item
 end
 

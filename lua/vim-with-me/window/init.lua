@@ -176,14 +176,14 @@ end
 ---@return WindowPosition
 function M.parse_command_data(data)
     local parts = vim.split(data, ":")
-    local width = tonumber(parts[1])
-    local height = tonumber(parts[2])
+    local rows = tonumber(parts[1])
+    local cols = tonumber(parts[2])
 
     return {
         row = 0,
         col = 0,
-        width = width,
-        height = height,
+        width = cols,
+        height = rows,
     }
 end
 --
