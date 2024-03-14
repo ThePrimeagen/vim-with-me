@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/theprimeagen/vim-with-me/pkg/commands"
+	"github.com/theprimeagen/vim_with_me/pkg/commands"
 )
 
 func TestWindowChangeSetOnly(t *testing.T) {

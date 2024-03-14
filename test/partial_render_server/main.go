@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/theprimeagen/vim-with-me/pkg/testies"
-	"github.com/theprimeagen/vim-with-me/pkg/window"
+	"github.com/theprimeagen/vim_with_me/pkg/testies"
+	"github.com/theprimeagen/vim_with_me/pkg/window"
 )
 
 func main() {
