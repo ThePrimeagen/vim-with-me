@@ -26,7 +26,7 @@ function DisplayCache:new(rows, cols)
 end
 ---@param partial PartialRender
 function DisplayCache:partial(partial)
-    self:place(partial.col, partial.row, partial.value)
+    self:place(partial.row, partial.col, partial.value)
 end
 
 
@@ -42,7 +42,7 @@ function DisplayCache:place(row, col, item)
     assert(col >= 1, "y must be greater than or equal to 1")
     assert(row <= self.rows, "row must be less than or equal to the rows")
     assert(col <= self.cols, "col must be less than or equal to the cols")
-    self.data[col][row] = item
+    self.data[row][col] = item
 end
 
 ---@return string[]
