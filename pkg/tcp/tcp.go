@@ -19,6 +19,10 @@ type TCPStream struct {
     welcomes []*TCPCommand
 }
 
+func (t *TCPStream) Len() int {
+    return len(t.outs)
+}
+
 func (t *TCPStream) Welcome(cmd *TCPCommand) {
     t.welcomes = append(t.welcomes, cmd)
 }
