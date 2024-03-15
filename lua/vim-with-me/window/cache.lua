@@ -83,20 +83,22 @@ function DisplayCache:from_string(str)
     )
 
     local y = 1
-    while y <= self.cols do
-        local line = string.sub(str, y, y + self.rows - 1)
+    while y <= self.rows do
+        local base = ((y - 1) * self.cols) + 1
+        local line = string.sub(str, base, base + self.cols - 1)
 
         for x = 1, #line do
             local char = string.sub(
-                str,
-                (y - 1) * self.rows + x,
-                (y - 1) * self.rows + x
+                line,
+                x,
+                x
             )
             self.data[y][x] = char
         end
 
         y = y + 1
     end
+
 end
 
 return DisplayCache
