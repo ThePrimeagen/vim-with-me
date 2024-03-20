@@ -17,21 +17,12 @@ func main() {
     }
 
     win := window.NewWindow(80, 24)
-    ticker := time.NewTicker(500 * time.Millisecond)
     server.ToSockets.Welcome(window.OpenCommand(win))
 
     count := 0
     for {
         count++
-        Outer:
-        for {
-            select {
-            case <-ticker.C:
-                break Outer
-            case command := <-server.FromSockets:
-                fmt.Printf("Got command from socket: %+v\n", command)
-            }
-        }
+        <-server.FromSockets
 
         number := count % 10
         row := count / win.Cols
