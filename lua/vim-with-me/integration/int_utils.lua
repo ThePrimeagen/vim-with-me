@@ -1,15 +1,23 @@
+local utils = require("vim-with-me.utils")
 local system = vim.system or require("vim-with-me.system")
 local TCP = require("vim-with-me.tcp").TCP
 
+local stdout = {}
+local function get_stdout()
+    local out = stdout
+    stdout = {}
+    return out
+end
+
 ---@param tcp TCP
----@return fun(): {command: string, data: string} | nil
+---@return (fun(): TCPCommand | nil), fun(): TCPCommand[]
 local function create_tcp_next(tcp)
     local received = {}
     tcp:listen(function(command, data)
         table.insert(received, {command = command, data = data})
     end)
 
-    return function()
+    local function next_cmd()
         vim.wait(1000, function()
             return #received > 0
         end)
@@ -21,13 +29,26 @@ local function create_tcp_next(tcp)
         local out = table.remove(received, 1)
         return out
     end
+
+    local function flush()
+        local cmds = {}
+        while true do
+            local cmd = next_cmd()
+            if cmd == nil then
+                break
+            end
+            table.insert(cmds, cmd)
+        end
+        return cmds
+    end
+
+    return next_cmd, flush
 end
 
 ---@param name string
 ---@param port number
----@param stdout (fun(_: any, data: string): nil) | nil
 ---@return TCP
-local function create_test_conn(name, port, stdout)
+local function create_test_conn(name, port)
     local done_building = false
     system.run({"go", "build", "-o", name, string.format("./test/%s/main.go", name)}, {
     }, function()
@@ -38,7 +59,9 @@ local function create_test_conn(name, port, stdout)
     end)
 
     system.run({string.format("./%s", name), "--port", tostring(port)}, {
-        stdout = stdout,
+        stdout = function(_, data)
+            table.insert(stdout, data)
+        end,
     })
     vim.wait(100)
 
@@ -90,7 +113,36 @@ end
 --     end
 -- end
 
+
+local function load(name)
+    local file_contents = utils.read_file(name)
+    if file_contents == nil then
+        return nil
+    end
+    file_contents = string.gsub(string.gsub(file_contents, "*", " "), "\n", "")
+    return file_contents
+end
+
+local theprimeagen = load("lua/vim-with-me/integration/theprimeagen")
+local theprimeagen_partial = load("lua/vim-with-me/integration/theprimeagen.partial")
+local empty = load("lua/vim-with-me/integration/empty")
+
+local function before_each()
+    stdout = {}
+end
+local function after_each()
+    for _, v in ipairs(stdout) do
+        print("stdout: ", v)
+    end
+end
+
 return {
     create_tcp_next = create_tcp_next,
     create_test_conn = create_test_conn,
+    theprimeagen = theprimeagen,
+    theprimeagen_partial = theprimeagen_partial,
+    empty = empty,
+    get_stdout = get_stdout,
+    before_each = before_each,
+    after_each = after_each,
 }

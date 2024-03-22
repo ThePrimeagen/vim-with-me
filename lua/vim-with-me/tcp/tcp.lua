@@ -31,6 +31,9 @@ local function get_opts(opts)
     return vim.tbl_extend("force", {}, copy_opts(default_opts), opts or {})
 end
 
+---@class TCPCommand
+---@field command string
+---@field data string
 
 ---@class TCP
 ---@field _connection any | nil
