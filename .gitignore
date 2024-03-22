@@ -2,6 +2,7 @@
 test_server
 main
 echo_server
+cmd_server
 
 
 # Added by cargo

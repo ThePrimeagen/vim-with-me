@@ -1,10 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"strconv"
-	"time"
 
 	"github.com/theprimeagen/vim-with-me/pkg/testies"
 	"github.com/theprimeagen/vim-with-me/pkg/window"

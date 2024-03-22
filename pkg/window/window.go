@@ -90,7 +90,16 @@ func (w *Window) SetWindow(value string) error {
     return nil
 }
 
-func (w *Window) Flush() []commands.Change {
+func (w *Window) Render() string {
+    out := ""
+    for i := 0; i < w.Rows; i++ {
+        out += string(w.cache[i])
+    }
+    w.changes = make([]commands.Change, 0)
+    return out
+}
+
+func (w *Window) PartialRender() []commands.Change {
     changes := w.changes
     w.changes = make([]commands.Change, 0)
     return changes

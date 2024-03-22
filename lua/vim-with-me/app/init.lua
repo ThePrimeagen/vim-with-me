@@ -2,33 +2,46 @@ local token = require("vim-with-me.app.token")
 local DisplayCache = require("vim-with-me.window.cache")
 local window = require("vim-with-me.window")
 
---- PROBABLY NOT A THING TO DO--- yet
 ---@class VWMApp
 ---@field public window WindowDetails | nil
 ---@field public cache DisplayCache | nil
 ---@field public conn TCP
 ---@field public _auth_cb (fun(): nil) | nil
----@field public _unhandled_commands fun(cmd: string, data: string): nil
+---@field public _on_render (fun(): nil) | nil
+---@field public _on_command (fun(cmd: string, data: string): nil) | nil
 local App = {}
 App.__index = App
 
 ---@param conn TCP
----@param unhandled_commands fun(cmd: string, data: string): nil
 ---@return VWMApp
-function App:new(conn, unhandled_commands)
+function App:new(conn)
     assert(conn:connected(), "connection not established")
-    assert(unhandled_commands, "no unhandled commands function")
 
     local app = setmetatable({
         conn = conn,
-        _unhandled_commands = unhandled_commands,
+        _on_command = nil,
         _auth_cb = nil,
+        _render_cb = nil,
         window = nil,
         cache = nil,
     }, self)
 
     conn:listen(function(command, data) app:_process(command, data) end)
     return app
+end
+
+---@param cb fun(): nil
+---@return VWMApp
+function App:on_render(cb)
+    self._render_cb = cb
+    return self
+end
+
+---@param cb fun(cmd: string, data: string): nil
+---@return VWMApp
+function App:on_cmd_received(cb)
+    self._render_cb = cb
+    return self
 end
 
 function App:_process(command, data)
@@ -40,6 +53,11 @@ function App:_process(command, data)
         --- Consider some sort of debounce here too
         local rows = self.cache:to_string_rows()
         vim.api.nvim_buf_set_lines(self.window.buffer, 0, -1, false, rows)
+
+        if self._on_render then
+            self._on_render()
+        end
+
     elseif command == "r" and self.window and self.cache then
         -- check to see if last character is a new line
         if string.sub(data, -1) == "\n" then
@@ -49,6 +67,10 @@ function App:_process(command, data)
 
         local rows = self.cache:to_string_rows()
         vim.api.nvim_buf_set_lines(self.window.buffer, 0, -1, false, rows)
+
+        if self._on_render then
+            self._on_render()
+        end
     elseif command == "c" then
         self:close()
     elseif command == "open-window" then
@@ -61,9 +83,10 @@ function App:_process(command, data)
         assert(self._auth_cb, "no auth callback")
         self._auth_cb()
         self._auth_cb = nil
-    else
-        assert(self._unhandled_commands, "no unhandled commands function")
-        self._unhandled_commands(command, data)
+    end
+
+    if self._on_command then
+        self._on_command(command, data)
     end
 
 end
