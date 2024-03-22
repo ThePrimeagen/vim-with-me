@@ -44,33 +44,43 @@ function App:on_cmd_received(cb)
     return self
 end
 
+---@param partials PartialRender
+function App:partial_render(partials)
+    for _, partial in ipairs(partials) do
+        self.cache:partial(partial)
+    end
+
+    --- TODO: Create it so that i only get back partial row updates
+    --- Consider some sort of debounce here too
+    local rows = self.cache:to_string_rows()
+    vim.api.nvim_buf_set_lines(self.window.buffer, 0, -1, false, rows)
+
+    if self._on_render then
+        self._on_render()
+    end
+end
+
+---@param str string
+function App:render(str)
+    -- check to see if last character is a new line
+    if string.sub(str, -1) == "\n" then
+        str = string.sub(str, 1, -2)
+    end
+    self.cache:from_string(str)
+
+    local rows = self.cache:to_string_rows()
+    vim.api.nvim_buf_set_lines(self.window.buffer, 0, -1, false, rows)
+
+    if self._on_render then
+        self._on_render()
+    end
+end
+
 function App:_process(command, data)
     if command == "p" and self.window and self.cache then
-        local partial = window.parse_partial_render(data)
-        self.cache:partial(partial)
-
-        --- TODO: Create it so that i only get back partial row updates
-        --- Consider some sort of debounce here too
-        local rows = self.cache:to_string_rows()
-        vim.api.nvim_buf_set_lines(self.window.buffer, 0, -1, false, rows)
-
-        if self._on_render then
-            self._on_render()
-        end
-
+        self:partial_render(window.parse_partial_render(data))
     elseif command == "r" and self.window and self.cache then
-        -- check to see if last character is a new line
-        if string.sub(data, -1) == "\n" then
-            data = string.sub(data, 1, -2)
-        end
-        self.cache:from_string(data)
-
-        local rows = self.cache:to_string_rows()
-        vim.api.nvim_buf_set_lines(self.window.buffer, 0, -1, false, rows)
-
-        if self._on_render then
-            self._on_render()
-        end
+        self:render(data)
     elseif command == "c" then
         self:close()
     elseif command == "open-window" then

@@ -186,27 +186,55 @@ function M.parse_command_data(data)
         height = rows,
     }
 end
+
+---@param str string
+---@param idx number | nil
+---@return number | nil, number
+local function next_number(str, idx)
+    assert(type(str) == "string", "next requires str to be a string")
+    if idx == nil then
+        return nil, #str
+    end
+    local next_idx = string.find(str, ":", idx)
+    if not next_idx then
+        return nil, #str
+    end
+    local num_str = string.sub(str, idx, next_idx - 1)
+    local num = tonumber(num_str)
+    assert(num ~= nil, "parsed item was not a string: " .. num_str)
+    return num, next_idx + 1
+end
+
 --
 ---@param data string
----@return PartialRender
+---@return PartialRender[]
 function M.parse_partial_render(data)
-    local parts = vim.split(data, ":")
 
-    assert(#parts == 3, "invalid partial render data")
+    local idx = 1
+    ---@type number | nil
+    local row = 0
+    ---@type number | nil
+    local col = 0
+    local renders = {}
+    while true do
+        row, idx = next_number(data, idx)
+        col, idx = next_number(data, idx)
+        if row == nil or col == nil then
+            break
+        end
 
-    local row = tonumber(parts[1])
-    local col = tonumber(parts[2])
-    local value = parts[3]
+        local value = string.sub(data, idx, idx)
+        assert(type(value) == "string", "value must be string")
+        assert(#value == 1, "value must be len 1")
 
-    assert(row ~= nil, "row must be a number")
-    assert(col ~= nil, "col must be a number")
-    assert(#value == 1, "value must be a single character")
-
-    return {
-        row = row + 1,
-        col = col + 1,
-        value = value,
-    }
+        idx = idx + 1
+        table.insert(renders, {
+            row = row + 1,
+            col = col + 1,
+            value = value,
+        })
+    end
+    return renders
 end
 
 return M

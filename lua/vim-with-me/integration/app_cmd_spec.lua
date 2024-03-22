@@ -25,8 +25,9 @@ describe("vim with me :: app_spec", function()
         flush_cmds()
         eq(int_utils.theprimeagen, table.concat(app.cache:to_string_rows()))
 
-        tcp:send("partial", "")
-        flush_cmds()
+        tcp:send("partial", "1:1")
+        local cmds = flush_cmds()
+        eq(#cmds > 0, true)
         eq(int_utils.theprimeagen_partial, table.concat(app.cache:to_string_rows()))
 
     end)

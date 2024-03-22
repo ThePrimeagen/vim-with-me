@@ -12,14 +12,21 @@ type Change struct {
     Value rune
 }
 
-func (c *Change) Command() *tcp.TCPCommand {
-    return PartialRender(c)
+func (c *Change) String() string {
+    return fmt.Sprintf("%d:%d:%c", c.Row, c.Col, c.Value)
 }
 
-func PartialRender(change *Change) *tcp.TCPCommand {
+type Changes []Change
+
+func PartialRender(changes Changes) *tcp.TCPCommand {
+    data := ""
+    for _, change := range changes {
+        data += change.String()
+    }
+
     return &tcp.TCPCommand{
         Command: "p",
-        Data: fmt.Sprintf("%d:%d:%c", change.Row, change.Col, change.Value),
+        Data: data,
     }
 }
 

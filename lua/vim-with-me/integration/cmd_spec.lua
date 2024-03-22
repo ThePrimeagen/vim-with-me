@@ -25,16 +25,15 @@ describe("vim with me", function()
         }, cmd)
         tcp:send("partial", "1:1")
 
-        local expected = {}
         local theprimeagen_str = "theprimeagen"
+        local data = ""
         for i = 1, #theprimeagen_str do
-            table.insert(expected, {
-                command = "p",
-                data = string.format("1:%d:%s", i, theprimeagen_str:sub(i, i)),
-            })
+            data = data .. string.format("1:%d:%s", i, theprimeagen_str:sub(i, i))
         end
 
-        eq(expected, flush_cmds())
+        eq({
+            {command = "p", data = data}
+        }, flush_cmds())
     end)
 end)
 

@@ -99,10 +99,10 @@ func (w *Window) Render() string {
     return out
 }
 
-func (w *Window) PartialRender() []commands.Change {
+func (w *Window) PartialRender() commands.Changes {
     changes := w.changes
     w.changes = make([]commands.Change, 0)
-    return changes
+    return commands.Changes(changes)
 }
 
 func OpenCommand(window *Window) *tcp.TCPCommand {
