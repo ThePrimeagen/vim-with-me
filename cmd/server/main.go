@@ -31,7 +31,7 @@ func main() {
 
     w := window.NewWindow(80, 24)
     cmd := window.OpenCommand(w)
-    server.ToSockets.Welcome(cmd)
+    server.Welcome(cmd)
 
     for {
         time.Sleep(1 * time.Second)

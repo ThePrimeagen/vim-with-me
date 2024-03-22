@@ -7,63 +7,10 @@ import (
 	"net"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 )
 
 var VERSION = 1
-
-type TCPStream struct {
-	outs []chan TCPCommand
-	lock sync.RWMutex
-    welcomes []*TCPCommand
-}
-
-func (t *TCPStream) Len() int {
-    return len(t.outs)
-}
-
-func (t *TCPStream) Welcome(cmd *TCPCommand) {
-    t.welcomes = append(t.welcomes, cmd)
-}
-
-func (t *TCPStream) Spread(command *TCPCommand) {
-	t.lock.RLock()
-	for i, listener := range t.outs {
-        fmt.Printf("sending command to listener: %d\n", i)
-		listener <- *command
-        fmt.Printf("   sent command: %d\n", i)
-	}
-	t.lock.RUnlock()
-}
-
-func (t *TCPStream) listen() <-chan TCPCommand {
-    fmt.Println("adding listener")
-	t.lock.Lock()
-	listener := make(chan TCPCommand, 10)
-	t.outs = append(t.outs, listener)
-	t.lock.Unlock()
-	return listener
-}
-
-func (t *TCPStream) removeListen(rm <-chan TCPCommand) {
-    fmt.Println("removing listener")
-	t.lock.Lock()
-	for i, listener := range t.outs {
-		if listener == rm {
-			t.outs = append(t.outs[:i], t.outs[i+1:]...)
-			break
-		}
-	}
-	t.lock.Unlock()
-}
-
-func createTCPCommandSpread() TCPStream {
-	return TCPStream{
-		outs: make([]chan TCPCommand, 0),
-		lock: sync.RWMutex{},
-	}
-}
 
 type TCPCommand struct {
 	Command string
@@ -138,12 +85,19 @@ func CommandFromBytes(b string) (string, *TCPCommand) {
 
 type TCP struct {
 	FromSockets chan TCPCommand
-	ToSockets   TCPStream
+	sockets     []Connection
+	welcomes    []*TCPCommand
 	listener    net.Listener
 }
 
+func (t *TCP) Welcome(cmd *TCPCommand) {
+	t.welcomes = append(t.welcomes, cmd)
+}
+
+// TODO: Think about project level logging and the ability to enable debug
+// logging
 func (t *TCP) Send(cmd *TCPCommand) {
-	t.ToSockets.Spread(cmd)
+	send(t.sockets, cmd)
 }
 
 func CommandParser(r io.Reader) chan TCPCommand {
@@ -157,7 +111,7 @@ func CommandParser(r io.Reader) chan TCPCommand {
 		for {
 			n, err := r.Read(buffer)
 			if err != nil {
-                fmt.Printf("Error reading from connection: %s\n", err)
+				fmt.Printf("Error reading from connection: %s\n", err)
 				out <- tcpClosedCommand
 				return
 			}
@@ -179,87 +133,54 @@ func (t *TCP) listen() {
 	for {
 
 		conn, err := t.listener.Accept()
+
 		if err != nil {
-			// true and factual
-			log.Fatal("You like amouranth", err)
+            // TODO: Logging?
+            log.Printf("server shutting down")
+            break;
 		}
 
-        // TODO: Think about this a bit more... i worry
-        fmt.Printf("sending welcome commands: %+v\n", t.ToSockets.welcomes)
-        for _, cmd := range t.ToSockets.welcomes {
-            fmt.Printf("   welcome: %v\n", cmd)
-            _, err := conn.Write(cmd.Bytes())
-            if err != nil {
-                conn.Close()
-                continue
-            }
-        }
+		new_conn := NewConnection(conn)
+		err = send_cmds(new_conn, t.welcomes)
+		if err != nil {
+			// TODO: Should i do something with the conn?
+			continue
+		}
+		t.sockets = append(t.sockets, new_conn)
 
 		go func(c net.Conn) {
-            defer c.Close()
+			defer c.Close()
 
-            toTcp := t.ToSockets.listen()
-            defer t.ToSockets.removeListen(toTcp)
+			fromTcp := CommandParser(conn)
+			defer func() {
+				fmt.Println("connection has closed")
+			}()
 
-            fromTcp := CommandParser(conn)
-            defer func() {
-                fmt.Println("connection has closed")
-            }()
-
-            timer := time.NewTicker(1 * time.Second)
+			timer := time.NewTicker(100 * time.Millisecond)
 
 		OuterLoop:
 			for {
-				select {
-				case cmd := <-toTcp:
-					_, err := c.Write(cmd.Bytes())
-					if err != nil {
-						fmt.Printf("Error writing to client: %s\n", err)
-						break OuterLoop
-					}
-
-				case cmd := <-fromTcp:
-					// NOTE: i am sure there is a better way to do this
-					// TODO: Figure out that better way
-					if cmd.Command == "c" {
+                select {
+                case cmd := <-fromTcp:
+                    // NOTE: i am sure there is a better way to do this
+                    // TODO: Figure out that better way
+                    if cmd.Command == "c" {
                         fmt.Println("closing connection")
-						break OuterLoop
-					}
+                        break OuterLoop
+                    }
 
-					t.FromSockets <- cmd
+                    t.FromSockets <- cmd
 
-					if cmd.Command == "e" {
-						break OuterLoop
-					}
+                    if cmd.Command == "e" {
+                        break OuterLoop
+                    }
 
                 case <-timer.C:
                     fmt.Println("tick")
-				}
+                }
 			}
-            fmt.Println("I AM DONE WITH THIS SHIT")
+			fmt.Println("I AM DONE WITH THIS SHIT")
 
 		}(conn)
 	}
-}
-
-func (t *TCP) Close() {
-	t.listener.Close()
-}
-
-func NewTCPServer(port uint16) (*TCP, error) {
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	if err != nil {
-		return nil, fmt.Errorf("Error creating TCP server: %w", err)
-	}
-
-	tcps := &TCP{
-		FromSockets: make(chan TCPCommand, 10),
-		ToSockets:   createTCPCommandSpread(),
-		listener:    listener,
-	}
-
-	go func() { tcps.listen() }()
-
-	return tcps, nil
-
 }

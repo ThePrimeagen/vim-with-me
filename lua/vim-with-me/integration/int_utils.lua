@@ -51,7 +51,12 @@ end
 local function create_test_conn(name, port)
     local done_building = false
     system.run({"go", "build", "-o", name, string.format("./test/%s/main.go", name)}, {
-    }, function()
+    }, function(exit_info)
+        if exit_info.code ~= 0 then
+            print(exit_info.stderr or "no standard error")
+            os.exit(exit_info.code, true)
+        end
+
         done_building = true
     end)
     vim.wait(1000, function()
