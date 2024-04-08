@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/theprimeagen/vim-with-me/pkg/commands"
+	"github.com/theprimeagen/vim-with-me/pkg/tcp"
 	"github.com/theprimeagen/vim-with-me/pkg/testies"
 	"github.com/theprimeagen/vim-with-me/pkg/window"
 )
@@ -51,6 +52,20 @@ func main() {
         case "open":
             out := window.OpenCommand(win)
             server.Send(out)
+        case "to_int":
+            i, err := strconv.Atoi(cmd.Data)
+            if err != nil {
+                server.Send(&tcp.TCPCommand{
+                    Command: "e",
+                    Data: "Error: " + err.Error(),
+                })
+            } else {
+                out := tcp.ToTCPInt(i)
+                server.Send(&tcp.TCPCommand{
+                    Command: "from_int",
+                    Data: out,
+                })
+            }
         case "render":
             render(win)
             str := win.Render()
