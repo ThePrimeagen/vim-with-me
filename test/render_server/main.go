@@ -34,7 +34,7 @@ func main() {
     count := 0
     for {
         cmd := <-server.FromSockets
-        if cmd.Command == "c" {
+        if cmd.Command == commands.CLOSE {
             break
         }
 
@@ -48,7 +48,7 @@ func main() {
         }
 
         count++
-        server.Send(commands.Render(str))
+        server.Send(commands.Render([]byte(str)))
     }
 }
 

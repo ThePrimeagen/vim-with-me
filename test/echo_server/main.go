@@ -36,8 +36,8 @@ func main() {
 	fmt.Printf("Command: %v\n", cmd)
 
     server.Send(&tcp.TCPCommand{
-        Command: cmd.Data,
-        Data: cmd.Command,
+        Command: cmd.Command,
+        Data: cmd.Data,
     })
 
     time.Sleep(1 * time.Second)

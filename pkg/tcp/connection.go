@@ -2,6 +2,7 @@ package tcp
 
 import (
 	"io"
+	"log"
 )
 
 type Connection struct {
@@ -25,8 +26,10 @@ func send(conns []Connection, cmd *TCPCommand) []Connection {
     msg := cmd.Bytes()
 
     for i, conn := range conns {
+        log.Printf("sending to %d\n", i)
         _, err := conn.conn.Write(msg)
         if err != nil {
+            log.Printf("removing due to close: %d\n", i)
             removals = append(removals, i)
         }
     }

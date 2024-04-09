@@ -1,8 +1,6 @@
 package commands
 
 import (
-	"fmt"
-
 	"github.com/theprimeagen/vim-with-me/pkg/tcp"
 )
 

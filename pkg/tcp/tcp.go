@@ -74,8 +74,8 @@ func (t *TCP) Send(cmd *TCPCommand) {
 }
 
 type TCPCommandResult struct {
-    error error
-    command *TCPCommand
+    Error error
+    Command *TCPCommand
 }
 
 func CommandParser(r io.Reader) chan TCPCommandResult {
@@ -90,8 +90,8 @@ func CommandParser(r io.Reader) chan TCPCommandResult {
 			n, err := r.Read(buffer)
 			if err != nil {
 				out <- TCPCommandResult{
-                    error: fmt.Errorf("error calling r.Read: %w", err),
-                    command: nil,
+                    Error: fmt.Errorf("error calling r.Read: %w", err),
+                    Command: nil,
                 }
 				return
 			}
@@ -101,11 +101,11 @@ func CommandParser(r io.Reader) chan TCPCommandResult {
 			for remaining, cmd, err := CommandFromBytes(current); cmd != nil; remaining, cmd, err = CommandFromBytes(current) {
                 if err != nil {
                     out <- TCPCommandResult{
-                        error: fmt.Errorf("error from parsing tcp command: %w", err),
-                        command: nil,
+                        Error: fmt.Errorf("error from parsing tcp command: %w", err),
+                        Command: nil,
                     }
                 } else {
-                    out <- TCPCommandResult{command: cmd, error: nil}
+                    out <- TCPCommandResult{Command: cmd, Error: nil}
                 }
 
 				current = remaining
@@ -124,7 +124,7 @@ func (t *TCP) runSocket(conn net.Conn) {
 
         fromTcp := CommandParser(conn)
         defer func() {
-            fmt.Println("connection has closed")
+            log.Println("connection has closed")
         }()
 
         timer := time.NewTicker(100 * time.Millisecond)
@@ -133,12 +133,12 @@ func (t *TCP) runSocket(conn net.Conn) {
             select {
             case commandWrapper := <-fromTcp:
 
-                if commandWrapper.error != nil {
-                    fmt.Printf("error from command parsing: %v\n", commandWrapper.error)
+                if commandWrapper.Error != nil {
+                    log.Printf("error from command parsing: %v\n", commandWrapper.Error)
                     return
                 }
 
-                cmd := commandWrapper.command
+                cmd := commandWrapper.Command
 
                 t.FromSockets <- cmd
 
@@ -147,7 +147,7 @@ func (t *TCP) runSocket(conn net.Conn) {
                 }
 
             case <-timer.C:
-                fmt.Println("tick")
+                // what to do here?
             }
         }
     }(conn)

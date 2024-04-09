@@ -1,15 +1,12 @@
 package main
 
 import (
-	"encoding/binary"
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/theprimeagen/vim-with-me/pkg/commands"
-	"github.com/theprimeagen/vim-with-me/pkg/tcp"
 	"github.com/theprimeagen/vim-with-me/pkg/testies"
 	"github.com/theprimeagen/vim-with-me/pkg/window"
 )
@@ -62,17 +59,17 @@ func main() {
 			server.Send(out)
         case 'r':
 			render(win)
-			str := win.Render()
-			out := commands.Render(str)
-			server.Send(out)
+			//str := win.Render()
+			//out := commands.Render(str)
+			//server.Send(out)
         case 'p':
-			data := strings.Split(cmd.Data, ":")
-			row, _ := strconv.Atoi(data[0])
-			col, _ := strconv.Atoi(data[1])
-			partialRender(win, row, col, "theprimeagen")
-			renders := win.PartialRender()
-			fmt.Printf("partial render %d\n", len(renders))
-			server.Send(commands.PartialRender(renders))
+			//data := strings.Split(cmd.Data, ":")
+			//row, _ := strconv.Atoi(data[0])
+			//col, _ := strconv.Atoi(data[1])
+			//partialRender(win, row, col, "theprimeagen")
+			//renders := win.PartialRender()
+			//fmt.Printf("partial render %d\n", len(renders))
+			//server.Send(commands.PartialRender(renders))
 		}
 	}
 }

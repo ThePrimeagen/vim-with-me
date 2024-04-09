@@ -1,11 +1,13 @@
-package tcp
+package tcp_test
 
 import (
+	"bytes"
 	"fmt"
 	"net"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/theprimeagen/vim-with-me/pkg/tcp"
 )
 
 func createTCPClient(port uint16) (*net.TCPConn, error) {
@@ -25,7 +27,9 @@ func createTCPClient(port uint16) (*net.TCPConn, error) {
 
 func TestTCPServer(t *testing.T) {
 	port := uint16(42069)
-	server, err := NewTCPServer(port)
+	server, err := tcp.NewTCPServer(port)
+    defer func() { server.Close() }()
+
 	if err != nil {
 		t.Fatalf("Error creating TCP server: %v", err)
 	}
@@ -39,7 +43,7 @@ func TestTCPServer(t *testing.T) {
 		t.Fatalf("Error creating TCP client: %v", err)
 	}
 
-	cmd := TCPCommand{
+	cmd := &tcp.TCPCommand{
 		Command: byte('g'),
 		Data:    []byte("Hello World"),
 	}
@@ -53,51 +57,48 @@ func TestTCPServer(t *testing.T) {
     c2 := <- server.FromSockets
     assert.Equal(t, c2, cmd)
 
-    cmd2 := TCPCommand{
+    cmd2 := &tcp.TCPCommand{
         Command: byte('t'),
         Data: []byte("69:420"),
     }
 
-    server.Send(&cmd2)
+    server.Send(cmd2)
 
-    clientCmd := CommandParser(client)
-    clientCmd2 := CommandParser(client2)
+    clientCmd := tcp.CommandParser(client)
+    clientCmd2 := tcp.CommandParser(client2)
 
     out := <- clientCmd
     out2 := <- clientCmd2
 
-    assert.Equal(t, out, cmd2)
-    assert.Equal(t, out2, cmd2)
+    assert.Equal(t, out, tcp.TCPCommandResult{Error: nil, Command: cmd2})
+    assert.Equal(t, out2, tcp.TCPCommandResult{Error: nil, Command: cmd2})
 
     client.Close()
 
-    server.Send(&cmd)
+    server.Send(cmd)
     out2 = <- clientCmd2
-    assert.Equal(t, out2, cmd)
+    assert.Equal(t, out2, tcp.TCPCommandResult{Error: nil, Command: cmd})
 }
 
-
-/*
 func TestCommandParser(t *testing.T) {
-    cmd := TCPCommand{
-        Command: "g",
-        Data: "Hello World",
+    cmd := &tcp.TCPCommand{
+        Command: byte('g'),
+        Data: []byte("Hello World"),
     }
 
-    cmd2 := TCPCommand{
-        Command: "t",
-        Data: "Goodbye, cruel world",
+    cmd2 := &tcp.TCPCommand{
+        Command: byte('t'),
+        Data: []byte("Goodbye, cruel world"),
     }
 
     b := cmd.Bytes()
     b2 := cmd2.Bytes()
     reader := bytes.NewReader(append(b, b2...))
 
-    parsedCmd := CommandParser(reader)
+    parsedCmd := tcp.CommandParser(reader)
 
     c := <- parsedCmd
     c2 := <- parsedCmd
-    assert.Equal(t, c, cmd)
-    assert.Equal(t, c2, cmd2)
+    assert.Equal(t, c.Command, cmd)
+    assert.Equal(t, c2.Command, cmd2)
 }
-*/
