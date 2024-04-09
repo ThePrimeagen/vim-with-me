@@ -32,7 +32,7 @@ local function get_opts(opts)
 end
 
 ---@class TCPCommand
----@field command string
+---@field command number
 ---@field data string
 
 ---@class TCP

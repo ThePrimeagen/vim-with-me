@@ -2,65 +2,80 @@
 local eq = assert.are.same
 local tcp = require("vim-with-me.tcp.process")
 
+local function to_string(...)
+    local out = {}
+    for i = 1, select("#", ...) do
+        local v = select(i, ...)
+        if type(v) == "number" then
+            table.insert(out, string.char(v))
+        elseif type(v) == "string" then
+            table.insert(out, v)
+        else
+            assert(false, "should never provide anything other than numbers, strings, or tables of strings and numbers")
+        end
+    end
+    return table.concat(out, "")
+end
+
 describe("vim with me :: tcp.process", function()
-    it("parse", function()
-        local str = "1:5:r:hel"
-        local next_chunk, command, data = tcp.parse(str, 5, 5)
-
-        eq(next_chunk, "")
-        eq(command, "r")
-        eq(data, "hel")
+    it("parse_big_endian_16", function()
+        eq(0x45, tcp.parse_big_endian_16(to_string(0, 69)))
+        eq(0x4500, tcp.parse_big_endian_16(to_string(69, 0)))
+        eq(0x4545, tcp.parse_big_endian_16(to_string(69, 69)))
     end)
-
 
     it("process packets chunks", function()
         local chunks = {
-            "1:",
-            "5:r:he",
-            "l1:10:r",
-            ":lo wo",
-            "rld",
+            to_string(1), -- version
+            to_string(69), -- cmd
+            tcp.to_big_endian_16(5),
+            to_string("n", "o", "i", "c", "e", 1),
+            to_string(72, tcp.to_big_endian_16(3), "f", "o", "o"), -- cmd, len, data
         }
 
         local packets = tcp.process_packets()
 
-        local command, data = packets(chunks[1])
-        eq(command, nil)
-        eq(data, nil)
+        local command = packets(chunks[1])
+        eq(nil, command)
 
-        command, data = packets(chunks[2])
-        eq(command, nil)
-        eq(data, nil)
+        command = packets(chunks[2])
+        eq(nil, command)
 
-        command, data = packets(chunks[3])
-        eq(command, "r")
-        eq(data, "hel")
+        command = packets(chunks[3])
+        eq(nil, command)
 
-        command, data = packets(chunks[4])
-        eq(command, nil)
-        eq(data, nil)
+        command = packets(chunks[4])
+        eq({command = 69, data = "noice"}, command)
 
-        command, data = packets(chunks[5])
-        eq(command, "r")
-        eq(data, "lo world")
+        command = packets(chunks[5])
+        eq({command = 72, data = "foo"}, command)
+
+        eq(nil, packets(""))
     end)
 
     it("process packets multiple in one chunk", function()
-        local chunks = "1:5:r:hel1:10:r:lo world"
-        local packets = tcp.process_packets()
+        local chunk = table.concat({
+            to_string(1), -- version
+            to_string(69), -- cmd
+            tcp.to_big_endian_16(5),
+            to_string("n", "o", "i", "c", "e", 1),
+            to_string(72, tcp.to_big_endian_16(3), "f", "o", "o"), -- cmd, len, data
+        }, "")
 
-        local command, data = packets(chunks)
-        eq(command, "r")
-        eq(data, "hel")
-        command, data = packets(chunks)
-        eq(command, "r")
-        eq(data, "lo world")
+        local packets = tcp.process_packets()
+        eq({command = 69, data = "noice"}, packets(chunk))
+        eq({command = 72, data = "foo"}, packets())
     end)
 
-    it("process packets multiple in one chunk", function()
-        local chunks = "2:5:r:hel1:10:r:lo world"
+    it("version mismatch should cause an error", function()
+        local chunk = table.concat({
+            to_string(2), -- version
+            to_string(69), -- cmd
+            tcp.to_big_endian_16(5),
+            to_string("n", "o", "i", "c", "e"),
+        }, "")
         local packets = tcp.process_packets()
-        local ok, _, _ = pcall(packets, chunks)
+        local ok, command = pcall(packets, chunk)
         eq(ok, false)
     end)
 end)
