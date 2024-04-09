@@ -16,7 +16,6 @@ func NewConnection(writer io.Writer) Connection {
 	return Connection{id: id, conn: writer}
 }
 
-
 // TODO: I need to handle n if n is less than bytes length
 // This will be a serious issue potentially.  once we are out of sync the
 // connection may crash

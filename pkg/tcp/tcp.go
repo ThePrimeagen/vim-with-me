@@ -1,90 +1,63 @@
 package tcp
 
 import (
+	"encoding/binary"
 	"fmt"
 	"io"
 	"log"
 	"net"
-	"strconv"
-	"strings"
 	"time"
 )
 
-var VERSION = 1
+var VERSION byte = 1
+var MINIMUM = 4
 
 type TCPCommand struct {
-	Command string
-	Data    string
-}
-
-var malformedTCPCommand = TCPCommand{
-	Command: "e",
-	Data:    "Malformed TCP Command",
-}
-
-func versionMismatch(v1, v2 int) *TCPCommand {
-	return &TCPCommand{
-		Command: "e",
-		Data:    fmt.Sprintf("Version Mismatch %d %d", v1, v2),
-	}
-}
-
-var tcpClosedCommand = TCPCommand{
-	Command: "c",
-	Data:    "Connection Closed",
+	Command byte
+	Data    []byte
 }
 
 func (t *TCPCommand) Bytes() []byte {
-	str := fmt.Sprintf("%s:%s", t.Command, t.Data)
-	str = fmt.Sprintf("%d:%d:%s", VERSION, len(str), str)
-	return []byte(str)
+    length := uint16(len(t.Data))
+    lengthData := make([]byte, 2)
+    binary.BigEndian.PutUint16(lengthData, length)
+
+    b := make([]byte, 0, 1 + 1 + 2 + length)
+    b = append(b, VERSION)
+    b = append(b, t.Command)
+    b = append(b, lengthData...)
+    return append(b, t.Data...)
 }
 
-func CommandFromBytes(b string) (string, *TCPCommand) {
-	parts := strings.SplitN(b, ":", 3)
-	if len(parts) != 3 {
-		return b, nil
-	}
+func CommandFromBytes(b []byte) ([]byte, *TCPCommand, error) {
+    if len(b) < MINIMUM {
+        return b, nil, nil
+    }
 
-	versionStr := parts[0]
-	lengthStr := parts[1]
-	dataStr := parts[2]
+    if b[0] != VERSION {
+        return b, nil, fmt.Errorf("version mismatch %d != %d", b[0], VERSION)
+    }
 
-	version, err := strconv.Atoi(versionStr)
-	if err != nil {
-		return b, &malformedTCPCommand
-	}
+    length := int(binary.BigEndian.Uint16(b[2:]))
+    end := MINIMUM + length
 
-	if version != VERSION {
-		return b, versionMismatch(version, VERSION)
-	}
+    if len(b) < end {
+        return b, nil, nil
+    }
 
-	length, err := strconv.Atoi(lengthStr)
-	if err != nil {
-		return b, &malformedTCPCommand
-	}
-	if len(dataStr) < length {
-		return b, nil
-	}
-
-	remaining := dataStr[length:]
-	commandStr := dataStr[:length]
-	commandParts := strings.SplitN(commandStr, ":", 2)
-
-	if len(commandParts) != 2 {
-		return b, &malformedTCPCommand
-	}
+    command := b[1]
+    data := b[MINIMUM:end]
 
 	cmd := &TCPCommand{
-		Command: commandParts[0],
-		Data:    commandParts[1],
+		Command: command,
+		Data:    data,
 	}
 
-	return remaining, cmd
+    return b[end:], cmd, nil
 }
 
 type TCP struct {
-	FromSockets chan TCPCommand
+	FromSockets chan *TCPCommand
 	sockets     []Connection
 	welcomes    []*TCPCommand
 	listener    net.Listener
@@ -100,26 +73,42 @@ func (t *TCP) Send(cmd *TCPCommand) {
 	send(t.sockets, cmd)
 }
 
-func CommandParser(r io.Reader) chan TCPCommand {
-	out := make(chan TCPCommand)
+type TCPCommandResult struct {
+    error error
+    command *TCPCommand
+}
+
+func CommandParser(r io.Reader) chan TCPCommandResult {
+	out := make(chan TCPCommandResult)
 
 	go func() {
 		defer close(out)
 
 		buffer := make([]byte, 1024)
-		previous := ""
+		previous := make([]byte, 0)
 		for {
 			n, err := r.Read(buffer)
 			if err != nil {
-				fmt.Printf("Error reading from connection: %s\n", err)
-				out <- tcpClosedCommand
+				out <- TCPCommandResult{
+                    error: fmt.Errorf("error calling r.Read: %w", err),
+                    command: nil,
+                }
 				return
 			}
-			current := previous + string(buffer[:n])
 
-			for remaining, cmd := CommandFromBytes(current); cmd != nil; remaining, cmd = CommandFromBytes(current) {
+			current := append(previous, buffer[:n]...)
+
+			for remaining, cmd, err := CommandFromBytes(current); cmd != nil; remaining, cmd, err = CommandFromBytes(current) {
+                if err != nil {
+                    out <- TCPCommandResult{
+                        error: fmt.Errorf("error from parsing tcp command: %w", err),
+                        command: nil,
+                    }
+                } else {
+                    out <- TCPCommandResult{command: cmd, error: nil}
+                }
+
 				current = remaining
-				out <- *cmd
 			}
 
 			previous = current
@@ -127,6 +116,41 @@ func CommandParser(r io.Reader) chan TCPCommand {
 	}()
 
 	return out
+}
+
+func (t *TCP) runSocket(conn net.Conn) {
+    go func(c net.Conn) {
+        defer c.Close()
+
+        fromTcp := CommandParser(conn)
+        defer func() {
+            fmt.Println("connection has closed")
+        }()
+
+        timer := time.NewTicker(100 * time.Millisecond)
+
+        for {
+            select {
+            case commandWrapper := <-fromTcp:
+
+                if commandWrapper.error != nil {
+                    fmt.Printf("error from command parsing: %v\n", commandWrapper.error)
+                    return
+                }
+
+                cmd := commandWrapper.command
+
+                t.FromSockets <- cmd
+
+                if cmd.Command == 'c' || cmd.Command == 'e' {
+                    return
+                }
+
+            case <-timer.C:
+                fmt.Println("tick")
+            }
+        }
+    }(conn)
 }
 
 func (t *TCP) listen() {
@@ -140,47 +164,13 @@ func (t *TCP) listen() {
             break;
 		}
 
-		new_conn := NewConnection(conn)
-		err = send_cmds(new_conn, t.welcomes)
+		newConn := NewConnection(conn)
+		err = send_cmds(newConn, t.welcomes)
 		if err != nil {
 			// TODO: Should i do something with the conn?
 			continue
 		}
-		t.sockets = append(t.sockets, new_conn)
-
-		go func(c net.Conn) {
-			defer c.Close()
-
-			fromTcp := CommandParser(conn)
-			defer func() {
-				fmt.Println("connection has closed")
-			}()
-
-			timer := time.NewTicker(100 * time.Millisecond)
-
-		OuterLoop:
-			for {
-                select {
-                case cmd := <-fromTcp:
-                    // NOTE: i am sure there is a better way to do this
-                    // TODO: Figure out that better way
-                    if cmd.Command == "c" {
-                        fmt.Println("closing connection")
-                        break OuterLoop
-                    }
-
-                    t.FromSockets <- cmd
-
-                    if cmd.Command == "e" {
-                        break OuterLoop
-                    }
-
-                case <-timer.C:
-                    fmt.Println("tick")
-                }
-			}
-			fmt.Println("I AM DONE WITH THIS SHIT")
-
-		}(conn)
+		t.sockets = append(t.sockets, newConn)
+        t.runSocket(conn)
 	}
 }

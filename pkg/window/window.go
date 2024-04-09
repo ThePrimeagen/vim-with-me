@@ -8,18 +8,18 @@ import (
 )
 
 type Window struct {
-	Rows int
-	Cols int
-    cache [][]rune
+	Rows byte
+	Cols byte
+    cache [][]byte
     changes []commands.Change
 }
 
-func NewWindow(rows, cols int) *Window {
-    cache := make([][]rune, rows)
+func NewWindow(rows, cols byte) *Window {
+    cache := make([][]byte, rows)
     for i := range cache {
-        cache[i] = make([]rune, cols)
+        cache[i] = make([]byte, cols)
         for j := range cache[i] {
-            cache[i][j] = ' '
+            cache[i][j] = byte(' ')
         }
     }
     return &Window{
@@ -29,7 +29,7 @@ func NewWindow(rows, cols int) *Window {
     }
 }
 
-func (w *Window) Set(row, col int, value rune) error {
+func (w *Window) Set(row, col byte, value byte) error {
     if row < 0 || row >= w.Rows {
         return fmt.Errorf("Row out of bounds: %d", row)
     }
@@ -50,17 +50,17 @@ func (w *Window) Set(row, col int, value rune) error {
     return nil
 }
 
-func (w *Window) SetString(row int, value string) error {
-    if len(value) > w.Cols {
+func (w *Window) SetString(row byte, value string) error {
+    if len(value) > int(w.Cols) {
         return fmt.Errorf("String provided to Window is longer than columns: %d > %d", len(value), w.Cols)
     }
 
-    for i, r := range value {
+    for i, r := range []byte(value) {
         if w.cache[row][i] != r {
             w.cache[row][i] = r
             w.changes = append(w.changes, commands.Change{
                 Row: row,
-                Col: i,
+                Col: byte(i),
                 Value: r,
             })
         }
@@ -70,18 +70,19 @@ func (w *Window) SetString(row int, value string) error {
 }
 
 func (w *Window) SetWindow(value string) error {
-    if len(value) != w.Rows * w.Cols {
+    if len(value) != int(w.Rows) * int(w.Cols) {
         return fmt.Errorf("String provided to Window is not the correct length: %d != %d", len(value), w.Rows * w.Cols)
     }
 
-    for i, r := range value {
-        row := i / w.Cols
-        col := i % w.Cols
+    for i, r := range []byte(value) {
+        row := i / int(w.Cols)
+        col := i % int(w.Cols)
+
         if w.cache[row][col] != r {
             w.cache[row][col] = r
             w.changes = append(w.changes, commands.Change{
-                Row: row,
-                Col: col,
+                Row: byte(row),
+                Col: byte(col),
                 Value: r,
             })
         }
@@ -92,7 +93,7 @@ func (w *Window) SetWindow(value string) error {
 
 func (w *Window) Render() string {
     out := ""
-    for i := 0; i < w.Rows; i++ {
+    for i := 0; i < int(w.Rows); i++ {
         out += string(w.cache[i])
     }
     w.changes = make([]commands.Change, 0)
@@ -107,7 +108,7 @@ func (w *Window) PartialRender() commands.Changes {
 
 func OpenCommand(window *Window) *tcp.TCPCommand {
     return &tcp.TCPCommand{
-        Command: "open-window",
-        Data: fmt.Sprintf("%d:%d", window.Rows, window.Cols),
+        Command: commands.OPEN_WINDOW,
+        Data: []byte{window.Rows, window.Cols},
     }
 }
