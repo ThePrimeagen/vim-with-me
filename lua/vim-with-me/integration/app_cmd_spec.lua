@@ -1,5 +1,6 @@
 local eq = assert.are.same
 local int_utils = require("vim-with-me.integration.int_utils")
+local utils = require("vim-with-me.tcp.utils")
 local App = require("vim-with-me.app")
 
 describe("vim with me :: app_spec", function()
@@ -14,22 +15,24 @@ describe("vim with me :: app_spec", function()
             count = count + 1
         end)
 
-        tcp:send("open", "")
         next_cmd()
-        eq(app.window == nil, false)
+
+        tcp:send({command = app.commands:get("open"), data = ""})
+        next_cmd()
+
+        eq(false, app.window == nil)
         eq(app.window.dim.width, 80)
         eq(app.window.dim.height, 24)
         eq(int_utils.empty, table.concat(app.cache:to_string_rows()))
 
-        tcp:send("render", "")
+        tcp:send({command = app.commands:get("render"), data = ""})
         flush_cmds()
         eq(int_utils.theprimeagen, table.concat(app.cache:to_string_rows()))
 
-        tcp:send("partial", "1:1")
+        tcp:send({command = app.commands:get("partial"), data = utils.to_string(1, 1)})
         local cmds = flush_cmds()
         eq(#cmds > 0, true)
         eq(int_utils.theprimeagen_partial, table.concat(app.cache:to_string_rows()))
-
     end)
 end)
 

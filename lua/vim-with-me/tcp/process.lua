@@ -1,3 +1,5 @@
+local utils = require("vim-with-me.tcp.utils")
+
 local VERSION = 1
 local HEADER_LENGTH = 4
 
@@ -104,23 +106,21 @@ local function process_packets()
     end
 end
 
----@param command string
----@param data string
+---@param command TCPCommand
 ---@return string
-local function create_tcp_command(command, data)
-    assert(type(command) == "string", "command must be a string")
-    assert(type(data) == "string", "data must be a string")
-
-    local tcp_data = string.format("%s:%s", command, data)
-    local len = string.len(tcp_data)
-    local header = string.format("%d:%d:", VERSION, len)
-    return string.format("%s%s", header, tcp_data)
+local function encode_tcp_command(command)
+    return utils.to_string(
+        VERSION,
+        command.command,
+        to_big_endian_16(#command.data),
+        command.data
+    )
 end
 
 return {
     process_packets = process_packets,
     parse_big_endian_16 = parse_big_endian_16,
     to_big_endian_16 = to_big_endian_16,
-    create_tcp_command = create_tcp_command,
+    encode_tcp_command = encode_tcp_command,
     VERSION = VERSION,
 }

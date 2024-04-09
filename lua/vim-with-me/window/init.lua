@@ -175,16 +175,15 @@ end
 ---@param data string
 ---@return WindowPosition
 function M.parse_command_data(data)
-    local parts = vim.split(data, ":")
-    local rows = tonumber(parts[1])
-    local cols = tonumber(parts[2])
-
-    return {
+    assert(#data == 2, "window position command should have length 2")
+    local open = {
         row = 0,
         col = 0,
-        width = cols,
-        height = rows,
+        height = string.byte(data, 1, 1),
+        width = string.byte(data, 2, 2),
     }
+
+    return open
 end
 
 ---@param str string
@@ -210,30 +209,17 @@ end
 ---@return PartialRender[]
 function M.parse_partial_render(data)
 
-    local idx = 1
-    ---@type number | nil
-    local row = 0
-    ---@type number | nil
-    local col = 0
+    assert(#data % 3 == 0, "incomplete partial render string provided: " .. #data)
+
     local renders = {}
-    while true do
-        row, idx = next_number(data, idx)
-        col, idx = next_number(data, idx)
-        if row == nil or col == nil then
-            break
-        end
-
-        local value = string.sub(data, idx, idx)
-        assert(type(value) == "string", "value must be string")
-        assert(#value == 1, "value must be len 1")
-
-        idx = idx + 1
+    for i = 1, #data, 3 do
         table.insert(renders, {
-            row = row + 1,
-            col = col + 1,
-            value = value,
+            row = string.byte(data, i, i) + 1,
+            col = string.byte(data, i + 1, i + 1) + 1,
+            value = string.sub(data, i + 2, i + 2),
         })
     end
+
     return renders
 end
 

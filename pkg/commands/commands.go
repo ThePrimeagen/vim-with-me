@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"maps"
+
 	"github.com/theprimeagen/vim-with-me/pkg/tcp"
 )
 
@@ -22,6 +24,16 @@ const (
     EXT_START
 )
 
+var commandMap = map[string]byte {
+    "render": RENDER,
+    "partial": PARTIAL_RENDER,
+    "close": CLOSE,
+    "error": ERROR,
+    "openWindow": OPEN_WINDOW,
+    "commands": COMMANDS,
+    "missing": MISSING,
+}
+
 type Commander struct {
     extensions map[string]byte
     size byte
@@ -29,7 +41,7 @@ type Commander struct {
 
 func NewCommander() Commander {
     return Commander {
-        extensions: map[string]byte{},
+        extensions: maps.Clone(commandMap),
         size: byte(EXT_START),
     }
 }

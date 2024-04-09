@@ -1,6 +1,22 @@
 local ZERO = string.byte("$")
 local BASE = 90
 
+local function to_string(...)
+    local out = {}
+    for i = 1, select("#", ...) do
+        local v = select(i, ...)
+        if type(v) == "number" then
+            table.insert(out, string.char(v))
+        elseif type(v) == "string" then
+            table.insert(out, v)
+        else
+            assert(false, "should never provide anything other than numbers, strings, or tables of strings and numbers")
+        end
+    end
+    return table.concat(out, "")
+end
+
+
 ---@param length number
 ---@return string
 local function to_tcp_int(length)
@@ -74,7 +90,8 @@ return {
     to_tcp_int = to_tcp_int,
     from_tcp_int = from_tcp_int,
 
-    ColorCompression = ColorCompression
+    ColorCompression = ColorCompression,
+    to_string = to_string,
 }
 
 

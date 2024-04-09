@@ -53,23 +53,25 @@ func main() {
 		fmt.Printf("waiting on from socket \n")
 		cmd := <-server.FromSockets
 		fmt.Printf("command received %+v\n", cmd)
+
 		switch cmd.Command {
+        // Think about how to do better custom commands and really routing in
+        // general
         case comms.GetCommandByte("open"):
 			out := window.OpenCommand(win)
 			server.Send(out)
-        case 'r':
+        case commands.RENDER:
 			render(win)
-			//str := win.Render()
-			//out := commands.Render(str)
-			//server.Send(out)
-        case 'p':
-			//data := strings.Split(cmd.Data, ":")
-			//row, _ := strconv.Atoi(data[0])
-			//col, _ := strconv.Atoi(data[1])
-			//partialRender(win, row, col, "theprimeagen")
-			//renders := win.PartialRender()
-			//fmt.Printf("partial render %d\n", len(renders))
-			//server.Send(commands.PartialRender(renders))
+			str := win.Render()
+			out := commands.Render([]byte(str))
+			server.Send(out)
+        case commands.PARTIAL_RENDER:
+            row := cmd.Data[0]
+            col := cmd.Data[1]
+			partialRender(win, row, col, []byte("theprimeagen"))
+			renders := win.PartialRender()
+			fmt.Printf("partial render %d\n", len(renders))
+			server.Send(commands.PartialRender(renders))
 		}
 	}
 }

@@ -1,36 +1,22 @@
 -- luacheck: globals describe it assert
 local eq = assert.are.same
 local tcp = require("vim-with-me.tcp.process")
-
-local function to_string(...)
-    local out = {}
-    for i = 1, select("#", ...) do
-        local v = select(i, ...)
-        if type(v) == "number" then
-            table.insert(out, string.char(v))
-        elseif type(v) == "string" then
-            table.insert(out, v)
-        else
-            assert(false, "should never provide anything other than numbers, strings, or tables of strings and numbers")
-        end
-    end
-    return table.concat(out, "")
-end
+local utils = require("vim-with-me.tcp.utils")
 
 describe("vim with me :: tcp.process", function()
     it("parse_big_endian_16", function()
-        eq(0x45, tcp.parse_big_endian_16(to_string(0, 69)))
-        eq(0x4500, tcp.parse_big_endian_16(to_string(69, 0)))
-        eq(0x4545, tcp.parse_big_endian_16(to_string(69, 69)))
+        eq(0x45, tcp.parse_big_endian_16(utils.to_string(0, 69)))
+        eq(0x4500, tcp.parse_big_endian_16(utils.to_string(69, 0)))
+        eq(0x4545, tcp.parse_big_endian_16(utils.to_string(69, 69)))
     end)
 
     it("process packets chunks", function()
         local chunks = {
-            to_string(1), -- version
-            to_string(69), -- cmd
+            utils.to_string(1), -- version
+            utils.to_string(69), -- cmd
             tcp.to_big_endian_16(5),
-            to_string("n", "o", "i", "c", "e", 1),
-            to_string(72, tcp.to_big_endian_16(3), "f", "o", "o"), -- cmd, len, data
+            utils.to_string("n", "o", "i", "c", "e", 1),
+            utils.to_string(72, tcp.to_big_endian_16(3), "f", "o", "o"), -- cmd, len, data
         }
 
         local packets = tcp.process_packets()
@@ -55,11 +41,11 @@ describe("vim with me :: tcp.process", function()
 
     it("process packets multiple in one chunk", function()
         local chunk = table.concat({
-            to_string(1), -- version
-            to_string(69), -- cmd
+            utils.to_string(1), -- version
+            utils.to_string(69), -- cmd
             tcp.to_big_endian_16(5),
-            to_string("n", "o", "i", "c", "e", 1),
-            to_string(72, tcp.to_big_endian_16(3), "f", "o", "o"), -- cmd, len, data
+            utils.to_string("n", "o", "i", "c", "e", 1),
+            utils.to_string(72, tcp.to_big_endian_16(3), "f", "o", "o"), -- cmd, len, data
         }, "")
 
         local packets = tcp.process_packets()
@@ -69,13 +55,13 @@ describe("vim with me :: tcp.process", function()
 
     it("version mismatch should cause an error", function()
         local chunk = table.concat({
-            to_string(2), -- version
-            to_string(69), -- cmd
+            utils.to_string(2), -- version
+            utils.to_string(69), -- cmd
             tcp.to_big_endian_16(5),
-            to_string("n", "o", "i", "c", "e"),
+            utils.to_string("n", "o", "i", "c", "e"),
         }, "")
         local packets = tcp.process_packets()
-        local ok, command = pcall(packets, chunk)
+        local ok, _ = pcall(packets, chunk)
         eq(ok, false)
     end)
 end)

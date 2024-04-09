@@ -1,14 +1,17 @@
-local token = require("vim-with-me.app.token")
+-- local token = require("vim-with-me.app.token")
 local DisplayCache = require("vim-with-me.window.cache")
 local window = require("vim-with-me.window")
+local Commands = require("vim-with-me.app.commands")
+local DefinedCommands = Commands.DefinedCommands
 
 ---@class VWMApp
 ---@field public window WindowDetails | nil
 ---@field public cache DisplayCache | nil
 ---@field public conn TCP
+---@field public commands TCPCommands
 ---@field public _auth_cb (fun(): nil) | nil
 ---@field public _on_render (fun(): nil) | nil
----@field public _on_command (fun(cmd: string, data: string): nil) | nil
+---@field public _on_command (fun(cmd: TCPCommand): nil) | nil
 local App = {}
 App.__index = App
 
@@ -21,12 +24,13 @@ function App:new(conn)
         conn = conn,
         _on_command = nil,
         _auth_cb = nil,
+        commands = Commands.Commands:new(),
         _render_cb = nil,
         window = nil,
         cache = nil,
     }, self)
 
-    conn:listen(function(command, data) app:_process(command, data) end)
+    conn:listen(function(command) app:_process(command) end)
     return app
 end
 
@@ -37,7 +41,7 @@ function App:on_render(cb)
     return self
 end
 
----@param cb fun(cmd: string, data: string): nil
+---@param cb fun(cmd: TCPCommand): nil
 ---@return VWMApp
 function App:on_cmd_received(cb)
     self._render_cb = cb
@@ -76,27 +80,36 @@ function App:render(str)
     end
 end
 
-function App:_process(command, data)
-    if command == "p" and self.window and self.cache then
+---@param command TCPCommand
+function App:_process(command)
+    local cmd = command.command
+    local data = command.data
+
+    if cmd == DefinedCommands.COMMANDS then
+        self.commands:parse(data)
+    elseif cmd == DefinedCommands.PARTIAL_RENDER and self.window and self.cache then
         self:partial_render(window.parse_partial_render(data))
-    elseif command == "r" and self.window and self.cache then
+    elseif cmd == DefinedCommands.RENDER and self.window and self.cache then
         self:render(data)
-    elseif command == "c" then
+    elseif cmd == DefinedCommands.CLOSE then
         self:close()
-    elseif command == "open-window" then
+    elseif cmd == DefinedCommands.OPEN_WINDOW then
         local dim = window.parse_command_data(data)
         self:with_window(dim, true)
-    elseif command == "e" then
+    elseif cmd == DefinedCommands.ERROR then
         -- TODO: error and then close
         self:close()
-    elseif command == "auth" then
+        --[[
+    elseif cmd == "auth" then
         assert(self._auth_cb, "no auth callback")
         self._auth_cb()
         self._auth_cb = nil
     end
+    -]]
+    end
 
     if self._on_command then
-        self._on_command(command, data)
+        self._on_command(command)
     end
 
 end
@@ -129,9 +142,11 @@ end
 
 ---@param cb function
 function App:authenticate(cb)
+    --[[
     local t = token.get_token()
     self.conn:send("auth", t)
     self._auth_cb = cb
+    --]]
 end
 
 return App

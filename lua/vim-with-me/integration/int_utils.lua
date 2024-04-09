@@ -13,8 +13,8 @@ end
 ---@return (fun(): TCPCommand | nil), fun(): TCPCommand[]
 local function create_tcp_next(tcp)
     local received = {}
-    tcp:listen(function(command, data)
-        table.insert(received, {command = command, data = data})
+    tcp:listen(function(command)
+        table.insert(received, command)
     end)
 
     local function next_cmd()

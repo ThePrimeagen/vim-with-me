@@ -35,9 +35,11 @@ end
 ---@field command number
 ---@field data string
 
+---@alias TCPListener (fun(command: TCPCommand): nil)
+
 ---@class TCP
 ---@field _connection any | nil
----@field _listeners (fun(command: string, data: string): nil)[]
+---@field _listeners TCPListener[]
 ---@field opts TCPOptions
 local TCP = {}
 TCP.__index = TCP
@@ -87,14 +89,14 @@ function TCP:_read()
         self._connection,
         vim.schedule_wrap(function(_, chunk)
             while true do
-                local command, data = process(chunk)
+                local command = process(chunk)
                 chunk = ""
-                if command == nil or data == nil then
+                if command == nil then
                     break
                 end
 
                 for _, listener in ipairs(self._listeners) do
-                    listener(command, data)
+                    listener(command)
                 end
             end
         end)
@@ -120,12 +122,14 @@ function TCP:connected()
     return self._connection ~= nil
 end
 
-function TCP:send(command, data)
+---@param command TCPCommand
+function TCP:send(command)
     assert(self._connection, "client not started")
-    local ok, _ = pcall(self._connection.write, self._connection, TcpProcess.create_tcp_command(command, data))
+    local ok, _ = pcall(self._connection.write, self._connection, TcpProcess.encode_tcp_command(command))
     assert(ok, "could not send data")
 end
 
+---@param cb TCPListener
 function TCP:listen(cb)
     print("listening", self._listeners, cb)
     table.insert(self._listeners, cb)
