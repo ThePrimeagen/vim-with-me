@@ -3,6 +3,9 @@ package tcp2
 import (
 	"encoding/binary"
 	"fmt"
+	"log/slog"
+	"net"
+	"sync"
 )
 
 var VERSION byte = 1
@@ -14,37 +17,143 @@ type TCPCommand struct {
 }
 
 func (t *TCPCommand) MarshalBinary() (data []byte, err error) {
-    length := uint16(len(t.Data))
-    lengthData := make([]byte, 2)
-    binary.BigEndian.PutUint16(lengthData, length)
+	length := uint16(len(t.Data))
+	lengthData := make([]byte, 2)
+	binary.BigEndian.PutUint16(lengthData, length)
 
-    b := make([]byte, 0, 1 + 1 + 2 + length)
-    b = append(b, VERSION)
-    b = append(b, t.Command)
-    b = append(b, lengthData...)
-    return append(b, t.Data...), nil
+	b := make([]byte, 0, 1+1+2+length)
+	b = append(b, VERSION)
+	b = append(b, t.Command)
+	b = append(b, lengthData...)
+	return append(b, t.Data...), nil
 }
 
 func (t *TCPCommand) UnmarshalBinary(bytes []byte) error {
-    if bytes[0] != VERSION {
-        return fmt.Errorf("version mismatch %d != %d", bytes[0], VERSION)
-    }
+	if bytes[0] != VERSION {
+		return fmt.Errorf("version mismatch %d != %d", bytes[0], VERSION)
+	}
 
-    length := int(binary.BigEndian.Uint16(bytes[2:]))
-    end := HEADER_SIZE + length
+	length := int(binary.BigEndian.Uint16(bytes[2:]))
+	end := HEADER_SIZE + length
 
-    if len(bytes) < end {
-        return fmt.Errorf("not enough data to parse packet: got %d expected %d", len(bytes), HEADER_SIZE + length)
-    }
+	if len(bytes) < end {
+		return fmt.Errorf("not enough data to parse packet: got %d expected %d", len(bytes), HEADER_SIZE+length)
+	}
 
-    command := bytes[1]
-    data := bytes[HEADER_SIZE:end]
+	command := bytes[1]
+	data := bytes[HEADER_SIZE:end]
 
-    t.Command = command
-    t.Data = data
+	t.Command = command
+	t.Data = data
 
-    return nil
+	return nil
 }
 
+type TCP struct {
+	welcomes    []*TCPCommand
+	sockets     []Connection
+	listener    net.Listener
+	mutex       sync.RWMutex
+	FromSockets chan TCPCommandWrapper
+}
 
+func (t *TCP) Send(command *TCPCommand) {
+	t.mutex.RLock()
+	removals := make([]int, 0)
+	for i, conn := range t.sockets {
+		slog.Info("sending message", "index", i, "msg", command)
+		err := conn.Write(command)
+		if err != nil {
+			slog.Error("removing due to error", "index", i)
+			removals = append(removals, i)
+		}
+	}
+	t.mutex.RUnlock()
 
+	if len(removals) > 0 {
+		t.mutex.Lock()
+		for i := len(removals) - 1; i >= 0; i-- {
+			idx := removals[i]
+			t.sockets = append(t.sockets[:idx], t.sockets[idx+1:]...)
+		}
+		t.mutex.Unlock()
+	}
+}
+
+func sendCommands(conn *Connection, cmds []*TCPCommand) error {
+	for _, cmd := range cmds {
+		err := conn.Write(cmd)
+		if err != nil {
+			// TODO: Do i need to close the connection?
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (t *TCP) WelcomeMessage(cmd *TCPCommand) {
+	t.welcomes = append(t.welcomes, cmd)
+}
+
+func (t *TCP) Close() {
+	t.listener.Close()
+}
+
+type TCPCommandWrapper struct {
+	Conn    *Connection
+	Command *TCPCommand
+}
+
+func NewTCPServer(port uint16) (*TCP, error) {
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	if err != nil {
+		return nil, err
+	}
+
+    // TODO: Done channel
+	return &TCP{
+		sockets:     make([]Connection, 0, 10),
+		welcomes:    make([]*TCPCommand, 0, 10),
+		listener:    listener,
+		FromSockets: make(chan TCPCommandWrapper, 10),
+		mutex:       sync.RWMutex{},
+	}, nil
+}
+
+func readConnection(tcp *TCP, conn *Connection) {
+	for {
+		cmd, err := conn.Next()
+		if err != nil {
+			slog.Error("received error while reading from socket", "id", conn.Id, "error", err)
+			break
+		}
+
+		tcp.FromSockets <- TCPCommandWrapper{Command: cmd, Conn: conn}
+	}
+}
+
+func (t *TCP) Start() {
+	for {
+		conn, err := t.listener.Accept()
+
+		if err != nil {
+			slog.Error("server error:", "error", err)
+		}
+
+		newConn := NewConnection(conn)
+        err = sendCommands(&newConn, t.welcomes)
+        if err != nil {
+			slog.Error("could not send out welcome messages", "error", err)
+            // TODO: How do i close?
+            // newConn.Close()
+            continue
+        }
+
+		t.mutex.Lock()
+		t.sockets = append(t.sockets, newConn)
+		t.mutex.Unlock()
+
+        defer readConnection(t, &newConn)
+	}
+}

@@ -1,23 +1,23 @@
 package main
 
 import (
-	"encoding"
-	"encoding/binary"
 	"fmt"
-	"io"
 	"log"
-	"net"
 	"os"
 
-	"github.com/theprimeagen/vim-with-me/pkg/tcp"
+	"github.com/theprimeagen/vim-with-me/pkg/commands"
+	"github.com/theprimeagen/vim-with-me/pkg/tcp2"
+	"github.com/theprimeagen/vim-with-me/pkg/testies"
 )
 
-func read_conn(conn Connection) {
+func read_conn(conn tcp2.Connection) {
 	for {
-		log.Printf("Reading(%d)...\n", id)
-        cmd, err := readTCPCommand(&conn.FrameReader)
+		log.Printf("Reading(%d)...\n", conn.Id)
+        cmd, err := conn.Next()
+
         if err != nil {
             log.Printf("error with: %+v\n", err)
+            break
         }
 
 		log.Printf("got command %+v", cmd)
@@ -31,26 +31,27 @@ func read_conn(conn Connection) {
 }
 
 func main() {
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", 42073))
-	defer listener.Close()
-	if err != nil {
-		log.Fatalf("you suck %+v\n", err)
-	}
-
 	log.SetOutput(os.Stdout)
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
+	server, err := testies.CreateServerFromArgs()
+
+    if err != nil {
+        log.Fatal("errror could not start", err)
+    }
+
+    defer server.Close()
+
+    commander := commands.NewCommander()
+    server.WelcomeMessage(commander.ToCommands())
+
 	log.Printf("starting server\n")
 	fmt.Printf("starting server from fmt!\n")
 
-	for {
-		conn, err := listener.Accept()
+    go server.Start()
 
-		if err != nil {
-			log.Fatalf("here is that server error: %+v\n", err)
-		}
-
-        newConn := NewConnection(conn)
-		go read_conn(conn, myId)
-		go write_conn(conn, myId)
-	}
+    for {
+        cmd := <- server.FromSockets
+        server.Send(cmd.Command)
+    }
 }

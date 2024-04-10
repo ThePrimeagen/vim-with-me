@@ -17,20 +17,45 @@ local function create_tcp()
     }
 end
 
+---@param cmds TCPCommand[]
+---@param expected TCPCommand
+local function assert_cmds(cmds, expected)
+    for _, v in ipairs(cmds) do
+        eq(expected, v)
+    end
+end
+
 describe("vim with me :: reconnecting test", function()
     before_each(int_utils.before_each)
     after_each(int_utils.after_each)
 
-    it("multiuser test", function()
+    it("reconnection test", function()
         int_utils.create_test_server("connection_server", PORT)
 
-        for _ = 1, 5 do
-            print("create connection")
+        local tcps = {
+            create_tcp(),
+            create_tcp(),
+            create_tcp(),
+        }
+
+        -- read app commands
+        int_utils.read_all(tcps)
+
+        for i = 1, 3 do
+            local expected = { command = 69, data = "your mom: " .. i }
+            tcps[1].tcp:send(expected)
+
+            local cmds = int_utils.read_all(tcps)
+            assert_cmds(cmds, expected)
+
+            tcps[1].tcp:close()
+            vim.wait(100)
+
+            table.remove(tcps, 1)
+
             local tcp = create_tcp()
-            vim.wait(500)
-            print("close connection")
-            tcp.tcp:close()
-            vim.wait(500)
+            table.insert(tcps, tcp)
+            tcp.next()
         end
 
         --[[

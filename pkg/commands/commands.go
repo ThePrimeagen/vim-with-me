@@ -3,7 +3,7 @@ package commands
 import (
 	"maps"
 
-	"github.com/theprimeagen/vim-with-me/pkg/tcp"
+	"github.com/theprimeagen/vim-with-me/pkg/tcp2"
 )
 
 type Change struct {
@@ -62,7 +62,7 @@ func (c *Commander) GetCommandByte(name string) byte {
     return MISSING
 }
 
-func (c *Commander) ToCommands() *tcp.TCPCommand {
+func (c *Commander) ToCommands() *tcp2.TCPCommand {
     b := []byte{}
     for name, k := range c.extensions {
         b = append(b, []byte(name)...)
@@ -70,7 +70,7 @@ func (c *Commander) ToCommands() *tcp.TCPCommand {
         b = append(b, k)
     }
 
-    return &tcp.TCPCommand{
+    return &tcp2.TCPCommand{
         Command: COMMANDS,
         Data: b,
     }
@@ -96,34 +96,34 @@ func (c *Change) Bytes() []byte {
 
 type Changes []Change
 
-func PartialRender(changes Changes) *tcp.TCPCommand {
+func PartialRender(changes Changes) *tcp2.TCPCommand {
     bytes := make([]byte, 0, len(changes) * CHANGE_LENGTH)
     for _, change := range changes {
         bytes = append(bytes, change.Bytes()...)
     }
 
-    return &tcp.TCPCommand{
+    return &tcp2.TCPCommand{
         Command: PARTIAL_RENDER,
         Data: bytes,
     }
 }
 
-func Render(data []byte) *tcp.TCPCommand {
-    return &tcp.TCPCommand{
+func Render(data []byte) *tcp2.TCPCommand {
+    return &tcp2.TCPCommand{
         Command: RENDER,
         Data: data,
     }
 }
 
-func Close(msg []byte) *tcp.TCPCommand {
-    return &tcp.TCPCommand{
+func Close(msg []byte) *tcp2.TCPCommand {
+    return &tcp2.TCPCommand{
         Command: CLOSE,
         Data: msg,
     }
 }
 
-func Error(msg []byte) *tcp.TCPCommand {
-    return &tcp.TCPCommand{
+func Error(msg []byte) *tcp2.TCPCommand {
+    return &tcp2.TCPCommand{
         Command: ERROR,
         Data: msg,
     }

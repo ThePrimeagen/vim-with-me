@@ -3,6 +3,7 @@ package tcp2
 import (
 	"encoding"
 	"encoding/binary"
+	"fmt"
 	"io"
 	"net"
 )
@@ -14,6 +15,7 @@ type Connection struct {
     Id int
 }
 
+// TODO: How do i close?
 func NewConnection(conn net.Conn) Connection {
     id++
 	return Connection{
@@ -58,7 +60,7 @@ func (f *FrameReader) parsePacket(data []byte) int {
 		return 0
 	}
 
-	length := int(binary.BigEndian.Uint16(data[3:]))
+	length := int(binary.BigEndian.Uint16(data[2:]))
 	if len(data) < HEADER_SIZE+length {
 		return 0
 	}
@@ -76,6 +78,7 @@ func (f *FrameReader) Read(data []byte) (int, error) {
 		}
 
 		n, err := f.reader.Read(f.scratch)
+        fmt.Printf("READ DATA: %d, %+v\n", n, err)
 		if err != nil {
 			return 0, err
 		}
@@ -120,3 +123,4 @@ func (w *FrameWriter) Write(bytes encoding.BinaryMarshaler) error {
 	}
 	return nil
 }
+

@@ -19,16 +19,6 @@ local function create_tcp()
     }
 end
 
----@param tcps TestTCP[]
----@return (TCPCommand | nil)[]
-local function read_all(tcps)
-    local out = {}
-    for _, tcp in ipairs(tcps) do
-        table.insert(out, tcp.next())
-    end
-    return out
-end
-
 describe("vim with me :: multiuser", function()
     before_each(int_utils.before_each)
     after_each(int_utils.after_each)

@@ -9,6 +9,17 @@ local function get_stdout()
     return out
 end
 
+---@param tcps TestTCP[]
+---@return (TCPCommand | nil)[]
+local function read_all(tcps)
+    local out = {}
+    for _, tcp in ipairs(tcps) do
+        table.insert(out, tcp.next())
+    end
+    return out
+end
+
+
 ---@param tcp TCP
 ---@return (fun(): TCPCommand | nil), fun(): TCPCommand[]
 local function create_tcp_next(tcp)
@@ -87,7 +98,6 @@ local function create_test_server(name, port)
         return done_building
     end)
 
-    print("hello world i have started my golang server")
     system.run({ string.format("./%s", name), "--port", tostring(port) }, {
         stdout = function(_, data)
             print("stdout:", data)
@@ -162,4 +172,5 @@ return {
     get_stdout = get_stdout,
     before_each = before_each,
     after_each = after_each,
+    read_all = read_all,
 }
