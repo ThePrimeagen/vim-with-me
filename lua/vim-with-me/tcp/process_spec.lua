@@ -31,10 +31,10 @@ describe("vim with me :: tcp.process", function()
         eq(nil, command)
 
         command = packets(chunks[4])
-        eq({command = 69, data = "noice"}, command)
+        eq({ command = 69, data = "noice" }, command)
 
         command = packets(chunks[5])
-        eq({command = 72, data = "foo"}, command)
+        eq({ command = 72, data = "foo" }, command)
 
         eq(nil, packets(""))
     end)
@@ -49,8 +49,8 @@ describe("vim with me :: tcp.process", function()
         }, "")
 
         local packets = tcp.process_packets()
-        eq({command = 69, data = "noice"}, packets(chunk))
-        eq({command = 72, data = "foo"}, packets())
+        eq({ command = 69, data = "noice" }, packets(chunk))
+        eq({ command = 72, data = "foo" }, packets())
     end)
 
     it("version mismatch should cause an error", function()

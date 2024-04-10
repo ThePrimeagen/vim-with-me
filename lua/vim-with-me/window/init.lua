@@ -208,8 +208,10 @@ end
 ---@param data string
 ---@return PartialRender[]
 function M.parse_partial_render(data)
-
-    assert(#data % 3 == 0, "incomplete partial render string provided: " .. #data)
+    assert(
+        #data % 3 == 0,
+        "incomplete partial render string provided: " .. #data
+    )
 
     local renders = {}
     for i = 1, #data, 3 do

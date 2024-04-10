@@ -10,12 +10,14 @@ local function to_string(...)
         elseif type(v) == "string" then
             table.insert(out, v)
         else
-            assert(false, "should never provide anything other than numbers, strings, or tables of strings and numbers")
+            assert(
+                false,
+                "should never provide anything other than numbers, strings, or tables of strings and numbers"
+            )
         end
     end
     return table.concat(out, "")
 end
-
 
 ---@param length number
 ---@return string
@@ -58,7 +60,7 @@ ColorCompression.__index = ColorCompression
 function ColorCompression:new()
     local compression = setmetatable({
         table = {},
-        size = 0
+        size = 0,
     }, self)
     return compression
 end
@@ -77,7 +79,14 @@ function ColorCompression:decompress(color)
     local index = from_tcp_int(color) + 1
     local value = self.table[index]
 
-    assert(value ~= nil, string.format("index: %d does not exist in table(%d)", index, #self.table))
+    assert(
+        value ~= nil,
+        string.format(
+            "index: %d does not exist in table(%d)",
+            index,
+            #self.table
+        )
+    )
     return value
 end
 
@@ -93,5 +102,3 @@ return {
     ColorCompression = ColorCompression,
     to_string = to_string,
 }
-
-

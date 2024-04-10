@@ -2,7 +2,6 @@
 local DisplayCache = require("vim-with-me.window.cache")
 local window = require("vim-with-me.window")
 local Commands = require("vim-with-me.app.commands")
-local DefinedCommands = Commands.DefinedCommands
 
 ---@class VWMApp
 ---@field public window WindowDetails | nil
@@ -30,7 +29,9 @@ function App:new(conn)
         cache = nil,
     }, self)
 
-    conn:listen(function(command) app:_process(command) end)
+    conn:listen(function(command)
+        app:_process(command)
+    end)
     return app
 end
 
@@ -84,19 +85,20 @@ end
 function App:_process(command)
     local cmd = command.command
     local data = command.data
+    local cmds = self.commands
 
-    if cmd == DefinedCommands.COMMANDS then
+    if cmd == cmds:get("commands") then
         self.commands:parse(data)
-    elseif cmd == DefinedCommands.PARTIAL_RENDER and self.window and self.cache then
+    elseif cmd == cmds:get("partial") and self.window and self.cache then
         self:partial_render(window.parse_partial_render(data))
-    elseif cmd == DefinedCommands.RENDER and self.window and self.cache then
+    elseif cmd == cmds:get("render") and self.window and self.cache then
         self:render(data)
-    elseif cmd == DefinedCommands.CLOSE then
+    elseif cmd == cmds:get("close") then
         self:close()
-    elseif cmd == DefinedCommands.OPEN_WINDOW then
+    elseif cmd == cmds:get("openWindow") then
         local dim = window.parse_command_data(data)
         self:with_window(dim, true)
-    elseif cmd == DefinedCommands.ERROR then
+    elseif cmd == cmds:get("error") then
         -- TODO: error and then close
         self:close()
         --[[
@@ -111,7 +113,6 @@ function App:_process(command)
     if self._on_command then
         self._on_command(command)
     end
-
 end
 
 function App:close()
@@ -129,11 +130,10 @@ end
 ---@param center boolean | nil
 ---@return VWMApp
 function App:with_window(dim, center)
-
     assert(self.window == nil, "window already open")
 
     center = center or center == nil
-    self.window = window.create_window(dim, center);
+    self.window = window.create_window(dim, center)
     window.focus(self.window)
 
     self.cache = DisplayCache:new(dim)
@@ -142,6 +142,7 @@ end
 
 ---@param cb function
 function App:authenticate(cb)
+    assert(cb, self)
     --[[
     local t = token.get_token()
     self.conn:send("auth", t)

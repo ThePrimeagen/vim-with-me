@@ -46,13 +46,15 @@ local function debug_packet(chunk)
     print("  command", command)
     print("  length", length)
     if #chunk >= HEADER_LENGTH + length then
-        print("  data", string.sub(chunk, HEADER_LENGTH, HEADER_LENGTH + length))
+        print(
+            "  data",
+            string.sub(chunk, HEADER_LENGTH, HEADER_LENGTH + length)
+        )
         print("  extra", #chunk - (HEADER_LENGTH + length))
     else
         print("  packet doesn't have all the data yet")
     end
 end
-
 
 -- Version : Command : Length : Data
 -- 1 byte  : 1 byte  : 2 bytes: Length bytes
@@ -67,12 +69,16 @@ local function parse_tcp_command(str, index)
     local length = parse_big_endian_16(str, 3)
     local data_start = index + HEADER_LENGTH
 
-    assert(#str >= HEADER_LENGTH + length, "string is too short to parse tcp command from")
+    assert(
+        #str >= HEADER_LENGTH + length,
+        "string is too short to parse tcp command from"
+    )
 
     return {
         command = string.byte(str, index + 1),
-        data = string.sub(str, data_start, data_start + length - 1)
-    }, length
+        data = string.sub(str, data_start, data_start + length - 1),
+    },
+        length
 end
 
 local function process_packets()

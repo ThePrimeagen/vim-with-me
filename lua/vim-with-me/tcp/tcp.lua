@@ -125,7 +125,11 @@ end
 ---@param command TCPCommand
 function TCP:send(command)
     assert(self._connection, "client not started")
-    local ok, _ = pcall(self._connection.write, self._connection, TcpProcess.encode_tcp_command(command))
+    local ok, _ = pcall(
+        self._connection.write,
+        self._connection,
+        TcpProcess.encode_tcp_command(command)
+    )
     assert(ok, "could not send data")
 end
 
@@ -136,4 +140,3 @@ function TCP:listen(cb)
 end
 
 return TCP
-

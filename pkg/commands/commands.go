@@ -14,12 +14,14 @@ type Change struct {
 
 var CHANGE_LENGTH = 3
 const (
-    RENDER = iota
+    COMMANDS = iota
+    RENDER
     PARTIAL_RENDER
     CLOSE
     ERROR
     OPEN_WINDOW
-    COMMANDS
+    // TODO: what should i do on the server for missing commands?
+    // I am thinking about closing the connection
     MISSING
     EXT_START
 )
@@ -31,7 +33,6 @@ var commandMap = map[string]byte {
     "error": ERROR,
     "openWindow": OPEN_WINDOW,
     "commands": COMMANDS,
-    "missing": MISSING,
 }
 
 type Commander struct {

@@ -17,30 +17,34 @@ describe("vim with me", function()
         local commands = Commands.Commands:new()
         commands:parse(server_commands.data)
 
-        tcp:send({command = commands:get("open"), data = ""})
+        tcp:send({ command = commands:get("open"), data = "" })
         eq({
             command = commands:get("openWindow"),
-            data = utils.to_string(24, 80)
+            data = utils.to_string(24, 80),
         }, next_cmd())
 
-        tcp:send({command = commands:get("render"), data = ""})
+        tcp:send({ command = commands:get("render"), data = "" })
         local cmd = next_cmd()
 
         eq({
-            command = Commands.DefinedCommands.RENDER,
+            command = commands:get("render"),
             data = theprimeagen,
         }, cmd)
-        tcp:send({command = commands:get("partial"), data = utils.to_string(1, 1)})
+        tcp:send({
+            command = commands:get("partial"),
+            data = utils.to_string(1, 1),
+        })
         local theprimeagen_str = "theprimeagen"
         local data = ""
         for i = 1, #theprimeagen_str do
-            data = data .. string.format(utils.to_string(1, i, theprimeagen_str:sub(i, i)))
+            data = data
+                .. string.format(
+                    utils.to_string(1, i, theprimeagen_str:sub(i, i))
+                )
         end
 
         eq({
-            {command = Commands.DefinedCommands.PARTIAL_RENDER, data = data}
+            { command = commands:get("partial"), data = data },
         }, flush_cmds())
-
     end)
 end)
-

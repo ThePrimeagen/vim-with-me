@@ -20,11 +20,8 @@ describe("app#commands", function()
         eq(8, cmd:get("open"))
         eq(9, cmd:get("close"))
         eq(10, cmd:get("foo"))
-        eq(Commands.DefinedCommands.MISSING, cmd:get("bar"))
+
+        local ok, _ = pcall(cmd.get, cmd, "bar")
+        eq(false, ok)
     end)
 end)
-
-
-
-
-

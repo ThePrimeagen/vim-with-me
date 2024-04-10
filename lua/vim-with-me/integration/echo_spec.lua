@@ -7,7 +7,7 @@ describe("vim with me", function()
     it("integartion testing", function()
         local tcp = int_utils.create_test_conn("echo_server", 42069)
         local next = int_utils.create_tcp_next(tcp)
-        tcp:send({command = 1, data = "world"})
+        tcp:send({ command = 1, data = "world" })
 
         local hello_back = next()
         eq(hello_back ~= nil, true)
@@ -16,7 +16,6 @@ describe("vim with me", function()
             return
         end
 
-        print(vim.inspect(hello_back))
         eq(hello_back.command, 1)
         eq(hello_back.data, "world")
     end)

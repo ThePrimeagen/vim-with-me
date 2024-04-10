@@ -40,7 +40,5 @@ describe("vim with me :: tcp.utils", function()
         eq(ok, false)
 
         eq(compression.size, 3)
-
     end)
 end)
-

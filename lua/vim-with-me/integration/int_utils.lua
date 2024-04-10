@@ -50,20 +50,23 @@ end
 ---@return TCP
 local function create_test_conn(name, port)
     local done_building = false
-    system.run({"go", "build", "-o", name, string.format("./test/%s/main.go", name)}, {
-    }, function(exit_info)
-        if exit_info.code ~= 0 then
-            print(exit_info.stderr or "no standard error")
-            os.exit(exit_info.code, true)
-        end
+    system.run(
+        { "go", "build", "-o", name, string.format("./test/%s/main.go", name) },
+        {},
+        function(exit_info)
+            if exit_info.code ~= 0 then
+                print(exit_info.stderr or "no standard error")
+                os.exit(exit_info.code, true)
+            end
 
-        done_building = true
-    end)
+            done_building = true
+        end
+    )
     vim.wait(1000, function()
         return done_building
     end)
 
-    system.run({string.format("./%s", name), "--port", tostring(port)}, {
+    system.run({ string.format("./%s", name), "--port", tostring(port) }, {
         stdout = function(_, data)
             table.insert(stdout, data)
         end,
@@ -118,7 +121,6 @@ end
 --     end
 -- end
 
-
 local function load(name)
     local file_contents = utils.read_file(name)
     if file_contents == nil then
@@ -129,7 +131,8 @@ local function load(name)
 end
 
 local theprimeagen = load("lua/vim-with-me/integration/theprimeagen")
-local theprimeagen_partial = load("lua/vim-with-me/integration/theprimeagen.partial")
+local theprimeagen_partial =
+    load("lua/vim-with-me/integration/theprimeagen.partial")
 local empty = load("lua/vim-with-me/integration/empty")
 
 local function before_each()

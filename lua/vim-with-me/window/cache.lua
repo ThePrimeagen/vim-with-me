@@ -28,7 +28,6 @@ function DisplayCache:partial(partial)
     self:place(partial.row, partial.col, partial.value)
 end
 
-
 ---@param row number
 ---@param col number
 ---@param item string
@@ -39,8 +38,20 @@ function DisplayCache:place(row, col, item)
     assert(#item == 1, "item must be a single character")
     assert(row >= 1, "x must be greater than or equal to 1")
     assert(col >= 1, "y must be greater than or equal to 1")
-    assert(row <= self.rows, "row must be less than or equal to the rows: " .. row .. " " .. self.rows)
-    assert(col <= self.cols, "col must be less than or equal to the cols: " .. col .. " " .. self.cols)
+    assert(
+        row <= self.rows,
+        "row must be less than or equal to the rows: "
+            .. row
+            .. " "
+            .. self.rows
+    )
+    assert(
+        col <= self.cols,
+        "col must be less than or equal to the cols: "
+            .. col
+            .. " "
+            .. self.cols
+    )
     self.data[row][col] = item
 end
 
@@ -88,17 +99,12 @@ function DisplayCache:from_string(str)
         local line = string.sub(str, base, base + self.cols - 1)
 
         for x = 1, #line do
-            local char = string.sub(
-                line,
-                x,
-                x
-            )
+            local char = string.sub(line, x, x)
             self.data[y][x] = char
         end
 
         y = y + 1
     end
-
 end
 
 return DisplayCache

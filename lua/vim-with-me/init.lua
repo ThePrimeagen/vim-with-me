@@ -14,7 +14,6 @@ function START()
         end
         app = App:new(conn, handle_commands)
     end)
-
 end
 
 function CLOSE()
