@@ -24,7 +24,9 @@ end
 ---@param name string
 ---@return number
 function Commands:get(name)
-    return self._commands[name] or DefinedCommands.MISSING
+    local value = self._commands[name]
+    assert(value ~= nil, "command not found " .. value)
+    return value
 end
 
 ---@param str string
