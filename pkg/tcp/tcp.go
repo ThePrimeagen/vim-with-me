@@ -2,9 +2,11 @@ package tcp
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"net"
 	"time"
 )
@@ -29,9 +31,8 @@ func (t *TCPCommand) Bytes() []byte {
     return append(b, t.Data...)
 }
 
-func CommandFromBytes(b []byte) ([]byte, *TCPCommand, error) {
+func CommandFromBytes(b []byte) (TCPCommand, error) {
     if len(b) < MINIMUM {
-        return b, nil, nil
     }
 
     if b[0] != VERSION {
@@ -58,13 +59,21 @@ func CommandFromBytes(b []byte) ([]byte, *TCPCommand, error) {
 
 type TCP struct {
 	FromSockets chan *TCPCommand
-	sockets     []Connection
+	sockets     []*Connection
 	welcomes    []*TCPCommand
 	listener    net.Listener
 }
 
 func (t *TCP) Length() int {
     return len(t.sockets)
+}
+
+func (t *TCP) Debug() string {
+    out := ""
+    for _, k := range t.sockets {
+        out += fmt.Sprintf("id=%d closed=%v ::", k.id, k.closed)
+    }
+    return out
 }
 
 func (t *TCP) Welcome(cmd *TCPCommand) {
@@ -74,6 +83,7 @@ func (t *TCP) Welcome(cmd *TCPCommand) {
 // TODO: Think about project level logging and the ability to enable debug
 // logging
 func (t *TCP) Send(cmd *TCPCommand) {
+	log.Printf("send %+v\n", cmd)
 	send(t.sockets, cmd)
 }
 
@@ -122,13 +132,14 @@ func CommandParser(r io.Reader) chan TCPCommandResult {
 	return out
 }
 
-func (t *TCP) runSocket(conn net.Conn) {
-    go func(c net.Conn) {
-        defer c.Close()
+func (t *TCP) runSocket(conn *Connection) {
+    go func() {
+        defer conn.Close()
 
-        fromTcp := CommandParser(conn)
+        fromTcp := CommandParser(conn.conn)
+
         defer func() {
-            log.Println("connection has closed")
+            log.Printf("connection has closed: %d\n", id)
         }()
 
         timer := time.NewTicker(100 * time.Millisecond)
@@ -136,6 +147,12 @@ func (t *TCP) runSocket(conn net.Conn) {
         for {
             select {
             case commandWrapper := <-fromTcp:
+
+                if errors.Is(commandWrapper.Error, io.EOF) {
+                    log.Printf("EOF received, closing connection", commandWrapper.Error)
+                    conn.closed = true
+                    return
+                }
 
                 if commandWrapper.Error != nil {
                     log.Printf("error from command parsing: %v\n", commandWrapper.Error)
@@ -147,6 +164,7 @@ func (t *TCP) runSocket(conn net.Conn) {
                 t.FromSockets <- cmd
 
                 if cmd.Command == 'c' || cmd.Command == 'e' {
+                    conn.Close()
                     return
                 }
 
@@ -154,27 +172,30 @@ func (t *TCP) runSocket(conn net.Conn) {
                 // what to do here?
             }
         }
-    }(conn)
+    }()
 }
 
 func (t *TCP) listen() {
 	for {
-
+        log.Printf("waiting for server incoming connection")
 		conn, err := t.listener.Accept()
 
 		if err != nil {
             // TODO: Logging?
-            log.Printf("server shutting down")
-            break;
+            log.Printf("server shutting down: %+v", err)
+            break
 		}
 
 		newConn := NewConnection(conn)
-		err = send_cmds(newConn, t.welcomes)
+        slog.Info("new connection received", "id", newConn.id)
+		err = send_cmds(&newConn, t.welcomes)
 		if err != nil {
+            log.Printf("this doesnt't happen: %+v\n", err)
 			// TODO: Should i do something with the conn?
 			continue
 		}
-		t.sockets = append(t.sockets, newConn)
-        t.runSocket(conn)
+		t.sockets = append(t.sockets, &newConn)
+        t.runSocket(&newConn)
 	}
+    log.Println("server finished running for loop")
 }

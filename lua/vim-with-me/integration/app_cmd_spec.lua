@@ -8,12 +8,15 @@ describe("vim with me :: app_spec", function()
     after_each(int_utils.after_each)
 
     it("app integration test", function()
-        local tcp = int_utils.create_test_conn("cmd_server", 42071)
+        int_utils.create_test_server("cmd_server", 42071)
+        local tcp = int_utils.create_tcp_connection(42071)
         local next_cmd, flush_cmds = int_utils.create_tcp_next(tcp)
         local count = 0
         local app = App:new(tcp):on_render(function()
             count = count + 1
         end)
+
+        next_cmd()
 
         tcp:send({ command = app.commands:get("open"), data = "" })
         next_cmd()

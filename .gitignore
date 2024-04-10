@@ -9,3 +9,5 @@ cmd_server
 # Added by cargo
 
 /target
+/out
+connection_server

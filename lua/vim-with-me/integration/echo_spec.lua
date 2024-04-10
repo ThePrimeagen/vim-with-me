@@ -5,7 +5,9 @@ describe("vim with me", function()
     before_each(int_utils.before_each)
     after_each(int_utils.after_each)
     it("integartion testing", function()
-        local tcp = int_utils.create_test_conn("echo_server", 42069)
+        int_utils.create_test_server("echo_server", 42069)
+        local tcp = int_utils.create_tcp_connection(42069)
+
         local next = int_utils.create_tcp_next(tcp)
         tcp:send({ command = 1, data = "world" })
 

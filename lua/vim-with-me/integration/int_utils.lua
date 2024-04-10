@@ -45,15 +45,36 @@ local function create_tcp_next(tcp)
     return next_cmd, flush
 end
 
+local function create_tcp_connection(port)
+    print("creating tcp", port)
+    local connected = false
+    local tcp = TCP:new({
+        host = "127.0.0.1",
+        port = port,
+        retry_count = 3,
+    })
+    tcp:start(function()
+        print("tcp#start", port)
+        connected = true
+    end)
+
+    vim.wait(1000, function()
+        return connected == true
+    end)
+
+    assert(connected, "could not connect to server")
+    return tcp
+end
+
 ---@param name string
 ---@param port number
----@return TCP
-local function create_test_conn(name, port)
+local function create_test_server(name, port)
     local done_building = false
     system.run(
         { "go", "build", "-o", name, string.format("./test/%s/main.go", name) },
         {},
         function(exit_info)
+            print("done building with", name, vim.inspect(exit_info))
             if exit_info.code ~= 0 then
                 print(exit_info.stderr or "no standard error")
                 os.exit(exit_info.code, true)
@@ -66,29 +87,16 @@ local function create_test_conn(name, port)
         return done_building
     end)
 
+    print("hello world i have started my golang server")
     system.run({ string.format("./%s", name), "--port", tostring(port) }, {
         stdout = function(_, data)
-            table.insert(stdout, data)
+            print("stdout:", data)
+        end,
+        stderr = function(_, data)
+            print("stderr:", data)
         end,
     })
     vim.wait(100)
-
-    local connected = false
-    local tcp = TCP:new({
-        host = "127.0.0.1",
-        port = port,
-        retry_count = 3,
-    })
-    tcp:start(function()
-        connected = true
-    end)
-
-    vim.wait(1000, function()
-        return connected == true
-    end)
-
-    assert(connected, "could not connect to server")
-    return tcp
 end
 
 -- --- TODO: This is for me to think about before i create this... I don't want to create complex testing application
@@ -145,8 +153,9 @@ local function after_each()
 end
 
 return {
+    create_tcp_connection = create_tcp_connection,
     create_tcp_next = create_tcp_next,
-    create_test_conn = create_test_conn,
+    create_test_server = create_test_server,
     theprimeagen = theprimeagen,
     theprimeagen_partial = theprimeagen_partial,
     empty = empty,

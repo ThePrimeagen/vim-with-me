@@ -18,7 +18,7 @@ func NewTCPServer(port uint16) (*TCP, error) {
 	tcps := &TCP{
 		FromSockets: make(chan *TCPCommand, 10),
 		listener:    listener,
-		sockets:     make([]Connection, 0, 10),
+		sockets:     make([]*Connection, 0, 10),
 		welcomes:    make([]*TCPCommand, 0, 10),
 	}
 

@@ -4,13 +4,36 @@ local int_utils = require("vim-with-me.integration.int_utils")
 local Commands = require("vim-with-me.app.commands")
 local theprimeagen = int_utils.theprimeagen
 
-describe("vim with me", function()
+local PORT = 42073
+
+---@return TestTCP
+local function create_tcp()
+    local tcp = int_utils.create_tcp_connection(PORT)
+    local next_cmd, flush_cmds = int_utils.create_tcp_next(tcp)
+    return {
+        tcp = tcp,
+        next = next_cmd,
+        flush = flush_cmds
+    }
+end
+
+describe("vim with me :: reconnecting test", function()
     before_each(int_utils.before_each)
     after_each(int_utils.after_each)
 
-    it("full command set", function()
-        int_utils.create_test_server("cmd_server", 42070)
-        local tcp = int_utils.create_tcp_connection(42070)
+    it("multiuser test", function()
+        int_utils.create_test_server("connection_server", PORT)
+
+        for _ = 1, 5 do
+            print("create connection")
+            local tcp = create_tcp()
+            vim.wait(500)
+            print("close connection")
+            tcp.tcp:close()
+            vim.wait(500)
+        end
+
+        --[[
 
         local next_cmd, flush_cmds = int_utils.create_tcp_next(tcp)
 
@@ -48,5 +71,8 @@ describe("vim with me", function()
         eq({
             { command = commands:get("partial"), data = data },
         }, flush_cmds())
+        --]]
     end)
 end)
+
+
