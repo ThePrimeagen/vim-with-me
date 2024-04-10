@@ -63,6 +63,10 @@ type TCP struct {
 	listener    net.Listener
 }
 
+func (t *TCP) Length() int {
+    return len(t.sockets)
+}
+
 func (t *TCP) Welcome(cmd *TCPCommand) {
 	t.welcomes = append(t.welcomes, cmd)
 }
