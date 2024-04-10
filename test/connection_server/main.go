@@ -6,11 +6,11 @@ import (
 	"os"
 
 	"github.com/theprimeagen/vim-with-me/pkg/commands"
-	"github.com/theprimeagen/vim-with-me/pkg/tcp2"
+	"github.com/theprimeagen/vim-with-me/pkg/tcp"
 	"github.com/theprimeagen/vim-with-me/pkg/testies"
 )
 
-func read_conn(conn tcp2.Connection) {
+func read_conn(conn tcp.Connection) {
 	for {
 		log.Printf("Reading(%d)...\n", conn.Id)
         cmd, err := conn.Next()

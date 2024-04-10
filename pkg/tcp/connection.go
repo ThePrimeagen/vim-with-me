@@ -1,4 +1,4 @@
-package tcp2
+package tcp
 
 import (
 	"encoding"
