@@ -5,6 +5,8 @@ local TCP = require("vim-with-me.tcp").TCP
 ---@type vim.SystemObj[]
 local running = {}
 
+local LEVEL = vim.fn.environ().LEVEL
+
 ---@param tcps TestTCP[]
 ---@return (TCPCommand | nil)[]
 local function read_all(tcps)
@@ -98,6 +100,10 @@ local function create_test_server(name, port)
         stderr = function(_, data)
             print("stderr:", data)
         end,
+
+        env = {
+            LEVEL = LEVEL
+        }
     })
     table.insert(running, run)
     vim.wait(100)
