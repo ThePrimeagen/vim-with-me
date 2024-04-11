@@ -2,12 +2,8 @@ local utils = require("vim-with-me.utils")
 local system = vim.system or require("vim-with-me.system")
 local TCP = require("vim-with-me.tcp").TCP
 
-local stdout = {}
-local function get_stdout()
-    local out = stdout
-    stdout = {}
-    return out
-end
+---@type vim.SystemObj[]
+local running = {}
 
 ---@param tcps TestTCP[]
 ---@return (TCPCommand | nil)[]
@@ -98,7 +94,7 @@ local function create_test_server(name, port)
         return done_building
     end)
 
-    system.run({ string.format("./%s", name), "--port", tostring(port) }, {
+    local run = system.run({ string.format("./%s", name), "--port", tostring(port) }, {
         stdout = function(_, data)
             print("stdout:", data)
         end,
@@ -106,6 +102,7 @@ local function create_test_server(name, port)
             print("stderr:", data)
         end,
     })
+    table.insert(running, run)
     vim.wait(100)
 end
 
@@ -154,12 +151,13 @@ local theprimeagen_partial =
 local empty = load("lua/vim-with-me/integration/empty")
 
 local function before_each()
-    stdout = {}
 end
+
 local function after_each()
-    for _, v in ipairs(stdout) do
-        print("stdout: ", v)
+    for _, proc in ipairs(running) do
+        proc:kill(9)
     end
+    running = {}
 end
 
 return {
@@ -169,7 +167,6 @@ return {
     theprimeagen = theprimeagen,
     theprimeagen_partial = theprimeagen_partial,
     empty = empty,
-    get_stdout = get_stdout,
     before_each = before_each,
     after_each = after_each,
     read_all = read_all,
