@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"log/slog"
 	"net"
 )
 
@@ -27,6 +28,7 @@ func NewConnection(conn net.Conn) Connection {
 
 func (c *Connection) Next() (*TCPCommand, error) {
     _, err := c.Read(c.scratch)
+
     if err != nil {
         return nil, err
     }

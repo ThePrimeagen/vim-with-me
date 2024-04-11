@@ -3,6 +3,9 @@ package testies
 import (
 	"flag"
 	"fmt"
+	"log"
+	"log/slog"
+	"os"
 
 	"github.com/theprimeagen/vim-with-me/pkg/tcp"
 )
@@ -25,4 +28,10 @@ func CreateServerFromArgs() (*tcp.TCP, error) {
     }
 
     return server, nil
+}
+
+func SetupLogger() {
+    log.SetOutput(os.Stdout)
+    log.SetFlags(log.LstdFlags | log.Lshortfile)
+    slog.SetLogLoggerLevel(slog.LevelDebug)
 }

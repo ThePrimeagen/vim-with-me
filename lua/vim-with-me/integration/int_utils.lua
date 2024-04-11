@@ -106,36 +106,6 @@ local function create_test_server(name, port)
     vim.wait(100)
 end
 
--- --- TODO: This is for me to think about before i create this... I don't want to create complex testing application
--- ---@class VWMTestApp
--- ---@field public app VWMApp
--- ---@field public conn TCP
--- local TestApp = {}
--- TestApp.__index = TestApp
---
--- ---@param app VWMApp
--- ---@param conn TCP
--- ---@return VWMTestApp
--- function TestApp:new(app, conn)
---     return setmetatable({
---         app = app,
---         conn = conn,
---     }, self)
--- end
---
--- ---@param tcp TCP
--- local function create_app(tcp)
---     local app = App:new(tcp)
---
---     local latest_command = nil
---     local function on_command(cmd, data)
---
---     end
---
---     return app, function()
---     end
--- end
-
 local function load(name)
     local file_contents = utils.read_file(name)
     if file_contents == nil then

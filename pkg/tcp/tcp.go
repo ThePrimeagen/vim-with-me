@@ -124,6 +124,8 @@ func NewTCPServer(port uint16) (*TCP, error) {
 func readConnection(tcp *TCP, conn *Connection) {
 	for {
 		cmd, err := conn.Next()
+        slog.Debug("new command", "id", conn.Id, "cmd", cmd)
+
 		if err != nil {
 			slog.Error("received error while reading from socket", "id", conn.Id, "error", err)
 			break
@@ -142,6 +144,7 @@ func (t *TCP) Start() {
 		}
 
 		newConn := NewConnection(conn)
+        slog.Debug("new connection", "id", newConn.Id)
         err = sendCommands(&newConn, t.welcomes)
         if err != nil {
 			slog.Error("could not send out welcome messages", "error", err)
@@ -154,6 +157,6 @@ func (t *TCP) Start() {
 		t.sockets = append(t.sockets, newConn)
 		t.mutex.Unlock()
 
-        defer readConnection(t, &newConn)
+        go readConnection(t, &newConn)
 	}
 }

@@ -20,6 +20,7 @@ end
 ---@param cmds TCPCommand[]
 ---@param expected TCPCommand
 local function assert_cmds(cmds, expected)
+    assert(#cmds > 0, "there must be commands to assert on")
     for _, v in ipairs(cmds) do
         eq(expected, v)
     end
