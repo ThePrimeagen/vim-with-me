@@ -15,7 +15,8 @@ describe("vim with me", function()
         local next_cmd, flush_cmds = int_utils.create_tcp_next(tcp)
 
         local server_commands = next_cmd()
-        assert(server_commands ~= nil)
+        assert(server_commands ~= nil, "expected server commands")
+
         local commands = Commands.Commands:new()
         commands:parse(server_commands.data)
 

@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"strings"
 
@@ -18,7 +18,7 @@ func render(win *window.Window) {
 	str = strings.ReplaceAll(str, "*", " ")
 
 	if err != nil {
-		log.Fatalf("Error reading file: %s", err)
+		slog.Error("Error reading file", "err", err)
 	}
 
 	_ = win.SetWindow(str)
@@ -29,45 +29,44 @@ func partialRender(win *window.Window, row, col byte, text []byte) {
 	for i := 0; i < len(text); i++ {
 		err := win.Set(row, col+byte(i), text[i])
 		if err != nil {
-			log.Fatalf("Error setting partial render: %s", err)
+			slog.Error("Error setting partial render", "err", err)
 		}
 	}
 }
 
 func main() {
+    testies.SetupLogger()
 	server, err := testies.CreateServerFromArgs()
 	if err != nil {
-		log.Fatalf("Error creating server: %s", err)
+		slog.Error("Error creating server: %s", err)
 	}
 
-    comms := commands.NewCommander()
-
-    comms.AddCommand("open")
-
-    server.Welcome(comms.ToCommands())
-
+	commander := commands.NewCommander()
+	commander.AddCommand("open")
+	server.WelcomeMessage(commander.ToCommands())
 	win := window.NewWindow(24, 80)
 
-	fmt.Printf("test\n")
-	for {
-		fmt.Printf("waiting on from socket \n")
-		cmd := <-server.FromSockets
-		fmt.Printf("command received %+v\n", cmd)
+    defer server.Close()
+    go server.Start()
 
-		switch cmd.Command {
-        // Think about how to do better custom commands and really routing in
-        // general
-        case comms.GetCommandByte("open"):
+	for {
+		wrapper := <-server.FromSockets
+		slog.Info("command received", "cmd", wrapper)
+
+		switch wrapper.Command.Command {
+		// Think about how to do better custom commands and really routing in
+		// general
+		case commander.GetCommandByte("open"):
 			out := window.OpenCommand(win)
 			server.Send(out)
-        case commands.RENDER:
+		case commands.RENDER:
 			render(win)
 			str := win.Render()
 			out := commands.Render([]byte(str))
 			server.Send(out)
-        case commands.PARTIAL_RENDER:
-            row := cmd.Data[0]
-            col := cmd.Data[1]
+		case commands.PARTIAL_RENDER:
+			row := wrapper.Command.Data[0]
+			col := wrapper.Command.Data[1]
 			partialRender(win, row, col, []byte("theprimeagen"))
 			renders := win.PartialRender()
 			fmt.Printf("partial render %d\n", len(renders))
