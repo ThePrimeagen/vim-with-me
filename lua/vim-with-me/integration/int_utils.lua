@@ -53,7 +53,6 @@ local function create_tcp_next(tcp)
 end
 
 local function create_tcp_connection(port)
-    print("creating tcp", port)
     local connected = false
     local tcp = TCP:new({
         host = "127.0.0.1",
@@ -61,7 +60,6 @@ local function create_tcp_connection(port)
         retry_count = 3,
     })
     tcp:start(function()
-        print("tcp#start", port)
         connected = true
     end)
 
@@ -81,7 +79,6 @@ local function create_test_server(name, port)
         { "go", "build", "-o", name, string.format("./test/%s/main.go", name) },
         {},
         function(exit_info)
-            print("done building with", name, vim.inspect(exit_info))
             if exit_info.code ~= 0 then
                 print(exit_info.stderr or "no standard error")
                 os.exit(exit_info.code, true)

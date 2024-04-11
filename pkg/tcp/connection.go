@@ -3,7 +3,6 @@ package tcp
 import (
 	"encoding"
 	"encoding/binary"
-	"fmt"
 	"io"
 	"net"
 )
@@ -79,7 +78,6 @@ func (f *FrameReader) Read(data []byte) (int, error) {
 		}
 
 		n, err := f.reader.Read(f.scratch)
-        fmt.Printf("READ DATA: %d, %+v\n", n, err)
 		if err != nil {
 			return 0, err
 		}

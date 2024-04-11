@@ -2,10 +2,13 @@ package tcp
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"net"
 	"sync"
+	"syscall"
 )
 
 var VERSION byte = 1
@@ -64,7 +67,11 @@ func (t *TCP) Send(command *TCPCommand) {
 		slog.Info("sending message", "index", i, "msg", command)
 		err := conn.Write(command)
 		if err != nil {
-			slog.Error("removing due to error", "index", i)
+            if errors.Is(err, syscall.EPIPE) {
+                slog.Debug("connection closed by client", "index", i)
+            } else {
+                slog.Error("removing due to error", "index", i, "error", err)
+            }
 			removals = append(removals, i)
 		}
 	}
@@ -127,7 +134,11 @@ func readConnection(tcp *TCP, conn *Connection) {
         slog.Debug("new command", "id", conn.Id, "cmd", cmd)
 
 		if err != nil {
-			slog.Error("received error while reading from socket", "id", conn.Id, "error", err)
+            if errors.Is(err, io.EOF) {
+                slog.Debug("socket received EOF", "id", conn.Id, "error", err)
+            } else {
+                slog.Error("received error while reading from socket", "id", conn.Id, "error", err)
+            }
 			break
 		}
 

@@ -135,7 +135,6 @@ end
 
 ---@param cb TCPListener
 function TCP:listen(cb)
-    print("listening", self._listeners, cb)
     table.insert(self._listeners, cb)
 end
 

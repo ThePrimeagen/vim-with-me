@@ -6,6 +6,7 @@ import (
 	"log"
 	"log/slog"
 	"os"
+	"strings"
 
 	"github.com/theprimeagen/vim-with-me/pkg/tcp"
 )
@@ -19,8 +20,7 @@ func CreateServerFromArgs() (*tcp.TCP, error) {
         return nil, fmt.Errorf("You need to provide a port")
 	}
 
-	fmt.Printf("Port: %d\n", port)
-	fmt.Printf("starting server\n")
+	slog.Info("starting server", "port", port)
 
 	server, err := tcp.NewTCPServer(uint16(port))
     if err != nil {
@@ -33,5 +33,12 @@ func CreateServerFromArgs() (*tcp.TCP, error) {
 func SetupLogger() {
     log.SetOutput(os.Stdout)
     log.SetFlags(log.LstdFlags | log.Lshortfile)
-    slog.SetLogLoggerLevel(slog.LevelDebug)
+    switch strings.ToLower(os.Getenv("LEVEL")) {
+    case "debug", "d":
+        slog.SetLogLoggerLevel(slog.LevelDebug)
+    case "info", "i":
+        slog.SetLogLoggerLevel(slog.LevelInfo)
+    default:
+        slog.SetLogLoggerLevel(slog.LevelError)
+    }
 }
