@@ -60,6 +60,10 @@ type TCP struct {
 	FromSockets chan TCPCommandWrapper
 }
 
+func (t *TCP) ConnectionCount() int {
+    return len(t.sockets)
+}
+
 func (t *TCP) Send(command *TCPCommand) {
 	t.mutex.RLock()
 	removals := make([]int, 0)
