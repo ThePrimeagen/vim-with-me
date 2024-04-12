@@ -2,23 +2,28 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"net"
 )
 
+type Color struct {
+    Foo int
+}
+
+type Cell struct {
+	Foreground Color
+	Background Color
+	Value      byte
+}
 
 func main() {
-    listener, err := net.Listen("tcp", fmt.Sprintf(":%d", 42073))
-    if err != nil {
-        log.Fatalf("you suck %+v\n", err)
-    }
 
-    for {
-		conn, err := listener.Accept()
-        if err != nil {
-            log.Fatalf("here is that server error: %+v\n", err)
-        }
+    c := []Cell{Cell{
+        Foreground: Color{Foo: 1},
+        Background: Color{Foo: 10},
+        Value: 100,
+    }}
 
+    d := c[0]
+    d.Value += 1
 
-    }
+    fmt.Printf("values: %+v %+v\n", c, d)
 }

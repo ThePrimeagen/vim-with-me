@@ -24,7 +24,7 @@ func TestWindowChangeSetOnly(t *testing.T) {
         t.Errorf("Expected 1 change, but got %d", len(flushed))
     }
 
-    assert.Equal(t, []commands.Change{{
+    assert.Equal(t, commands.Changes{{
         Row: 0,
         Col: 0,
         Value: 'a',

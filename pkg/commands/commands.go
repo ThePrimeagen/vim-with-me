@@ -17,6 +17,7 @@ const (
     COMMANDS = iota
     RENDER
     PARTIAL_RENDER
+    COLOR
     CLOSE
     ERROR
     OPEN_WINDOW

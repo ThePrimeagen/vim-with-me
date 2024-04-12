@@ -1,8 +1,6 @@
 package window
 
-import (
-	"github.com/theprimeagen/vim-with-me/pkg/utils"
-)
+import "github.com/theprimeagen/vim-with-me/pkg/assert"
 
 const FOREGROUND = 1
 const COLOR = 3
@@ -14,11 +12,11 @@ type Color struct {
 	foreground bool
 }
 
-func NewColor(r, b, g byte, f bool) Color {
+func NewColor(r, g, b byte, f bool) Color {
 	return Color{
 		red:        r,
+        green:      g,
 		blue:       b,
-		green:      g,
 		foreground: f,
 	}
 }
@@ -37,7 +35,7 @@ func (c *Color) MarshalBinary() (data []byte, err error) {
 }
 
 func (c *Color) UnmarshalBinary(data []byte) error {
-	utils.Assert(len(data) < FOREGROUND+COLOR, "i should never unmarshall without all the data")
+	assert.Assert(len(data) < FOREGROUND+COLOR, "i should never unmarshall without all the data")
 
     c.foreground = data[0] == 0
     c.red = data[1]

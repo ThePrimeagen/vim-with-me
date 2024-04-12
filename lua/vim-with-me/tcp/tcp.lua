@@ -130,6 +130,8 @@ function TCP:send(command)
         self._connection,
         TcpProcess.encode_tcp_command(command)
     )
+
+    -- TODO: Probably turn this into something different?
     assert(ok, "could not send data")
 end
 
