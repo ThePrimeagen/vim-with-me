@@ -67,8 +67,8 @@ func (t *TCP) ConnectionCount() int {
 func (t *TCP) Send(command *TCPCommand) {
 	t.mutex.RLock()
 	removals := make([]int, 0)
+    slog.Debug("sending message", "msg", command)
 	for i, conn := range t.sockets {
-		slog.Info("sending message", "index", i, "msg", command)
 		err := conn.Write(command)
 		if err != nil {
             if errors.Is(err, syscall.EPIPE) {
