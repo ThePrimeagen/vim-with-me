@@ -29,7 +29,7 @@ func main() {
         os.Exit(1)
     }
 
-    w := window.NewWindow(80, 24)
+    w := window.NewSimpleWindow(80, 24)
     cmd := window.OpenCommand(w)
     server.Welcome(cmd)
 

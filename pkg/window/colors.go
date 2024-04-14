@@ -13,6 +13,8 @@ type Color struct {
 	foreground bool
 }
 
+var DEFAULT_BACKGROUND = Color{red: 0, blue: 0, green: 0}
+
 func NewColor(r, g, b byte, f bool) Color {
 	return Color{
 		red:        r,

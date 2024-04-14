@@ -4,6 +4,7 @@ main
 echo_server
 cmd_server
 !test/cmd_server
+!test/color_server
 
 
 # Added by cargo
@@ -11,3 +12,4 @@ cmd_server
 /target
 /out
 connection_server
+/color_server

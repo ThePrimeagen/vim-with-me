@@ -103,6 +103,7 @@ func sendCommands(conn *Connection, cmds []*TCPCommand) error {
 	return nil
 }
 
+// TODO(v1) make this into func(conn) *TCPCommand
 func (t *TCP) WelcomeMessage(cmd *TCPCommand) {
 	t.welcomes = append(t.welcomes, cmd)
 }

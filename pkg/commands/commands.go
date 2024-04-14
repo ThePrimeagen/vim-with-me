@@ -3,16 +3,11 @@ package commands
 import (
 	"maps"
 
+	"github.com/theprimeagen/vim-with-me/pkg/assert"
 	"github.com/theprimeagen/vim-with-me/pkg/tcp"
+	"github.com/theprimeagen/vim-with-me/pkg/window"
 )
 
-type Change struct {
-    Row byte
-    Col byte
-    Value byte
-}
-
-var CHANGE_LENGTH = 3
 const (
     COMMANDS = iota
     RENDER
@@ -87,26 +82,30 @@ func (c *Commander) ToString(b byte) string {
     return ""
 }
 
-func (c *Change) Bytes() []byte {
-    return []byte{
-        c.Row,
-        c.Col,
-        c.Value,
-    }
-}
-
-type Changes []Change
-
-func PartialRender(changes Changes) *tcp.TCPCommand {
-    bytes := make([]byte, 0, len(changes) * CHANGE_LENGTH)
-    for _, change := range changes {
-        bytes = append(bytes, change.Bytes()...)
+func PartialRender(cells []*window.Cell) *tcp.TCPCommand {
+    bytes := make([]byte, 0, len(cells) * window.CELL_ENCODING_LENGTH)
+    for _, cell := range cells {
+        data, err := cell.MarshalBinary()
+        assert.Assert(err == nil, "encoding a cell should never fail")
+        bytes = append(bytes, data...)
     }
 
     return &tcp.TCPCommand{
         Command: PARTIAL_RENDER,
         Data: bytes,
     }
+}
+
+type Openable interface {
+    Dimensions() (byte, byte)
+}
+
+func OpenCommand(window Openable) *tcp.TCPCommand {
+    rows, cols := window.Dimensions()
+	return &tcp.TCPCommand{
+		Command: OPEN_WINDOW,
+		Data:    []byte{rows, cols},
+	}
 }
 
 func Render(data []byte) *tcp.TCPCommand {

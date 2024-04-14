@@ -7,11 +7,15 @@ import (
 	"github.com/theprimeagen/vim-with-me/pkg/assert"
 )
 
+const CELL_ENCODING_LENGTH = COLOR_ENCODING_LENGTH*2 + 1
+
 type Cell struct {
 	Foreground Color
 	Background Color
 	Value      byte
 }
+
+type CellWithLocation ...
 
 func (c *Cell) MarshalBinary() ([]byte, error) {
 	foreground, err := c.Foreground.MarshalBinary()
@@ -39,16 +43,16 @@ func (c *Cell) UnmarshalBinary(data []byte) error {
 	if err != nil {
 		return err
 	}
-    c.Foreground = foreground
+	c.Foreground = foreground
 
 	var background Color
 	err = background.UnmarshalBinary(data[1+COLOR_ENCODING_LENGTH:])
-    if err != nil {
-        return err
-    }
+	if err != nil {
+		return err
+	}
 
-    c.Background = background
-    return nil
+	c.Background = background
+	return nil
 }
 
 func (c *Cell) Equal(other *Cell) bool {
@@ -152,6 +156,10 @@ func (r *Renderer) Remove(renderable Render) {
 			break
 		}
 	}
+}
+
+func (r *Renderer) Dimensions() (byte, byte) {
+	return byte(r.rows), byte(r.cols)
 }
 
 func (r *Renderer) place(renderable Render) {

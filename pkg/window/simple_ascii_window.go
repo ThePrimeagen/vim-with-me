@@ -1,5 +1,13 @@
 package window
 
+/*
+
+// TODO(v1): Simple Ascii window needs to use Cells insteasd of bytes
+// TODO(v1): Simple Ascii window needs to use Cells insteasd of bytes
+// TODO(v1): Simple Ascii window needs to use Cells insteasd of bytes
+// TODO(v1): Simple Ascii window needs to use Cells insteasd of bytes
+// TODO(v1): Simple Ascii window needs to use Cells insteasd of bytes
+
 import (
 	"fmt"
 
@@ -16,7 +24,7 @@ type SimpleAsciiWindow struct {
 	changes    []commands.Change
 }
 
-func NewWindow(rows, cols byte) *SimpleAsciiWindow {
+func NewSimpleWindow(rows, cols byte) *SimpleAsciiWindow {
 	cache := make([][]byte, rows)
 	for i := range cache {
 		cache[i] = make([]byte, cols)
@@ -91,6 +99,10 @@ func (w *SimpleAsciiWindow) SetWindow(value string) error {
 	return nil
 }
 
+func (r *SimpleAsciiWindow) Dimensions() (byte, byte) {
+    return r.Rows, r.Cols
+}
+
 func (w *SimpleAsciiWindow) Render() string {
 	out := ""
 	for i := 0; i < int(w.Rows); i++ {
@@ -105,10 +117,4 @@ func (w *SimpleAsciiWindow) PartialRender() commands.Changes {
 	w.changes = make([]commands.Change, 0)
 	return commands.Changes(changes)
 }
-
-func OpenCommand(window *SimpleAsciiWindow) *tcp.TCPCommand {
-	return &tcp.TCPCommand{
-		Command: commands.OPEN_WINDOW,
-		Data:    []byte{window.Rows, window.Cols},
-	}
-}
+*/

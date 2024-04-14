@@ -6,7 +6,7 @@ describe("vim with me", function()
     after_each(int_utils.after_each)
 
     it("integartion testing", function()
-        int_utils.create_test_server("connection_server", 42069)
+        int_utils.create_test_server("echo_server", 42069)
         local tcp = int_utils.create_tcp_connection(42069)
 
         local next = int_utils.create_tcp_next(tcp)

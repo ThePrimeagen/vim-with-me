@@ -44,7 +44,7 @@ func main() {
 	commander := commands.NewCommander()
 	commander.AddCommand("open")
 	server.WelcomeMessage(commander.ToCommands())
-	win := window.NewWindow(24, 80)
+	win := window.NewSimpleWindow(24, 80)
 
     defer server.Close()
     go server.Start()

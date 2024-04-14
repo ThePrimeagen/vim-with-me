@@ -1,4 +1,4 @@
----@class PartialRender
+---@class Cell
 ---@field row number
 ---@field col number
 ---@field value string
@@ -206,7 +206,7 @@ end
 
 --
 ---@param data string
----@return PartialRender[]
+---@return Cell[]
 function M.parse_partial_render(data)
     assert(
         #data % 3 == 0,
