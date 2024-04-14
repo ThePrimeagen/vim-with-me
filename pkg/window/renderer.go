@@ -13,10 +13,48 @@ type Cell struct {
 	Value      byte
 }
 
+func (c *Cell) MarshalBinary() ([]byte, error) {
+	foreground, err := c.Foreground.MarshalBinary()
+	if err != nil {
+		return []byte{}, err
+	}
+
+	background, err := c.Background.MarshalBinary()
+	if err != nil {
+		return []byte{}, err
+	}
+
+	b := make([]byte, 0, len(foreground)+len(background)+1)
+	b = append(b, c.Value)
+	b = append(b, foreground...)
+	return append(b, background...), nil
+}
+
+func (c *Cell) UnmarshalBinary(data []byte) error {
+	assert.Assert(len(data) < 1+COLOR_ENCODING_LENGTH*2, "i should never unmarshall without all the data")
+
+	c.Value = data[0]
+	var foreground Color
+	err := foreground.UnmarshalBinary(data[1:])
+	if err != nil {
+		return err
+	}
+    c.Foreground = foreground
+
+	var background Color
+	err = background.UnmarshalBinary(data[1+COLOR_ENCODING_LENGTH:])
+    if err != nil {
+        return err
+    }
+
+    c.Background = background
+    return nil
+}
+
 func (c *Cell) Equal(other *Cell) bool {
-    return c.Value == other.Value &&
-        c.Foreground.Equal(&other.Foreground) &&
-        c.Background.Equal(&other.Background)
+	return c.Value == other.Value &&
+		c.Foreground.Equal(&other.Foreground) &&
+		c.Background.Equal(&other.Background)
 }
 
 type Render interface {
@@ -51,7 +89,7 @@ func NewRender(cols, rows int) Renderer {
 	}
 
 	previous := make([]Cell, length, length)
-    copy(previous, buffer)
+	copy(previous, buffer)
 
 	return Renderer{
 		buffer:                buffer,
@@ -138,38 +176,39 @@ func (r *Renderer) place(renderable Render) {
 }
 
 func (r *Renderer) Render() []*Cell {
-    for i := 0; i < len(r.renderables); i++ {
+	for i := 0; i < len(r.renderables); i++ {
 		r.place(r.renderables[i])
-    }
-
-    out := make([]*Cell, 0)
-	for i, cell := range r.buffer {
-        other := r.previous[i]
-        if !cell.Equal(&other) {
-            out = append(out, &cell)
-        }
 	}
 
-    r.previousPartialRender = out
-    return out
+	out := make([]*Cell, 0)
+	for i, cell := range r.buffer {
+		other := r.previous[i]
+		if !cell.Equal(&other) {
+			out = append(out, &cell)
+		}
+	}
+
+	r.previousPartialRender = out
+	copy(r.previous, r.buffer)
+	return out
 }
 
 func printBuff(buffer []Cell, rows, cols int) {
-    for row := 0; row < rows; row++ {
-        toPrint := make([]int, 0)
-        for col := 0; col < cols; col++ {
-            i := row * cols + col
-            toPrint = append(toPrint, int(buffer[i].Value))
-        }
-        fmt.Printf("%+v\n", toPrint)
-    }
+	for row := 0; row < rows; row++ {
+		toPrint := make([]int, 0)
+		for col := 0; col < cols; col++ {
+			i := row*cols + col
+			toPrint = append(toPrint, int(buffer[i].Value))
+		}
+		fmt.Printf("%+v\n", toPrint)
+	}
 
 }
 
 func (r *Renderer) debug() {
-    fmt.Println("buffer")
-    printBuff(r.buffer, r.rows, r.cols)
+	fmt.Println("buffer")
+	printBuff(r.buffer, r.rows, r.cols)
 
-    fmt.Println("previous")
-    printBuff(r.previous, r.rows, r.cols)
+	fmt.Println("previous")
+	printBuff(r.previous, r.rows, r.cols)
 }

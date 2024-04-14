@@ -8,7 +8,7 @@ import (
 	"github.com/theprimeagen/vim-with-me/pkg/tcp"
 )
 
-n/ TODO(v1): Simple Ascii window needs to use Cells insteasd of bytes
+// TODO(v1): Simple Ascii window needs to use Cells insteasd of bytes
 type SimpleAsciiWindow struct {
 	Rows       byte
 	Cols       byte

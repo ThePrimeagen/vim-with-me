@@ -4,6 +4,7 @@ import "github.com/theprimeagen/vim-with-me/pkg/assert"
 
 const FOREGROUND = 1
 const COLOR = 3
+const COLOR_ENCODING_LENGTH = FOREGROUND + COLOR
 
 type Color struct {
 	red        byte
@@ -25,7 +26,7 @@ func (c *Color) Equal(other *Color) bool {
     return c.red == other.red && c.green == other.green && c.blue == other.blue
 }
 
-func (c *Color) MarshalBinary() (data []byte, err error) {
+func (c *Color) MarshalBinary() ([]byte, error) {
 	foreground := 1
 	if !c.foreground {
 		foreground = 0
