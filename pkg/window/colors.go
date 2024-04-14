@@ -21,6 +21,10 @@ func NewColor(r, g, b byte, f bool) Color {
 	}
 }
 
+func (c *Color) Equal(other *Color) bool {
+    return c.red == other.red && c.green == other.green && c.blue == other.blue
+}
+
 func (c *Color) MarshalBinary() (data []byte, err error) {
 	foreground := 1
 	if !c.foreground {
