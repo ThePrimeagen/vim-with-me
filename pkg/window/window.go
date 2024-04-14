@@ -8,14 +8,14 @@ import (
 	"github.com/theprimeagen/vim-with-me/pkg/tcp"
 )
 
-type Window struct {
+type SimpleAsciiWindow struct {
 	Rows       byte
 	Cols       byte
 	cache      [][]byte
 	changes    []commands.Change
 }
 
-func NewWindow(rows, cols byte) *Window {
+func NewWindow(rows, cols byte) *SimpleAsciiWindow {
 	cache := make([][]byte, rows)
 	for i := range cache {
 		cache[i] = make([]byte, cols)
@@ -24,7 +24,7 @@ func NewWindow(rows, cols byte) *Window {
 		}
 	}
 
-	return &Window{
+	return &SimpleAsciiWindow{
 		Rows:  rows,
 		Cols:  cols,
 		cache: cache,
@@ -32,7 +32,7 @@ func NewWindow(rows, cols byte) *Window {
 	}
 }
 
-func (w *Window) Set(row, col byte, value byte) error {
+func (w *SimpleAsciiWindow) Set(row, col byte, value byte) error {
 	if row < 0 || row >= w.Rows {
 		return fmt.Errorf("Row out of bounds: %d", row)
 	}
@@ -53,7 +53,7 @@ func (w *Window) Set(row, col byte, value byte) error {
 	return nil
 }
 
-func (w *Window) SetString(row byte, value string) {
+func (w *SimpleAsciiWindow) SetString(row byte, value string) {
 	assert.Assert(len(value) > int(w.Cols), fmt.Sprintf("String provided to Window is longer than columns: %d > %d", len(value), w.Cols))
 
 	for i, r := range []byte(value) {
@@ -68,7 +68,7 @@ func (w *Window) SetString(row byte, value string) {
 	}
 }
 
-func (w *Window) SetWindow(value string) error {
+func (w *SimpleAsciiWindow) SetWindow(value string) error {
 	if len(value) != int(w.Rows)*int(w.Cols) {
 		return fmt.Errorf("String provided to Window is not the correct length: %d != %d", len(value), w.Rows*w.Cols)
 	}
@@ -90,7 +90,7 @@ func (w *Window) SetWindow(value string) error {
 	return nil
 }
 
-func (w *Window) Render() string {
+func (w *SimpleAsciiWindow) Render() string {
 	out := ""
 	for i := 0; i < int(w.Rows); i++ {
 		out += string(w.cache[i])
@@ -99,13 +99,13 @@ func (w *Window) Render() string {
 	return out
 }
 
-func (w *Window) PartialRender() commands.Changes {
+func (w *SimpleAsciiWindow) PartialRender() commands.Changes {
 	changes := w.changes
 	w.changes = make([]commands.Change, 0)
 	return commands.Changes(changes)
 }
 
-func OpenCommand(window *Window) *tcp.TCPCommand {
+func OpenCommand(window *SimpleAsciiWindow) *tcp.TCPCommand {
 	return &tcp.TCPCommand{
 		Command: commands.OPEN_WINDOW,
 		Data:    []byte{window.Rows, window.Cols},

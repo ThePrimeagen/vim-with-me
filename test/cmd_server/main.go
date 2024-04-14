@@ -11,7 +11,7 @@ import (
 	"github.com/theprimeagen/vim-with-me/pkg/window"
 )
 
-func render(win *window.Window) {
+func render(win *window.SimpleAsciiWindow) {
 	bytes, err := os.ReadFile("lua/vim-with-me/integration/theprimeagen")
 	str := string(bytes)
 	str = strings.ReplaceAll(str, "\n", "")
@@ -24,7 +24,7 @@ func render(win *window.Window) {
 	_ = win.SetWindow(str)
 }
 
-func partialRender(win *window.Window, row, col byte, text []byte) {
+func partialRender(win *window.SimpleAsciiWindow, row, col byte, text []byte) {
 
 	for i := 0; i < len(text); i++ {
 		err := win.Set(row, col+byte(i), text[i])
