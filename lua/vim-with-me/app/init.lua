@@ -54,6 +54,7 @@ end
 function App:partial_render(partials)
     for _, partial in ipairs(partials) do
         self.cache:partial(partial)
+
     end
 
     --- TODO: Create it so that i only get back partial row updates
