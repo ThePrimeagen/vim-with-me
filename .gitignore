@@ -1,15 +1,3 @@
 /node_modules/
-test_server
-main
-echo_server
-cmd_server
-!test/cmd_server
-!test/color_server
 
-
-# Added by cargo
-
-/target
 /out
-connection_server
-/color_server

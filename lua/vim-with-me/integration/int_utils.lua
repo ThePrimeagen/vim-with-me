@@ -73,12 +73,13 @@ local function create_tcp_connection(port)
     return tcp
 end
 
----@param name string
+---@param exec_name string
 ---@param port number
-local function create_test_server(name, port)
+local function create_test_server(exec_name, port)
+    local name = string.format("/tmp/%s", exec_name)
     local done_building = false
     system.run(
-        { "go", "build", "-o", name, string.format("./test/%s/main.go", name) },
+        { "go", "build", "-o", name, string.format("./test/%s/main.go", exec_name) },
         {},
         function(exit_info)
             if exit_info.code ~= 0 then
@@ -93,7 +94,7 @@ local function create_test_server(name, port)
         return done_building
     end)
 
-    local run = system.run({ string.format("./%s", name), "--port", tostring(port) }, {
+    local run = system.run({ name, "--port", tostring(port) }, {
         stdout = function(_, data)
             print("stdout:", data)
         end,
