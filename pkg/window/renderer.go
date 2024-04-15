@@ -2,12 +2,14 @@ package window
 
 import (
 	"fmt"
+	"log/slog"
 	"slices"
 
 	"github.com/theprimeagen/vim-with-me/pkg/assert"
 )
 
 const CELL_ENCODING_LENGTH = COLOR_ENCODING_LENGTH*2 + 1
+const CELL_AND_LOC_ENCODING_LENGTH = CELL_ENCODING_LENGTH + LOCATION_ENCODING_LENGTH
 
 type Cell struct {
 	Foreground Color
@@ -15,7 +17,53 @@ type Cell struct {
 	Value      byte
 }
 
-type CellWithLocation ...
+func (c *Cell) String() string {
+    return fmt.Sprintf(
+        "value=%s foreground=%s background=%s",
+        []byte{c.Value},
+        c.Foreground.String(),
+        c.Background.String(),
+    )
+}
+
+type CellWithLocation struct {
+    Cell
+    Location
+}
+
+func (c *CellWithLocation) MarshalBinary() ([]byte, error) {
+    loc, err := c.Location.MarshalBinary()
+    if err != nil {
+        return nil, err
+    }
+
+    cell, err := c.Cell.MarshalBinary()
+    if err != nil {
+        return nil, err
+    }
+
+    return append(loc, cell...), nil
+}
+
+func (c *CellWithLocation) UnmarshalBinary(data []byte) error {
+    assert.Assert(len(data) >= CELL_ENCODING_LENGTH + LOCATION_ENCODING_LENGTH, "not enough bytes for unmarshaling CellWithLocation")
+
+    var loc Location
+    err := loc.UnmarshalBinary(data)
+    if err != nil {
+        return err
+    }
+    c.Location = loc
+
+    var cell Cell
+    err = cell.UnmarshalBinary(data[LOCATION_ENCODING_LENGTH:])
+    if err != nil {
+        return err
+    }
+    c.Cell = cell
+
+    return nil
+}
 
 func (c *Cell) MarshalBinary() ([]byte, error) {
 	foreground, err := c.Foreground.MarshalBinary()
@@ -77,10 +125,10 @@ type Renderer struct {
 	previous    []Cell
 	renderables []Render
 
-	previousPartialRender []*Cell
+	previousPartialRender []*CellWithLocation
 }
 
-func NewRender(cols, rows int) Renderer {
+func NewRender(rows, cols int) Renderer {
 	length := cols * rows
 	buffer := make([]Cell, 0, length)
 
@@ -95,11 +143,12 @@ func NewRender(cols, rows int) Renderer {
 	previous := make([]Cell, length, length)
 	copy(previous, buffer)
 
+    slog.Debug("new renderer", "rows", rows, "cols", cols)
 	return Renderer{
 		buffer:                buffer,
 		previous:              previous,
 		renderables:           make([]Render, 0, 100),
-		previousPartialRender: make([]*Cell, 0),
+		previousPartialRender: make([]*CellWithLocation, 0),
 
 		cols: cols,
 		rows: rows,
@@ -108,7 +157,7 @@ func NewRender(cols, rows int) Renderer {
 }
 
 func translate(loc *Location, offsetR, offsetC, rowSize, colSize int) (bool, int) {
-	out := int((loc.Row+offsetR)*colSize + loc.Col + offsetC)
+	out := (loc.Row+offsetR)*colSize + loc.Col + offsetC
 
 	exceeds :=
 		// Off the board on right or down
@@ -183,22 +232,37 @@ func (r *Renderer) place(renderable Render) {
 	}
 }
 
-func (r *Renderer) Render() []*Cell {
+func (r *Renderer) Render() []*CellWithLocation {
 	for i := 0; i < len(r.renderables); i++ {
 		r.place(r.renderables[i])
 	}
 
-	out := make([]*Cell, 0)
+	out := make([]*CellWithLocation, 0)
 	for i, cell := range r.buffer {
 		other := r.previous[i]
 		if !cell.Equal(&other) {
-			out = append(out, &cell)
+            row := i / r.cols
+            col := i % r.cols
+
+            // I probably care about this...
+            // TODO(v1): LogValuer interface (LogAttr maybe?)
+            slog.Debug("partial render cell with location", "row", row, "col", col, "cell", cell.String())
+
+			out = append(out, &CellWithLocation{
+                Cell: cell,
+                Location: NewLocation(row, col),
+            })
 		}
 	}
 
 	r.previousPartialRender = out
 	copy(r.previous, r.buffer)
 	return out
+}
+
+func (r *Renderer) FullRender() []*Cell {
+    assert.Assert(false, "please implement me")
+    return nil
 }
 
 func printBuff(buffer []Cell, rows, cols int) {

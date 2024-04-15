@@ -82,8 +82,8 @@ func (c *Commander) ToString(b byte) string {
     return ""
 }
 
-func PartialRender(cells []*window.Cell) *tcp.TCPCommand {
-    bytes := make([]byte, 0, len(cells) * window.CELL_ENCODING_LENGTH)
+func PartialRender(cells []*window.CellWithLocation) *tcp.TCPCommand {
+    bytes := make([]byte, 0, len(cells) * window.CELL_AND_LOC_ENCODING_LENGTH)
     for _, cell := range cells {
         data, err := cell.MarshalBinary()
         assert.Assert(err == nil, "encoding a cell should never fail")

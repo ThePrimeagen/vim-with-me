@@ -1,6 +1,10 @@
 package window
 
-import "github.com/theprimeagen/vim-with-me/pkg/assert"
+import (
+	"fmt"
+
+	"github.com/theprimeagen/vim-with-me/pkg/assert"
+)
 
 const FOREGROUND = 1
 const COLOR = 3
@@ -11,6 +15,10 @@ type Color struct {
 	blue       byte
 	green      byte
 	foreground bool
+}
+
+func (c *Color) String() string {
+    return fmt.Sprintf("r=%d, g=%d, b=%d, f=%v", c.red, c.green, c.blue, c.foreground)
 }
 
 var DEFAULT_BACKGROUND = Color{red: 0, blue: 0, green: 0}

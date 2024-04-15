@@ -6,7 +6,7 @@ import (
 	"github.com/theprimeagen/vim-with-me/pkg/assert"
 )
 
-const LOCATION_BYTE_LENGTH = 2
+const LOCATION_ENCODING_LENGTH = 2
 type Location struct {
     Row int
     Col int

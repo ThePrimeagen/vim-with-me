@@ -49,7 +49,7 @@ function App:on_cmd_received(cb)
     return self
 end
 
----@param partials PartialRender
+---@param partials Cell
 function App:partial_render(partials)
     for _, partial in ipairs(partials) do
         self.cache:partial(partial)

@@ -19,6 +19,23 @@ local function to_string(...)
     return table.concat(out, "")
 end
 
+---@param cmd TCPCommand | nil
+local function pretty_print(cmd)
+    if cmd == nil then
+        print("command is nil")
+        return
+    end
+
+    print("command", cmd.command)
+
+    local to_print = {}
+    for i = 1, #cmd.data do
+        table.insert(to_print, string.byte(cmd.data, i, i))
+    end
+
+    print(table.concat(to_print, ", "))
+end
+
 ---@param length number
 ---@return string
 local function to_tcp_int(length)
@@ -101,4 +118,5 @@ return {
 
     ColorCompression = ColorCompression,
     to_string = to_string,
+    pretty_print = pretty_print,
 }

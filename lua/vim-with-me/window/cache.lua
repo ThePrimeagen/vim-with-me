@@ -23,7 +23,7 @@ function DisplayCache:new(dim)
         cols = dim.width,
     }, self)
 end
----@param partial PartialRender
+---@param partial Cell
 function DisplayCache:partial(partial)
     self:place(partial.row, partial.col, partial.value)
 end

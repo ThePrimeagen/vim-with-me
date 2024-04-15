@@ -1,8 +1,3 @@
----@class Cell
----@field row number
----@field col number
----@field value string
-
 ---@class WindowPosition
 ---@field width number
 ---@field height number
@@ -202,27 +197,6 @@ local function next_number(str, idx)
     local num = tonumber(num_str)
     assert(num ~= nil, "parsed item was not a string: " .. num_str)
     return num, next_idx + 1
-end
-
---
----@param data string
----@return Cell[]
-function M.parse_partial_render(data)
-    assert(
-        #data % 3 == 0,
-        "incomplete partial render string provided: " .. #data
-    )
-
-    local renders = {}
-    for i = 1, #data, 3 do
-        table.insert(renders, {
-            row = string.byte(data, i, i) + 1,
-            col = string.byte(data, i + 1, i + 1) + 1,
-            value = string.sub(data, i + 2, i + 2),
-        })
-    end
-
-    return renders
 end
 
 return M

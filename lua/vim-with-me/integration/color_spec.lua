@@ -1,5 +1,7 @@
 local eq = assert.are.same
 local int_utils = require("vim-with-me.integration.int_utils")
+local parse = require("vim-with-me.tcp.parse")
+local utils = require("vim-with-me.tcp.utils")
 
 local port = 42075
 
@@ -12,13 +14,34 @@ describe("vim with me :: Color test", function()
         local tcp = int_utils.create_tcp_connection(port)
 
         local next = int_utils.create_tcp_next(tcp)
-        local commands = next()
-        local open_window = next()
+        next()
+        next()
         local x = next()
 
-        print(vim.inspect(commands))
-        print(vim.inspect(open_window))
-        print(vim.inspect(x))
+        utils.pretty_print(x)
+
+        eq({
+            cell = {
+                background = {
+                    blue = 0,
+                    foreground = false,
+                    green = 0,
+                    red = 0
+                },
+                foreground = {
+                    blue = 69,
+                    foreground = true,
+                    green = 169,
+                    red = 100
+                },
+                value = "X"
+            },
+            loc = {
+                col = 8,
+                row = 8,
+            }
+        }, parse.parse_cell_with_location(x.data))
+
     end)
 end)
 
