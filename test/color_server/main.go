@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/theprimeagen/vim-with-me/pkg/commands"
 	"github.com/theprimeagen/vim-with-me/pkg/testies"
@@ -44,15 +46,34 @@ func main() {
 	server.WelcomeMessage(commander.ToCommands())
 	server.WelcomeMessage(commands.OpenCommand(&renderer))
 
-    renderer.Add(&X{row: 8, col: 8, foreground: window.NewColor(100, 169, 69, true)})
-    cells := renderer.Render()
-
-	server.WelcomeMessage(commands.PartialRender(cells))
+    x := &X{row: 10, col: 10, foreground: window.NewColor(100, 169, 69, true)}
+    renderer.Add(x)
 
 	defer server.Close()
 	go server.Start()
 
+    ticker := time.NewTicker(time.Millisecond * 250)
+
+    count := 0
 	for {
-		<-server.FromSockets
+        <-ticker.C
+
+        localCount := count % 20
+        if localCount >= 10 {
+            x.col--
+            x.row--
+        } else {
+            x.col++
+            x.row++
+        }
+
+        count++
+
+        cells := renderer.Render()
+        fmt.Printf("cells = %+v\n", cells)
+        fmt.Printf("x = %+v\n", x)
+
+        server.Send(commands.PartialRender(cells))
+
 	}
 }

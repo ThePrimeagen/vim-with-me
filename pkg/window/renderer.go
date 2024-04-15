@@ -18,51 +18,51 @@ type Cell struct {
 }
 
 func (c *Cell) String() string {
-    return fmt.Sprintf(
-        "value=%s foreground=%s background=%s",
-        []byte{c.Value},
-        c.Foreground.String(),
-        c.Background.String(),
-    )
+	return fmt.Sprintf(
+		"value=%s foreground=%s background=%s",
+		[]byte{c.Value},
+		c.Foreground.String(),
+		c.Background.String(),
+	)
 }
 
 type CellWithLocation struct {
-    Cell
-    Location
+	Cell
+	Location
 }
 
 func (c *CellWithLocation) MarshalBinary() ([]byte, error) {
-    loc, err := c.Location.MarshalBinary()
-    if err != nil {
-        return nil, err
-    }
+	loc, err := c.Location.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
 
-    cell, err := c.Cell.MarshalBinary()
-    if err != nil {
-        return nil, err
-    }
+	cell, err := c.Cell.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
 
-    return append(loc, cell...), nil
+	return append(loc, cell...), nil
 }
 
 func (c *CellWithLocation) UnmarshalBinary(data []byte) error {
-    assert.Assert(len(data) >= CELL_ENCODING_LENGTH + LOCATION_ENCODING_LENGTH, "not enough bytes for unmarshaling CellWithLocation")
+	assert.Assert(len(data) >= CELL_ENCODING_LENGTH+LOCATION_ENCODING_LENGTH, "not enough bytes for unmarshaling CellWithLocation")
 
-    var loc Location
-    err := loc.UnmarshalBinary(data)
-    if err != nil {
-        return err
-    }
-    c.Location = loc
+	var loc Location
+	err := loc.UnmarshalBinary(data)
+	if err != nil {
+		return err
+	}
+	c.Location = loc
 
-    var cell Cell
-    err = cell.UnmarshalBinary(data[LOCATION_ENCODING_LENGTH:])
-    if err != nil {
-        return err
-    }
-    c.Cell = cell
+	var cell Cell
+	err = cell.UnmarshalBinary(data[LOCATION_ENCODING_LENGTH:])
+	if err != nil {
+		return err
+	}
+	c.Cell = cell
 
-    return nil
+	return nil
 }
 
 func (c *Cell) MarshalBinary() ([]byte, error) {
@@ -123,6 +123,7 @@ type Renderer struct {
 
 	buffer      []Cell
 	previous    []Cell
+	clean       []Cell
 	renderables []Render
 
 	previousPartialRender []*CellWithLocation
@@ -141,12 +142,15 @@ func NewRender(rows, cols int) Renderer {
 	}
 
 	previous := make([]Cell, length, length)
+	clean := make([]Cell, length, length)
 	copy(previous, buffer)
+	copy(clean, buffer)
 
-    slog.Debug("new renderer", "rows", rows, "cols", cols)
+	slog.Debug("new renderer", "rows", rows, "cols", cols)
 	return Renderer{
 		buffer:                buffer,
 		previous:              previous,
+		clean:                 clean,
 		renderables:           make([]Render, 0, 100),
 		previousPartialRender: make([]*CellWithLocation, 0),
 
@@ -241,28 +245,29 @@ func (r *Renderer) Render() []*CellWithLocation {
 	for i, cell := range r.buffer {
 		other := r.previous[i]
 		if !cell.Equal(&other) {
-            row := i / r.cols
-            col := i % r.cols
+			row := i / r.cols
+			col := i % r.cols
 
-            // I probably care about this...
-            // TODO(v1): LogValuer interface (LogAttr maybe?)
-            slog.Debug("partial render cell with location", "row", row, "col", col, "cell", cell.String())
+			// I probably care about this...
+			// TODO(v1): LogValuer interface (LogAttr maybe?)
+			slog.Debug("partial render cell with location", "row", row, "col", col, "cell", cell.String())
 
 			out = append(out, &CellWithLocation{
-                Cell: cell,
-                Location: NewLocation(row, col),
-            })
+				Cell:     cell,
+				Location: NewLocation(row, col),
+			})
 		}
 	}
 
 	r.previousPartialRender = out
 	copy(r.previous, r.buffer)
+	copy(r.buffer, r.clean)
 	return out
 }
 
 func (r *Renderer) FullRender() []*Cell {
-    assert.Assert(false, "please implement me")
-    return nil
+	assert.Assert(false, "please implement me")
+	return nil
 }
 
 func printBuff(buffer []Cell, rows, cols int) {

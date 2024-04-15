@@ -2,6 +2,7 @@
 local DisplayCache = require("vim-with-me.window.cache")
 local window = require("vim-with-me.window")
 local Commands = require("vim-with-me.app.commands")
+local parse = require("vim-with-me.tcp.parse")
 
 ---@class VWMApp
 ---@field public window WindowDetails | nil
@@ -49,7 +50,7 @@ function App:on_cmd_received(cb)
     return self
 end
 
----@param partials Cell
+---@param partials CellWithLocation
 function App:partial_render(partials)
     for _, partial in ipairs(partials) do
         self.cache:partial(partial)
@@ -90,7 +91,7 @@ function App:_process(command)
     if cmd == cmds:get("commands") then
         self.commands:parse(data)
     elseif cmd == cmds:get("partial") and self.window and self.cache then
-        self:partial_render(window.parse_partial_render(data))
+        self:partial_render(parse.parse_partial_renders(data))
     elseif cmd == cmds:get("render") and self.window and self.cache then
         self:render(data)
     elseif cmd == cmds:get("close") then

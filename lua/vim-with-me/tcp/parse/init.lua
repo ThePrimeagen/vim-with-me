@@ -12,7 +12,7 @@ local CELL_AND_LOC_ENCODING_LENGTH = CELL_ENCODING_LENGTH + LOCATION_ENCODING_LE
 ---@class Cell
 ---@field foreground VWMColor
 ---@field background VWMColor
----@field value      number
+---@field value      string
 
 ---@class VWMColor
 ---@field red        number

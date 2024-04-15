@@ -9,10 +9,10 @@ function START()
 
     local conn = TCP:new()
     conn:start(function()
-        local function handle_commands(cmd, data)
-            print("unhandled command", cmd, data)
+        local function handle_commands(cmd)
+            print("handled command", vim.inspect(cmd))
         end
-        app = App:new(conn, handle_commands)
+        app = App:new(conn):on_cmd_received(handle_commands)
     end)
 end
 

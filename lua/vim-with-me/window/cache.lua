@@ -23,9 +23,9 @@ function DisplayCache:new(dim)
         cols = dim.width,
     }, self)
 end
----@param partial Cell
+---@param partial CellWithLocation
 function DisplayCache:partial(partial)
-    self:place(partial.row, partial.col, partial.value)
+    self:place(partial.loc.row, partial.loc.col, partial.cell.value)
 end
 
 ---@param row number
