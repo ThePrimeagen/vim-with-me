@@ -20,9 +20,9 @@ type TCPCommand struct {
 }
 
 func (t *TCPCommand) MarshalBinary() (data []byte, err error) {
-	data = []byte{VERSION, t.Command, 0, 0}
+	data = append([]byte{VERSION, t.Command, 0, 0}, t.Data...)
 	binary.BigEndian.PutUint16(data[2:4], uint16(len(t.Data)))
-	return append(data, t.Data...), nil
+	return
 }
 
 func (t *TCPCommand) UnmarshalBinary(bytes []byte) error {
