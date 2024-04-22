@@ -128,6 +128,8 @@ local function before_each()
 end
 
 local function after_each()
+    print("after_each?")
+    vim.wait(5000)
     for _, proc in ipairs(running) do
         proc:kill(9)
     end

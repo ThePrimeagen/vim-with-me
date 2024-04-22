@@ -24,8 +24,8 @@ func (x *X) Id() int {
 }
 
 var cell window.Cell = window.Cell{
-	Background: window.DEFAULT_BACKGROUND,
-	Foreground: window.DEFAULT_FOREGROUND,
+	Background: window.NewColor(255, 0, 0, false),
+	Foreground: window.NewColor(0, 255, 0, true),
 	Value:      byte('X'),
 }
 

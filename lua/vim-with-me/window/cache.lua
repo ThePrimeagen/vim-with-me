@@ -1,7 +1,10 @@
+local Locations = require("vim-with-me.location")
+
 ---@class DisplayCache
 ---@field data string[][]
 ---@field rows number
 ---@field cols number
+---@field dirty table<table<boolean>>
 local DisplayCache = {}
 DisplayCache.__index = DisplayCache
 
@@ -9,23 +12,29 @@ DisplayCache.__index = DisplayCache
 ---@return DisplayCache
 function DisplayCache:new(dim)
     local data = {}
+    local dirty = {}
     for _ = 1, dim.height do
         local row = {}
+        local dirty_row = {}
         for _ = 1, dim.width do
             table.insert(row, " ")
+            table.insert(dirty_row, false)
         end
         table.insert(data, row)
+        table.insert(dirty, dirty_row)
     end
 
     return setmetatable({
         data = data,
         rows = dim.height,
         cols = dim.width,
+        dirty = dirty,
     }, self)
 end
 ---@param partial CellWithLocation
 function DisplayCache:partial(partial)
-    self:place(partial.loc.row, partial.loc.col, partial.cell.value)
+    local row, col = Locations.to_cache(partial)
+    self:place(row, col, partial.cell.value)
 end
 
 ---@param row number
@@ -53,6 +62,26 @@ function DisplayCache:place(row, col, item)
             .. self.cols
     )
     self.data[row][col] = item
+    self.dirty[row][col] = true
+end
+
+---@param window WindowDetails
+function DisplayCache:render_into(window)
+    --- TODO: Make this even more fantastic by doing dirty contiguous regions instead of dirty cells
+    for r, dirty_row in ipairs(self.dirty) do
+        for c, dirty in ipairs(dirty_row) do
+            if dirty then
+                local loc = Locations.from_cache(r, c)
+                local data = vim.api.nvim_buf_get_lines(window.buffer, 0, -1, false)
+                print("cache loc", vim.inspect(loc), vim.inspect(data))
+                vim.api.nvim_buf_set_text(
+                    window.buffer,
+                    loc.row, loc.col,
+                    loc.row, loc.col + 1, {self.data[r][c]})
+                dirty_row[c] = false
+            end
+        end
+    end
 end
 
 ---@return string[]

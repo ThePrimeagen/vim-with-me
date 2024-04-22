@@ -58,6 +58,7 @@ type TCP struct {
 	listener    net.Listener
 	mutex       sync.RWMutex
 	FromSockets chan TCPCommandWrapper
+	NewSocket chan *Connection
 }
 
 func (t *TCP) ConnectionCount() int {
@@ -152,8 +153,11 @@ func readConnection(tcp *TCP, conn *Connection) {
 }
 
 func (t *TCP) Start() {
+    fmt.Println("STARTING")
 	for {
+        fmt.Println("waiting for listener")
 		conn, err := t.listener.Accept()
+        fmt.Println("got a listener")
 
 		if err != nil {
 			slog.Error("server error:", "error", err)
@@ -162,6 +166,7 @@ func (t *TCP) Start() {
 		newConn := NewConnection(conn)
         slog.Debug("new connection", "id", newConn.Id)
         err = sendCommands(&newConn, t.welcomes)
+
         if err != nil {
 			slog.Error("could not send out welcome messages", "error", err)
             // TODO: How do i close?

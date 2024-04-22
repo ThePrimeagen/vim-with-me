@@ -1,4 +1,3 @@
-
 local function from_cache(row, col)
     return {
         row = row - 1,

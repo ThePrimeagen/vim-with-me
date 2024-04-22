@@ -108,7 +108,9 @@ function ColorSet:color_cell(cell)
     local ns = self.namespaces[row][col]
 
     row, col = Locations.to_line_api(cell)
+
     vim.api.nvim_buf_clear_namespace(self.buffer, ns, row, row + 1)
+
     vim.highlight.range(self.buffer, ns, fg_name, {row, col}, {row, col + 1})
     vim.highlight.range(self.buffer, ns, bg_name, {row, col}, {row, col + 1})
 

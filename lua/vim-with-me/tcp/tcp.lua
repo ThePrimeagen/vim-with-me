@@ -64,8 +64,10 @@ function TCP:start(cb, opts)
 
     cb = cb or function() end
 
+    print("creating new tcp connection")
     self._connection = uv.new_tcp()
     self._connection:connect(self.opts.host, self.opts.port, function(err)
+        print("connect", err)
         if err then
             self._connection = nil
             vim.defer_fn(function()
@@ -76,6 +78,7 @@ function TCP:start(cb, opts)
             return
         end
 
+        print("reading starts")
         self:_read()
         vim.schedule(cb)
     end)

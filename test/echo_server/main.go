@@ -1,13 +1,11 @@
 package main
 
 import (
-	"flag"
 	"log"
 	"log/slog"
 	"os"
 
 	"github.com/theprimeagen/vim-with-me/pkg/commands"
-	"github.com/theprimeagen/vim-with-me/pkg/tcp"
 	"github.com/theprimeagen/vim-with-me/pkg/testies"
 )
 

@@ -18,6 +18,7 @@ App.__index = App
 ---@param conn TCP
 ---@return VWMApp
 function App:new(conn)
+    print("app", conn.new)
     assert(conn:connected(), "connection not established")
 
     local app = setmetatable({
@@ -53,24 +54,23 @@ end
 ---@param partials CellWithLocation
 function App:partial_render(partials)
 
-    local ok, fh = pcall(vim.loop.fs_open, "/tmp/partials", "w", 493)
-
     for _, partial in ipairs(partials) do
         self.cache:partial(partial)
-        self.color_set:color_cell(partial)
-        ok, _ = pcall(vim.loop.fs_write, fh, vim.inspect(partial))
     end
-
-    vim.loop.fs_close(fh)
 
     --- TODO: Create it so that i only get back partial row updates
     --- Consider some sort of debounce here too
-    local rows = self.cache:to_string_rows()
-    vim.api.nvim_buf_set_lines(self.window.buffer, 0, -1, false, rows)
+    self.cache:render_into(self.window)
 
-    if self._on_render then
-        self._on_render()
-    end
+    vim.schedule(function()
+        for _, partial in ipairs(partials) do
+            self.color_set:color_cell(partial)
+        end
+
+        if self._on_render then
+            self._on_render()
+        end
+    end)
 end
 
 ---@param str string
@@ -139,6 +139,8 @@ function App:with_window(dim, center)
 
     self.cache = DisplayCache:new(dim)
     self.color_set = ColorSet:new(self.window)
+
+    vim.api.nvim_buf_set_lines(self.window.buffer, 0, -1, false, self.cache:to_string_rows())
 
     return self
 end
