@@ -9,3 +9,5 @@ provided
   - once i take in input from the client then i'll need to also have location
     from cursor
 
+
+* color rework probably is needed especially when it comes to location within app

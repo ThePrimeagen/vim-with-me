@@ -13,23 +13,38 @@ import (
 type X struct {
 	row int
 	col int
-
-	foreground window.Color
 }
 
 func (x *X) Z() int {
-    return 1
+	return 1
 }
 
 func (x *X) Id() int {
-    return 1
+	return 1
+}
+
+var cell window.Cell = window.Cell{
+	Background: window.DEFAULT_BACKGROUND,
+	Foreground: window.DEFAULT_FOREGROUND,
+	Value:      byte('X'),
 }
 
 func (x *X) Render() (window.Location, [][]window.Cell) {
-    cells := [][]window.Cell{
-        {{Background: window.DEFAULT_BACKGROUND, Foreground: x.foreground, Value: byte('X')}},
-    }
-    return window.NewLocation(x.row, x.col), cells
+	cells := [][]window.Cell{
+		{cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell},
+		{cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell},
+		{cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell},
+		{cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell},
+		{cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell},
+		{cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell},
+		{cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell},
+		{cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell},
+		{cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell},
+		{cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell},
+		{cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell},
+		{cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell},
+	}
+	return window.NewLocation(x.row-1, x.col-1), cells
 }
 
 func main() {
@@ -46,34 +61,34 @@ func main() {
 	server.WelcomeMessage(commander.ToCommands())
 	server.WelcomeMessage(commands.OpenCommand(&renderer))
 
-    x := &X{row: 10, col: 10, foreground: window.NewColor(100, 169, 69, true)}
-    renderer.Add(x)
+	x := &X{row: 10, col: 10}
+	renderer.Add(x)
 
 	defer server.Close()
 	go server.Start()
 
-    ticker := time.NewTicker(time.Millisecond * 250)
+	ticker := time.NewTicker(time.Millisecond * 2500)
 
-    count := 0
+	count := 0
 	for {
-        <-ticker.C
+		<-ticker.C
 
-        localCount := count % 20
-        if localCount >= 10 {
-            x.col--
-            x.row--
-        } else {
-            x.col++
-            x.row++
-        }
+		localCount := count % 20
+		if localCount >= 10 {
+			x.col--
+			x.row--
+		} else {
+			x.col++
+			x.row++
+		}
 
-        count++
+		count++
 
-        cells := renderer.Render()
-        fmt.Printf("cells = %+v\n", cells)
-        fmt.Printf("x = %+v\n", x)
+		cells := renderer.Render()
+		fmt.Printf("cells = %+v\n", cells)
+		fmt.Printf("x = %+v\n", x)
 
-        server.Send(commands.PartialRender(cells))
+		server.Send(commands.PartialRender(cells))
 
 	}
 }

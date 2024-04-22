@@ -14,6 +14,7 @@ local CELL_AND_LOC_ENCODING_LENGTH = CELL_ENCODING_LENGTH + LOCATION_ENCODING_LE
 ---@field background VWMColor
 ---@field value      string
 
+-- {loc={row = 1, col = 1}, cell={ foreground = { red = 12, green = 34, blue = 56, foreground = true}, background = { red = 12, green = 34, blue = 56, foreground = true}},
 ---@class VWMColor
 ---@field red        number
 ---@field blue       number

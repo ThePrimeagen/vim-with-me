@@ -1,5 +1,5 @@
--- local token = require("vim-with-me.app.token")
 local DisplayCache = require("vim-with-me.window.cache")
+local ColorSet = require("vim-with-me.app.colors")
 local window = require("vim-with-me.window")
 local Commands = require("vim-with-me.app.commands")
 local parse = require("vim-with-me.tcp.parse")
@@ -7,9 +7,9 @@ local parse = require("vim-with-me.tcp.parse")
 ---@class VWMApp
 ---@field public window WindowDetails | nil
 ---@field public cache DisplayCache | nil
+---@field public color_set VWMColorSet | nil
 ---@field public conn TCP
 ---@field public commands TCPCommands
----@field public _auth_cb (fun(): nil) | nil
 ---@field public _on_render (fun(): nil) | nil
 ---@field public _on_command (fun(cmd: TCPCommand): nil) | nil
 local App = {}
@@ -23,11 +23,11 @@ function App:new(conn)
     local app = setmetatable({
         conn = conn,
         _on_command = nil,
-        _auth_cb = nil,
         commands = Commands.Commands:new(),
         _render_cb = nil,
         window = nil,
         cache = nil,
+        color_set = nil,
     }, self)
 
     conn:listen(function(command)
@@ -52,10 +52,16 @@ end
 
 ---@param partials CellWithLocation
 function App:partial_render(partials)
+
+    local ok, fh = pcall(vim.loop.fs_open, "/tmp/partials", "w", 493)
+
     for _, partial in ipairs(partials) do
         self.cache:partial(partial)
-
+        self.color_set:color_cell(partial)
+        ok, _ = pcall(vim.loop.fs_write, fh, vim.inspect(partial))
     end
+
+    vim.loop.fs_close(fh)
 
     --- TODO: Create it so that i only get back partial row updates
     --- Consider some sort of debounce here too
@@ -103,13 +109,6 @@ function App:_process(command)
     elseif cmd == cmds:get("error") then
         -- TODO: error and then close
         self:close()
-        --[[
-    elseif cmd == "auth" then
-        assert(self._auth_cb, "no auth callback")
-        self._auth_cb()
-        self._auth_cb = nil
-    end
-    -]]
     end
 
     if self._on_command then
@@ -139,17 +138,9 @@ function App:with_window(dim, center)
     window.focus(self.window)
 
     self.cache = DisplayCache:new(dim)
-    return self
-end
+    self.color_set = ColorSet:new(self.window)
 
----@param cb function
-function App:authenticate(cb)
-    assert(cb, self)
-    --[[
-    local t = token.get_token()
-    self.conn:send("auth", t)
-    self._auth_cb = cb
-    --]]
+    return self
 end
 
 return App

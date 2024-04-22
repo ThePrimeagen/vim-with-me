@@ -22,6 +22,7 @@ func (c *Color) String() string {
 }
 
 var DEFAULT_BACKGROUND = Color{red: 0, blue: 0, green: 0}
+var DEFAULT_FOREGROUND = Color{red: 255, blue: 255, green: 255}
 
 func NewColor(r, g, b byte, f bool) Color {
 	return Color{

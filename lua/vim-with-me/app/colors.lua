@@ -1,10 +1,25 @@
-local utils = require("vim-with-me.utils")
-local ns = utils.namespace
+local Locations = require("vim-with-me.location")
+
+---@type VWMColor
+local DEFAULT_BACKGROUND = {
+    foreground = false,
+    red = 0,
+    green = 0,
+    blue = 0,
+}
+
+---@type VWMColor
+local DEFAULT_FOREGROUND = {
+    foreground = true,
+    red = 50,
+    green = 75,
+    blue = 120,
+}
 
 ---@param color VWMColor
 ---@return string
 local function color_to_string(color)
-    return string.format("%02x%02x%02x", color.red, color.green, color.blue)
+    return string.format("#%02x%02x%02x", color.red, color.green, color.blue)
 end
 
 ---@class VWMColors
@@ -13,6 +28,7 @@ end
 
 ---@class VWMColorSet
 ---@field seen table<string, string>
+---@field namespaces table<table<string>>
 ---@field count number
 ---@field buffer number
 ---@field rows number
@@ -20,25 +36,45 @@ end
 local ColorSet = {}
 ColorSet.__index = ColorSet
 
----@param buffer number
----@param rows number
----@param cols number
----@param base_foreground VWMColor
----@param base_background VWMColor
-function ColorSet:new(buffer, rows, cols, base_foreground, base_background)
+---@param window WindowDetails
+---@param base_foreground VWMColor | nil
+---@param base_background VWMColor | nil
+function ColorSet:new(window, base_foreground, base_background)
+    base_background = base_background or DEFAULT_BACKGROUND
+    base_foreground = base_foreground or DEFAULT_FOREGROUND
+
+    local rows = window.dim.height
+    local cols = window.dim.width
     local color = setmetatable({
         seen = {},
         count = 0,
         rows = rows,
+        namespaces = {},
         cols = cols,
-        buffer = buffer,
+        buffer = window.buffer,
     }, self)
 
     color:_get_name(base_foreground)
     color:_get_name(base_background)
 
-    color:color_range(base_foreground, 1, 0, rows + 1, cols)
-    color:color_range(base_background, 1, 0, rows + 1, cols)
+    for r = 1, rows do
+        local namespace_row = {}
+        table.insert(color.namespaces, namespace_row)
+
+        for c = 1, cols do
+            local namespace = vim.api.nvim_create_namespace(string.format("VWM%d_%d", r, c))
+            table.insert(namespace_row, namespace)
+
+            color:color_cell({
+                loc = Locations.from_cache(r, c),
+                cell = {
+                    foreground = base_foreground,
+                    background = base_background,
+                    value = 'E' -- nice
+                }
+            })
+        end
+    end
 
     return color
 end
@@ -54,9 +90,9 @@ function ColorSet:_get_name(vwm_color)
         self.count = self.count + 1
 
         local opts = {}
-        opts[vwm_color.foreground and "foreground" or "background"] = string.format("#%s", color)
+        opts[vwm_color.foreground and "foreground" or "background"] = color
 
-        vim.api.nvim_set_hl(ns, name, opts)
+        vim.api.nvim_set_hl(0, name, opts)
     end
     return self.seen[color]
 end
@@ -67,43 +103,20 @@ end
 function ColorSet:color_cell(cell)
     local fg_name = self:_get_name(cell.cell.foreground)
     local bg_name = self:_get_name(cell.cell.background)
-    local loc = cell.loc
-    local col = loc.col
-    local row = loc.row
 
-    vim.api.nvim_buf_add_highlight(self.buffer, ns, fg_name, row, col, col + 1)
-    vim.api.nvim_buf_add_highlight(self.buffer, ns, bg_name, row, col, col + 1)
-end
+    local row, col = Locations.to_cache(cell)
+    local ns = self.namespaces[row][col]
 
----@param color VWMColor
----@param row_start number
----@param col_start number
----@param row_end number
----@param col_end number
-function ColorSet:color_range(color, row_start, col_start, row_end, col_end)
-    local name = self:_get_name(color)
-    local function add(row, s, e)
-        vim.api.nvim_buf_add_highlight(
-            self.buffer,
-            ns,
-            name,
-            row,
-            s,
-            e
-        )
-    end
+    row, col = Locations.to_line_api(cell)
+    vim.api.nvim_buf_clear_namespace(self.buffer, ns, row, row + 1)
+    vim.highlight.range(self.buffer, ns, fg_name, {row, col}, {row, col + 1})
+    vim.highlight.range(self.buffer, ns, bg_name, {row, col}, {row, col + 1})
 
-    if row_start == row_end then
-        add(row_start, col_start, col_end)
-    end
-
-    add(row_start, col_start, self.cols)
-
-    for i = row_start + 1, row_end - 1 do
-        add(i, 0, self.cols)
-    end
-
-    add(row_end, 0, col_end)
+    --[[
+    vim.api.nvim_buf_add_highlight(self.buffer, ns, fg_name, row, col - 1, col + 1)
+    vim.api.nvim_buf_add_highlight(self.buffer, ns, fg_name, row - 1, col - 1, col + 1)
+    vim.api.nvim_buf_add_highlight(self.buffer, ns, fg_name, row + 1, col - 1, col + 1)
+    --]]
 end
 
 return ColorSet
