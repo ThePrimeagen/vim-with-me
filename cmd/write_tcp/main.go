@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -50,9 +51,15 @@ var messageThree = commands.PartialRender([]*window.CellWithLocation{
     cell(y, 0, 0),
 })
 
-
-
 func main() {
+    var path string
+    flag.StringVar(&path, "path", "FOO", "the path to write the file too")
+    flag.Parse()
+
+    if path == "FOO" {
+        log.Fatal("YOU DIDN'T PROVIDE A PATH -- Go watch some pokimane")
+    }
+
     commander := commands.NewCommander()
 
     cmds := commander.ToCommands()
@@ -90,7 +97,7 @@ func main() {
     all_data = append(all_data, render_commands...)
     fmt.Printf("data written: %d", len(all_data))
 
-    err = os.WriteFile("/tmp/partials", all_data, 0o777)
+    err = os.WriteFile(path, all_data, 0o777)
     if err != nil {
         log.Fatal("your order of her beer failed", err)
     }

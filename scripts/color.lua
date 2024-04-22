@@ -1,3 +1,4 @@
+local DATA = "./data/partial"
 local plenary = require("plenary.reload")
 plenary.reload_module("vim-with-me")
 
@@ -42,7 +43,7 @@ function FakeTCP:listen(cb)
     read_one()
 end
 
-local ok, fh = pcall(vim.loop.fs_open, "/tmp/partials", "r", 493)
+local ok, fh = pcall(vim.loop.fs_open, DATA, "r", 493)
 if not ok then
     error("cannot open file")
 end
