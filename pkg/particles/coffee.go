@@ -103,13 +103,13 @@ func NewCoffee(width, height int, scale float64) Coffee {
         if count == 0 {
             return " "
         }
-        if count < 3 {
+        if count < 4 {
             return "░"
         }
-        if count  < 5 {
+        if count  < 6 {
             return "▒"
         }
-        if count < 7 {
+        if count < 9 {
             return "▓"
         }
         return "█"
