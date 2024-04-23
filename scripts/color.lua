@@ -5,55 +5,8 @@ plenary.reload_module("vim-with-me")
 local App = require("vim-with-me.app")
 local ColorSet = require("vim-with-me.app.colors")
 local parse = require("vim-with-me.tcp.parse")
-local process = require("vim-with-me.tcp.process")
 local window = require("vim-with-me.window")
-
-local processor = process.process_packets()
-local FakeTCP = { }
-FakeTCP.__index = FakeTCP
-
-function FakeTCP:new(tcp_data)
-    local item = setmetatable({
-        process = processor,
-        data = tcp_data
-    }, self)
-
-    return item
-end
-
-function FakeTCP:connected()
-    return true
-end
-
-function FakeTCP:listen(cb)
-    local packet = processor(self.data)
-    local function read_one()
-        if packet == nil then
-            return
-        end
-
-        cb(packet)
-        packet = processor()
-
-        vim.defer_fn(function()
-            read_one()
-        end, 500)
-    end
-
-    read_one()
-end
-
-local ok, fh = pcall(vim.loop.fs_open, DATA, "r", 493)
-if not ok then
-    error("cannot open file")
-end
-
-local ok, data = pcall(vim.loop.fs_read, fh, 2048)
-if not ok then
-    error("cannot read data")
-end
-
-vim.loop.fs_close(fh)
+local TestUtils = require("vim-with-me.test-utils")
 
 local function manual_run()
     local win = window.create_window({
@@ -92,7 +45,7 @@ local function manual_run()
 end
 
 local function run_app()
-    local app = App:new(FakeTCP:new(data))
+    local app = App:new(TestUtils.fake_tcp_from_file(DATA))
 end
 
 run_app()

@@ -75,14 +75,6 @@ func NewCoffee(width, height int, scale float64) Coffee {
         if count == 0 {
             return " "
         }
-        /*
-        if count == 1 {
-            if row > 0 && counts[row - 1][col] > 0 {
-                return "."
-            }
-        }
-
-*/
         direction := row +
             int(((time.Now().UnixMilli() - startTime) / 2000) % 2)
 

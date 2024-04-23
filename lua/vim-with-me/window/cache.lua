@@ -72,8 +72,6 @@ function DisplayCache:render_into(window)
         for c, dirty in ipairs(dirty_row) do
             if dirty then
                 local loc = Locations.from_cache(r, c)
-                local data = vim.api.nvim_buf_get_lines(window.buffer, 0, -1, false)
-                print("cache loc", vim.inspect(loc), vim.inspect(data))
                 vim.api.nvim_buf_set_text(
                     window.buffer,
                     loc.row, loc.col,
