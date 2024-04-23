@@ -2,8 +2,6 @@ local plenary = require("plenary.reload")
 plenary.reload_module("vim-with-me")
 
 local App = require("vim-with-me.app")
-local ColorSet = require("vim-with-me.app.colors")
-local window = require("vim-with-me.window")
 local TestUtils = require("vim-with-me.test-utils")
 local IntUtils = require("vim-with-me.integration.int_utils")
 
