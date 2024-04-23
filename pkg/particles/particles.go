@@ -17,8 +17,13 @@ type Particle struct {
 }
 
 type NextPosition func(particle *Particle, deltaMS int64)
-type ParticleRender func(row, col int, count [][]int) window.Cell
+type ParticleRender func(row, col int, count [][]ParticleCellStat, p *ParticleParams) window.Cell
 type Reset func(particle *Particle, params *ParticleParams)
+
+type ParticleCellStat struct {
+	count         int
+	totalLifetime int64
+}
 
 type ParticleParams struct {
 	MaxLife  int64
@@ -76,12 +81,12 @@ func (ps *ParticleSystem) Update() {
 }
 
 func (ps *ParticleSystem) Render() (window.Location, [][]window.Cell) {
-	counts := make([][]int, 0)
+	counts := make([][]ParticleCellStat, 0)
 
 	for row := 0; row < ps.Y; row++ {
-		count := make([]int, 0)
+		count := make([]ParticleCellStat, 0)
 		for col := 0; col < ps.X; col++ {
-			count = append(count, 0)
+			count = append(count, ParticleCellStat{})
 		}
 		counts = append(counts, count)
 	}
@@ -90,14 +95,15 @@ func (ps *ParticleSystem) Render() (window.Location, [][]window.Cell) {
 		row := int(math.Floor(p.Y))
 		col := int(math.Round(p.X))
 
-		counts[row][col]++
+		counts[row][col].count++
+		counts[row][col].totalLifetime += p.Lifetime
 	}
 
 	out := make([][]window.Cell, 0)
 	for r, row := range counts {
 		outRow := make([]window.Cell, 0)
 		for c := range row {
-			outRow = append(outRow, ps.render(r, c, counts))
+			outRow = append(outRow, ps.render(r, c, counts, &ps.ParticleParams))
 		}
 
 		out = append(out, outRow)

@@ -57,7 +57,7 @@ var dirs = [][]int{
 	{1, -1},
 }
 
-func countParticles(row, col int, counts [][]int) int {
+func countParticles(row, col int, counts [][]ParticleCellStat) int {
 	count := 0
 	for _, dir := range dirs {
 		r := row + dir[0]
@@ -66,37 +66,49 @@ func countParticles(row, col int, counts [][]int) int {
 		if r < 0 || r >= len(counts) || c < 0 || c >= len(counts[0]) {
 			continue
 		}
-		count = counts[row+dir[0]][col+dir[1]]
+		count = counts[row+dir[0]][col+dir[1]].count
 	}
 	return count
-}
-
-func normalize(row, col int, counts [][]int) {
-
-	if countParticles(row, col, counts) > 4 {
-		counts[row][col] = 0
-	}
 }
 
 func NewCoffee(width, height int, scale float64) Coffee {
 	assert.Assert(width%2 == 1, "width of particle system MUST be odd")
 
 	startTime := time.Now().UnixMilli()
-	ascii := func(row, col int, counts [][]int) window.Cell {
-		count := counts[row][col]
-		if count == 0 {
+	ascii := func(row, col int, counts [][]ParticleCellStat, params *ParticleParams) window.Cell {
+		stats := counts[row][col]
+		if stats.count == 0 {
 			return window.DefaultCell(' ')
 		}
+
 		direction := row +
 			int(((time.Now().UnixMilli()-startTime)/2000)%2)
 
+        /**
+        white = FF FF FF
+        yellow = FF FF 00
+        orange = FF 88 00
+        red = FF 00 00
+        */
+
+        normalLife := math.Min(0.9999, math.Max(0.0001, float64(stats.totalLifetime) / float64(params.MaxLife)))
+        halfCol := float64(params.X / 2)
+
+        colDist := math.Abs(halfCol - float64(col))
+        //rowSq := float64(row * row)
+        colNormal := math.Max(0, 1 - colDist / halfCol)
+
+        normal := normalLife * colNormal
+        green := byte(255 * normal)
+        color := window.NewColor(255, green, 0, true)
+
 		if countParticles(row, col, counts) > 3 {
 			if direction%2 == 0 {
-				return window.DefaultCell('{')
+				return window.ForegroundCell('{', color)
 			}
-			return window.DefaultCell('}')
+			return window.ForegroundCell('}', color)
 		}
-		return window.DefaultCell('.')
+		return window.ForegroundCell('.', color)
 	}
 
 	_ = ascii

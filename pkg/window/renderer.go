@@ -17,6 +17,14 @@ type Cell struct {
 	Value      byte
 }
 
+func ForegroundCell(value byte, foreground Color) Cell {
+    return Cell{
+        Value: value,
+        Foreground: foreground,
+        Background: DEFAULT_BACKGROUND,
+    }
+}
+
 func DefaultCell(value byte) Cell {
     return Cell{
         Value: value,

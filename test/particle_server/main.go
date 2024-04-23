@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log/slog"
 	"time"
 
@@ -31,11 +30,10 @@ func main() {
     coffee.Start()
     renderer.Add(&coffee)
 
-    timer := time.NewTicker(100 * time.Millisecond)
+    timer := time.NewTicker(16 * time.Millisecond)
     for _ = range timer.C {
         coffee.Update()
         partials := renderer.Render()
-        fmt.Printf("partials: %+v\n", partials)
         server.Send(commands.PartialRender(partials))
     }
 }
