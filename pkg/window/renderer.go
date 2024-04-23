@@ -17,6 +17,14 @@ type Cell struct {
 	Value      byte
 }
 
+func DefaultCell(value byte) Cell {
+    return Cell{
+        Value: value,
+        Foreground: DEFAULT_FOREGROUND,
+        Background: DEFAULT_BACKGROUND,
+    }
+}
+
 func (c *Cell) String() string {
 	return fmt.Sprintf(
 		"value=%s foreground=%s background=%s",
@@ -263,6 +271,12 @@ func (r *Renderer) Render() []*CellWithLocation {
 	copy(r.previous, r.buffer)
 	copy(r.buffer, r.clean)
 	return out
+}
+
+var id int = 0
+func GetNextId() int {
+    id++
+    return id
 }
 
 func (r *Renderer) FullRender() []*Cell {

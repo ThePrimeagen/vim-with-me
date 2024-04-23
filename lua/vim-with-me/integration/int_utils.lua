@@ -78,42 +78,64 @@ end
 ---@field exit_code number
 ---@field exec string
 ---@field server_path string
+---@field stdout string[]
+---@field stderr string[]
+
+---@param server_name string
+---@return ServerInfo
+local function server_info_from_name(server_name)
+    local exec = string.format("/tmp/%s", server_name)
+    local server_path = string.format("./test/%s/main.go", server_name)
+    return {
+        success = true,
+        exit_code = 0,
+        exec = exec,
+        server_path = server_path,
+        stdout = {},
+        stderr = {},
+    }
+end
 
 ---@param server_name string
 ---@param opts {timeout: number}?
 ---@return ServerInfo
 local function build_go_test_server(server_name, opts)
-    opts = vim.tbl_extend("force", {}, opts or {
+    opts = vim.tbl_extend("force", {}, {
+        debug = false,
         timeout = 500,
-    })
+    }, opts or {})
 
-    local exec = string.format("/tmp/%s", server_name)
-    local server_path = string.format("./test/%s/main.go", server_name)
-    local success = 0
-    local exit_code = 0
+    local server_info = server_info_from_name(server_name)
+
+    local run_opts = { "go", "build", "-o", server_info.exec, server_info.server_path }
+    if opts.debug then
+        print("executing: ", table.concat(run_opts, " "))
+    end
 
     system.run(
-        { "go", "build", "-o", exec, server_path },
-        {},
+        run_opts,
+        {
+            stdout = function(_, data)
+                table.insert(server_info.stdout, data)
+            end,
+            stderr = function(_, data)
+                table.insert(server_info.stderr, data)
+            end,
+        },
         function(exit_info)
-            exit_code = exit_info.code
+            server_info.exit_code = exit_info.code
             if exit_info.code ~= 0 then
-                success = -1
+                server_info.success = -1
             else
-                success = 1
+                server_info.success = 1
             end
         end
     )
     vim.wait(opts.timeout, function()
-        return success ~= 0
+        return server_info.success ~= 0
     end)
 
-    return {
-        success = success == 1,
-        exit_code = exit_code,
-        exec = exec,
-        server_path = server_path,
-    }
+    return server_info
 end
 
 ---@param server_info ServerInfo
@@ -185,4 +207,5 @@ return {
     read_all = read_all,
     build_go_test_server = build_go_test_server,
     run_test_server = run_test_server,
+    server_info_from_name = server_info_from_name,
 }

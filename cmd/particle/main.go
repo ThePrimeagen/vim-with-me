@@ -50,10 +50,12 @@ func main() {
         <-timer.C
         fmt.Print("\033[H\033[2J")
         coffee.Update()
-        steam := coffee.Display()
+        /*
+        _, _ = coffee.Render()
         for _, row := range steam {
             fmt.Printf("              %s\n", row)
         }
+        */
         fmt.Println(c)
     }
 }

@@ -3,8 +3,9 @@ package particles
 import (
 	"math"
 	"slices"
-	"strings"
 	"time"
+
+	"github.com/theprimeagen/vim-with-me/pkg/window"
 )
 
 type Particle struct {
@@ -16,7 +17,7 @@ type Particle struct {
 }
 
 type NextPosition func(particle *Particle, deltaMS int64)
-type Ascii func(row, col int, count [][]int) string
+type ParticleRender func(row, col int, count [][]int) window.Cell
 type Reset func(particle *Particle, params *ParticleParams)
 
 type ParticleParams struct {
@@ -26,11 +27,11 @@ type ParticleParams struct {
 	ParticleCount int
 
 	XSTD float64
-	X      int
-	Y      int
+	X    int
+	Y    int
 
 	nextPosition NextPosition
-	ascii        Ascii
+	render       ParticleRender
 	reset        Reset
 }
 
@@ -74,7 +75,7 @@ func (ps *ParticleSystem) Update() {
 	}
 }
 
-func (ps *ParticleSystem) Display() []string {
+func (ps *ParticleSystem) Render() (window.Location, [][]window.Cell) {
 	counts := make([][]int, 0)
 
 	for row := 0; row < ps.Y; row++ {
@@ -92,21 +93,16 @@ func (ps *ParticleSystem) Display() []string {
 		counts[row][col]++
 	}
 
-	out := make([][]string, 0)
+	out := make([][]window.Cell, 0)
 	for r, row := range counts {
-		outRow := make([]string, 0)
+		outRow := make([]window.Cell, 0)
 		for c := range row {
-			outRow = append(outRow, ps.ascii(r, c, counts))
+			outRow = append(outRow, ps.render(r, c, counts))
 		}
 
 		out = append(out, outRow)
 	}
 
 	slices.Reverse(out)
-	outStr := make([]string, 0)
-	for _, row := range out {
-		outStr = append(outStr, strings.Join(row, ""))
-	}
-
-	return outStr
+	return window.NewLocation(0, 0), out
 }
