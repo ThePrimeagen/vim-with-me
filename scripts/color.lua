@@ -1,52 +1,36 @@
-local DATA = "./data/partial"
 local plenary = require("plenary.reload")
 plenary.reload_module("vim-with-me")
 
 local App = require("vim-with-me.app")
 local ColorSet = require("vim-with-me.app.colors")
-local parse = require("vim-with-me.tcp.parse")
 local window = require("vim-with-me.window")
 local TestUtils = require("vim-with-me.test-utils")
+local IntUtils = require("vim-with-me.integration.int_utils")
 
-local function manual_run()
-    local win = window.create_window({
-        width = 5,
-        height = 5,
-        row = 0,
-        col = 0,
-    }, true)
+local DATA_PATH = "./data/partial"
+local TEST_SERVER = "color_server"
+local PORT = 42069
 
-    vim.api.nvim_buf_set_lines(win.buffer, 0, -1, false, {
-        "XXXXX",
-        "XXXXX",
-        "XXXXX",
-        "XXXXX",
-        "XXXXX",
-    })
-
-    local colorer = ColorSet:new(win)
-
-    ---[[
-    --- @param partials CellWithLocation[]
-    --- @param i number
-    local function color(partials, i)
-        if i > #partials then
-            print("leaving", i, #partials)
-            return
-        end
-
-        colorer:color_cell(partials[i])
-        vim.defer_fn(function()
-            color(partials, i + 1)
-        end, 50)
+---@type TCP
+local tcp = nil
+local function server_run()
+    local server_info = IntUtils.build_go_test_server(TEST_SERVER)
+    if not server_info.success then
+        error(string.format("unable to start server: %d", server_info.exit_code))
+        return
     end
 
-    color(parsed_partials, 1)
+    IntUtils.run_test_server(server_info, PORT)
+    vim.wait(100)
+
+    tcp = IntUtils.create_tcp_connection(PORT)
 end
 
-local function run_app()
-    local app = App:new(TestUtils.fake_tcp_from_file(DATA))
+local function file_run()
+    tcp = TestUtils.fake_tcp_from_file(DATA_PATH)
 end
 
-run_app()
+file_run()
+assert(tcp ~= nil, "please call file_run or server_run")
+App:new(tcp)
 

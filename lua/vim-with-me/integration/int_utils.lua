@@ -73,28 +73,53 @@ local function create_tcp_connection(port)
     return tcp
 end
 
----@param exec_name string
----@param port number
-local function create_test_server(exec_name, port)
-    local name = string.format("/tmp/%s", exec_name)
-    local done_building = false
+---@class ServerInfo
+---@field success number
+---@field exit_code number
+---@field exec string
+---@field server_path string
+
+---@param server_name string
+---@param opts {timeout: number}?
+---@return ServerInfo
+local function build_go_test_server(server_name, opts)
+    opts = vim.tbl_extend("force", {}, opts or {
+        timeout = 500,
+    })
+
+    local exec = string.format("/tmp/%s", server_name)
+    local server_path = string.format("./test/%s/main.go", server_name)
+    local success = 0
+    local exit_code = 0
+
     system.run(
-        { "go", "build", "-o", name, string.format("./test/%s/main.go", exec_name) },
+        { "go", "build", "-o", exec, server_path },
         {},
         function(exit_info)
+            exit_code = exit_info.code
             if exit_info.code ~= 0 then
-                print(exit_info.stderr or "no standard error")
-                os.exit(exit_info.code, true)
+                success = -1
+            else
+                success = 1
             end
-
-            done_building = true
         end
     )
-    vim.wait(1000, function()
-        return done_building
+    vim.wait(opts.timeout, function()
+        return success ~= 0
     end)
 
-    local run = system.run({ name, "--port", tostring(port) }, {
+    return {
+        success = success == 1,
+        exit_code = exit_code,
+        exec = exec,
+        server_path = server_path,
+    }
+end
+
+---@param server_info ServerInfo
+---@param port number | string
+local function run_test_server(server_info, port)
+    local run = system.run({ server_info.exec, "--port", tostring(port) }, {
         stdout = function(_, data)
             print("stdout:", data)
         end,
@@ -107,6 +132,18 @@ local function create_test_server(exec_name, port)
         }
     })
     table.insert(running, run)
+end
+
+---@param exec_name string
+---@param port number | string
+local function create_test_server(exec_name, port)
+    local server_info = build_go_test_server(exec_name)
+    if not server_info.success then
+        print("failed to launch server")
+        os.exit(server_info.exit_code)
+    end
+
+    run_test_server(server_info, port)
     vim.wait(100)
 end
 
@@ -146,4 +183,6 @@ return {
     before_each = before_each,
     after_each = after_each,
     read_all = read_all,
+    build_go_test_server = build_go_test_server,
+    run_test_server = run_test_server,
 }
