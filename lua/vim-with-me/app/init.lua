@@ -11,7 +11,7 @@ local parse = require("vim-with-me.tcp.parse")
 ---@field public conn TCP
 ---@field public commands TCPCommands
 ---@field public _on_render (fun(): nil) | nil
----@field public _on_command (fun(cmd: TCPCommand): nil) | nil
+---@field public _on_command (fun(cmd: TCPCommand): nil)[]
 local App = {}
 App.__index = App
 
@@ -23,7 +23,7 @@ function App:new(conn)
 
     local app = setmetatable({
         conn = conn,
-        _on_command = nil,
+        _on_command = {},
         commands = Commands.Commands:new(),
         _render_cb = nil,
         window = nil,
@@ -46,8 +46,8 @@ end
 
 ---@param cb fun(cmd: TCPCommand): nil
 ---@return VWMApp
-function App:on_cmd_received(cb)
-    self._render_cb = cb
+function App:on_command(cb)
+    table.insert(self._on_command, cb)
     return self
 end
 
@@ -111,8 +111,8 @@ function App:_process(command)
         self:close()
     end
 
-    if self._on_command then
-        self._on_command(command)
+    for _, cmd_cb in ipairs(self._on_command) do
+        cmd_cb(command)
     end
 end
 

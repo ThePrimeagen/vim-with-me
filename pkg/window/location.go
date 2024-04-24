@@ -13,8 +13,8 @@ type Location struct {
 }
 
 func NewLocation(r, c int) Location {
-    assert.Assert(r < 256, "cannot exceed 256 for rows")
-    assert.Assert(c < 256, "cannot exceed 256 for cols")
+    assert.Assert(r < 256, fmt.Sprintf("cannot exceed 256 for rows: %d", r))
+    assert.Assert(c < 256, fmt.Sprintf("cannot exceed 256 for cols: %d", c))
 
     return Location{Row: int(r), Col: int(c)}
 }

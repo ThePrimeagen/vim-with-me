@@ -82,6 +82,11 @@ func (c *Commander) ToString(b byte) string {
     return ""
 }
 
+func Render(cells []*window.CellWithLocation) *tcp.TCPCommand {
+    assert.Assert(false, "implement this function you rookie")
+    return nil
+}
+
 func PartialRender(cells []*window.CellWithLocation) *tcp.TCPCommand {
     bytes := make([]byte, 0, len(cells) * window.CELL_AND_LOC_ENCODING_LENGTH)
     for _, cell := range cells {
@@ -106,13 +111,6 @@ func OpenCommand(window Openable) *tcp.TCPCommand {
 		Command: OPEN_WINDOW,
 		Data:    []byte{rows, cols},
 	}
-}
-
-func Render(data []byte) *tcp.TCPCommand {
-    return &tcp.TCPCommand{
-        Command: RENDER,
-        Data: data,
-    }
 }
 
 func Close(msg []byte) *tcp.TCPCommand {

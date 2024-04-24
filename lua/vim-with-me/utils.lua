@@ -36,4 +36,7 @@ return {
     key = key,
     read_file = read_file,
     namespace = namespace,
+    optsify = function(opts, default)
+        return vim.tbl_extend("force", {}, default, opts or {})
+    end
 }

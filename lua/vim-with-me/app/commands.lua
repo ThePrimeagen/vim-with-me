@@ -1,3 +1,5 @@
+---@alias TCPCommandName "render" | "partial" | "close" | "error" | "openWindow" | "commands" | string
+
 ---@class TCPCommands
 ---@field _commands table<string, number>
 local Commands = {}
@@ -10,12 +12,21 @@ function Commands:new()
     }, self)
 end
 
----@param name "render" | "partial" | "close" | "error" | "openWindow" | "commands" | string
+---@param name TCPCommandName
 ---@return number
 function Commands:get(name)
     local value = self._commands[name]
     assert(value ~= nil, "command not found " .. name)
     return value
+end
+
+---@param cmd TCPCommand
+---@param name TCPCommandName
+---@return boolean
+function Commands:is(cmd, name)
+    local value = self._commands[name]
+    assert(value ~= nil, "command not found " .. name)
+    return cmd.command == value
 end
 
 ---@param str string

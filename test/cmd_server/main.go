@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log/slog"
 	"os"
 	"strings"
@@ -24,10 +23,10 @@ func render(win *window.SimpleAsciiWindow) {
 	_ = win.SetWindow(str)
 }
 
-func partialRender(win *window.SimpleAsciiWindow, row, col byte, text []byte) {
+func partialRender(win *window.SimpleAsciiWindow, row, col int, text []byte) {
 
 	for i := 0; i < len(text); i++ {
-		err := win.Set(row, col+byte(i), text[i])
+		err := win.Set(row, col+i, text[i])
 		if err != nil {
 			slog.Error("Error setting partial render", "err", err)
 		}
@@ -35,7 +34,7 @@ func partialRender(win *window.SimpleAsciiWindow, row, col byte, text []byte) {
 }
 
 func main() {
-    testies.SetupLogger()
+	testies.SetupLogger()
 	server, err := testies.CreateServerFromArgs()
 	if err != nil {
 		slog.Error("Error creating server: %s", err)
@@ -46,8 +45,8 @@ func main() {
 	server.WelcomeMessage(commander.ToCommands())
 	win := window.NewSimpleWindow(24, 80)
 
-    defer server.Close()
-    go server.Start()
+	defer server.Close()
+	go server.Start()
 
 	for {
 		wrapper := <-server.FromSockets
@@ -57,19 +56,18 @@ func main() {
 		// Think about how to do better custom commands and really routing in
 		// general
 		case commander.GetCommandByte("open"):
-			out := window.OpenCommand(win)
+			out := commands.OpenCommand(&win)
 			server.Send(out)
 		case commands.RENDER:
-			render(win)
-			str := win.Render()
-			out := commands.Render([]byte(str))
+			render(&win)
+			cells := win.Render()
+			out := commands.PartialRender(cells)
 			server.Send(out)
 		case commands.PARTIAL_RENDER:
-			row := wrapper.Command.Data[0]
-			col := wrapper.Command.Data[1]
-			partialRender(win, row, col, []byte("theprimeagen"))
+			row := int(wrapper.Command.Data[0])
+			col := int(wrapper.Command.Data[1])
+			partialRender(&win, row, col, []byte("theprimeagen"))
 			renders := win.PartialRender()
-			fmt.Printf("partial render %d\n", len(renders))
 			server.Send(commands.PartialRender(renders))
 		}
 	}
