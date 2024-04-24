@@ -10,35 +10,34 @@ describe("vim with me :: Color test", function()
     after_each(int_utils.after_each)
 
     it("do we color?", function()
-        int_utils.create_test_server("color_server", port)
+        int_utils.create_test_server("color_server", port, {debug = true })
         local tcp = int_utils.create_tcp_connection(port)
 
         local next = int_utils.create_tcp_next(tcp)
         next()
         next()
-        local x = next()
 
-        utils.pretty_print(x)
+        local x = next()
 
         eq({
             cell = {
                 background = {
-                    blue = 0,
+                    blue = 69,
                     foreground = false,
                     green = 0,
-                    red = 0
+                    red = 255
                 },
                 foreground = {
-                    blue = 69,
+                    blue = 42,
                     foreground = true,
-                    green = 169,
-                    red = 100
+                    green = 255,
+                    red = 69
                 },
                 value = "X"
             },
             loc = {
-                col = 8,
-                row = 8,
+                col = 9,
+                row = 6,
             }
         }, parse.parse_cell_with_location(x.data))
 

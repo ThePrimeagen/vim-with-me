@@ -73,9 +73,10 @@ local function create_tcp_connection(port)
 end
 
 ---@class ServerInfo
----@field success number
+---@field success boolean
 ---@field exit_code number
 ---@field exec string
+---@field cmd string[]
 ---@field server_path string
 ---@field stdout string[]
 ---@field stderr string[]
@@ -86,7 +87,8 @@ local function server_info_from_name(server_name)
     local exec = string.format("/tmp/%s", server_name)
     local server_path = string.format("./test/%s/main.go", server_name)
     return {
-        success = true,
+        cmd = { "go", "build", "-o", exec, server_path },
+        success = nil,
         exit_code = 0,
         exec = exec,
         server_path = server_path,
@@ -101,18 +103,17 @@ end
 local function build_go_test_server(server_name, opts)
     opts = vim.tbl_extend("force", {}, {
         debug = false,
-        timeout = 500,
+        timeout = 1000,
     }, opts or {})
 
     local server_info = server_info_from_name(server_name)
 
-    local run_opts = { "go", "build", "-o", server_info.exec, server_info.server_path }
     if opts.debug then
-        print("executing: ", table.concat(run_opts, " "))
+        print("executing: ", table.concat(server_info.cmd, " "))
     end
 
     system.run(
-        run_opts,
+        server_info.cmd,
         {
             stdout = function(_, data)
                 table.insert(server_info.stdout, data)
@@ -123,15 +124,12 @@ local function build_go_test_server(server_name, opts)
         },
         function(exit_info)
             server_info.exit_code = exit_info.code
-            if exit_info.code ~= 0 then
-                server_info.success = -1
-            else
-                server_info.success = 1
-            end
+            server_info.success = exit_info.code == 0
         end
     )
+
     vim.wait(opts.timeout, function()
-        return server_info.success ~= 0
+        return server_info.success ~= nil
     end)
 
     return server_info
@@ -157,10 +155,11 @@ end
 
 ---@param exec_name string
 ---@param port number | string
-local function create_test_server(exec_name, port)
-    local server_info = build_go_test_server(exec_name)
+---@param opts table<string, any>?
+local function create_test_server(exec_name, port, opts)
+    local server_info = build_go_test_server(exec_name, opts)
     if not server_info.success then
-        print("failed to launch server")
+        print("failed to launch server", table.concat(server_info.stderr, "\n"))
         os.exit(server_info.exit_code)
     end
 

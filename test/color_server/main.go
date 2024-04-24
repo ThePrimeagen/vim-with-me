@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log/slog"
-	"time"
 
 	"github.com/theprimeagen/vim-with-me/pkg/commands"
 	"github.com/theprimeagen/vim-with-me/pkg/testies"
@@ -24,27 +23,16 @@ func (x *X) Id() int {
 }
 
 var cell window.Cell = window.Cell{
-	Background: window.NewColor(255, 0, 0, false),
-	Foreground: window.NewColor(0, 255, 0, true),
+	Background: window.NewColor(255, 0, 69, false),
+	Foreground: window.NewColor(69, 255, 42, true),
 	Value:      byte('X'),
 }
 
 func (x *X) Render() (window.Location, [][]window.Cell) {
 	cells := [][]window.Cell{
-		{cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell},
-		{cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell},
-		{cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell},
-		{cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell},
-		{cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell},
-		{cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell},
-		{cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell},
-		{cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell},
-		{cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell},
-		{cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell},
-		{cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell},
-		{cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell, cell},
+		{cell},
 	}
-	return window.NewLocation(x.row-1, x.col-1), cells
+	return window.NewLocation(x.row, x.col), cells
 }
 
 func main() {
@@ -58,37 +46,16 @@ func main() {
 	commander := commands.NewCommander()
 	renderer := window.NewRender(24, 80)
 
+	x := &X{row: 6, col: 9}
+	renderer.Add(x)
+    cells := renderer.Render()
+
 	server.WelcomeMessage(commander.ToCommands())
 	server.WelcomeMessage(commands.OpenCommand(&renderer))
+	server.WelcomeMessage(commands.PartialRender(cells))
 
-	x := &X{row: 10, col: 10}
-	renderer.Add(x)
+    fmt.Printf("Does this work?\n")
 
 	defer server.Close()
-	go server.Start()
-
-	ticker := time.NewTicker(time.Millisecond * 2500)
-
-	count := 0
-	for {
-		<-ticker.C
-
-		localCount := count % 20
-		if localCount >= 10 {
-			x.col--
-			x.row--
-		} else {
-			x.col++
-			x.row++
-		}
-
-		count++
-
-		cells := renderer.Render()
-		fmt.Printf("cells = %+v\n", cells)
-		fmt.Printf("x = %+v\n", x)
-
-		server.Send(commands.PartialRender(cells))
-
-	}
+	server.Start()
 }

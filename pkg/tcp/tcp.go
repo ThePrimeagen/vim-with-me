@@ -153,7 +153,6 @@ func readConnection(tcp *TCP, conn *Connection) {
 }
 
 func (t *TCP) Start() {
-    fmt.Println("STARTING")
 	for {
 		conn, err := t.listener.Accept()
 

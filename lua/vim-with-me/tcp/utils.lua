@@ -20,10 +20,11 @@ local function to_string(...)
 end
 
 ---@param cmd TCPCommand | nil
+---@return TCPCommand | nil
 local function pretty_print(cmd)
     if cmd == nil then
         print("command is nil")
-        return
+        return cmd
     end
 
     print("command", cmd.command)
@@ -34,6 +35,7 @@ local function pretty_print(cmd)
     end
 
     print(table.concat(to_print, ", "))
+    return cmd
 end
 
 ---@param length number
