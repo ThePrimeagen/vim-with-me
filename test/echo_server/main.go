@@ -28,7 +28,6 @@ func main() {
 
     for {
         cmd := <- server.FromSockets
-        log.Printf("message from socket: %+v\n", cmd)
         server.Send(cmd.Command)
     }
 }

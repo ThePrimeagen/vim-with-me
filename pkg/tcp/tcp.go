@@ -155,9 +155,7 @@ func readConnection(tcp *TCP, conn *Connection) {
 func (t *TCP) Start() {
     fmt.Println("STARTING")
 	for {
-        fmt.Println("waiting for listener")
 		conn, err := t.listener.Accept()
-        fmt.Println("got a listener")
 
 		if err != nil {
 			slog.Error("server error:", "error", err)

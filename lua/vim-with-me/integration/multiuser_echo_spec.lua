@@ -66,9 +66,6 @@ describe("vim with me :: multiuser", function()
 
             tcps[3].tcp:send(expected)
 
-            -- read command replies
-            int_utils.read_all(tcps)
-
             local outs = int_utils.read_all(tcps)
 
             for _, v in ipairs(outs) do
