@@ -1,8 +1,5 @@
 local eq = assert.are.same
-local utils = require("vim-with-me.tcp.utils")
 local int_utils = require("vim-with-me.integration.int_utils")
-local Commands = require("vim-with-me.app.commands")
-local theprimeagen = int_utils.theprimeagen
 
 ---@alias TestTCP {tcp: TCP, next: (fun(): TCPCommand | nil), flush: fun(): TCPCommand[]}
 
@@ -31,12 +28,15 @@ describe("vim with me :: multiuser", function()
             create_tcp(),
         }
 
-        local idx = 1
-        while idx < 10 do
+        -- discard the command replies
+        int_utils.read_all(tcps)
+
+        for idx = 1, 3 do
             local expected = { command = idx, data = "hello" .. idx }
 
             tcps[1].tcp:send(expected)
-            local outs = read_all(tcps)
+
+            local outs = int_utils.read_all(tcps)
 
             for _, v in ipairs(outs) do
                 eq(expected, v)
@@ -47,22 +47,29 @@ describe("vim with me :: multiuser", function()
 
             vim.wait(100)
 
-            print("sending out another echo")
             tcps[1].tcp:send(expected)
-            outs = read_all(tcps)
+            outs = int_utils.read_all(tcps)
 
             for _, v in ipairs(outs) do
                 eq(expected, v)
             end
 
-            table.insert(tcps, create_tcp())
+            local tcp = create_tcp()
+            table.insert(tcps, tcp)
+
+            -- read command
+            tcp.next()
         end
 
-        while idx < 10 do
+        for idx = 1, 3 do
             local expected = { command = idx, data = "hello" .. idx }
 
             tcps[3].tcp:send(expected)
-            local outs = read_all(tcps)
+
+            -- read command replies
+            int_utils.read_all(tcps)
+
+            local outs = int_utils.read_all(tcps)
 
             for _, v in ipairs(outs) do
                 eq(expected, v)
@@ -72,54 +79,18 @@ describe("vim with me :: multiuser", function()
             table.remove(tcps, 3)
 
             tcps[1].tcp:send(expected)
-            outs = read_all(tcps)
+            outs = int_utils.read_all(tcps)
 
             for _, v in ipairs(outs) do
                 eq(expected, v)
             end
 
-            table.insert(tcps, 1, create_tcp())
+            local tcp = create_tcp()
+            table.insert(tcps, 1, tcp)
+
+            -- read command
+            tcp.next()
         end
-
-        --[[
-
-        local next_cmd, flush_cmds = int_utils.create_tcp_next(tcp)
-
-        local server_commands = next_cmd()
-        assert(server_commands ~= nil)
-        local commands = Commands.Commands:new()
-        commands:parse(server_commands.data)
-
-        tcp:send({ command = commands:get("open"), data = "" })
-        eq({
-            command = commands:get("openWindow"),
-            data = utils.to_string(24, 80),
-        }, next_cmd())
-
-        tcp:send({ command = commands:get("render"), data = "" })
-        local cmd = next_cmd()
-
-        eq({
-            command = commands:get("render"),
-            data = theprimeagen,
-        }, cmd)
-        tcp:send({
-            command = commands:get("partial"),
-            data = utils.to_string(1, 1),
-        })
-        local theprimeagen_str = "theprimeagen"
-        local data = ""
-        for i = 1, #theprimeagen_str do
-            data = data
-                .. string.format(
-                    utils.to_string(1, i, theprimeagen_str:sub(i, i))
-                )
-        end
-
-        eq({
-            { command = commands:get("partial"), data = data },
-        }, flush_cmds())
-        --]]
     end)
 end)
 
