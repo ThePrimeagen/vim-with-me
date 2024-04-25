@@ -66,7 +66,7 @@ func countParticles(row, col int, counts [][]ParticleCellStat) int {
 		if r < 0 || r >= len(counts) || c < 0 || c >= len(counts[0]) {
 			continue
 		}
-		count = counts[row+dir[0]][col+dir[1]].count
+		count += counts[row+dir[0]][col+dir[1]].count
 	}
 	return count
 }
