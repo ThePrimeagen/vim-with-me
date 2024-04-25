@@ -3,116 +3,96 @@ package tcp
 import (
 	"encoding"
 	"encoding/binary"
-	"io"
 	"net"
 )
 
 var id int = 0
+
+// wraps underline net.Conn
 type Connection struct {
-    FrameReader
-    FrameWriter
-    Id int
+	net.Conn
+	Id       int
+	scratch  []byte
+	previous []byte
 }
 
 // TODO: How do i close?
 func NewConnection(conn net.Conn) Connection {
-    id++
+	id++
 	return Connection{
-        FrameReader: NewFrameReader(conn),
-        FrameWriter: NewFrameWriter(conn),
-        Id: id,
+		Conn:     conn,
+		Id:       id,
+		scratch:  make([]byte, 1024),
+		previous: make([]byte, 0),
 	}
+}
+
+// refering to the underline connection
+func (c *Connection) Close() error {
+	return c.Conn.Close()
 }
 
 func (c *Connection) Next() (*TCPCommand, error) {
-    _, err := c.Read(c.scratch)
 
-    if err != nil {
-        return nil, err
-    }
+	for {
+		n, err := c.Read(c.scratch)
+		if err != nil {
+			return nil, err
+		}
 
-    var cmd TCPCommand
-    err = cmd.UnmarshalBinary(c.scratch)
+		c.previous = append(c.previous, c.scratch[:n]...)
 
-    if err != nil {
-        return nil, err
-    }
+		packetN := c.parsePacket()
+		if packetN == 0 {
+			continue
+		}
 
-    return &cmd, nil
-}
+		var cmd TCPCommand
+		err = cmd.UnmarshalBinary(c.previous[:packetN])
+		if err != nil {
+			return nil, err
+		}
 
-type FrameReader struct {
-	reader   io.Reader
-	previous []byte
-	scratch  []byte
-}
+		c.previous = c.previous[packetN:]
 
-func NewFrameReader(reader io.Reader) FrameReader {
-	return FrameReader{
-		reader:   reader,
-		previous: []byte{},
-		scratch:  make([]byte, 1024),
+		return &cmd, nil
 	}
 }
 
-func (f *FrameReader) parsePacket(data []byte) int {
-	if len(data) < HEADER_SIZE {
+func (c *Connection) parsePacket() int {
+	if len(c.previous) < HEADER_SIZE {
 		return 0
 	}
 
-	length := int(binary.BigEndian.Uint16(data[2:]))
-	if len(data) < HEADER_SIZE+length {
+	length := int(binary.BigEndian.Uint16(c.previous[2:]))
+	if len(c.previous) < HEADER_SIZE+length {
 		return 0
 	}
 
 	return HEADER_SIZE + length
 }
 
-func (f *FrameReader) Read(data []byte) (int, error) {
-	for {
-		n := f.parsePacket(f.previous)
-		if n > 0 {
-			copy(data, f.previous[:n])
-			f.previous = f.previous[n:]
-			return n, nil
-		}
-
-		n, err := f.reader.Read(f.scratch)
-		if err != nil {
-			return 0, err
-		}
-
-		f.previous = append(f.previous, f.scratch[:n]...)
-	}
+func (c *Connection) Read(b []byte) (int, error) {
+	return c.Conn.Read(b)
 }
 
 type Bytes interface {
 	Bytes() []byte
 }
 
-type FrameWriter struct {
-	writer io.Writer
-}
-
-func NewFrameWriter(writer io.Writer) FrameWriter {
-	return FrameWriter{
-		writer: writer,
-	}
-}
-
-func (w *FrameWriter) Write(bytes encoding.BinaryMarshaler) error {
+func (c *Connection) Write(bytes encoding.BinaryMarshaler) error {
 	data, err := bytes.MarshalBinary()
-    if err != nil {
-        return err
-    }
+	if err != nil {
+		return err
+	}
 
 	length := len(data)
 
 	for length > 0 {
-		n, err := w.writer.Write(data)
+		n, err := c.Conn.Write(data)
 
-        // TODO: what's the error that means i need to wait for a moment to
-        // write more?
+		// TODO: what's the error that means i need to wait for a moment to
+		// write more?
 		if err != nil {
 			return err
 		}
@@ -122,4 +102,3 @@ func (w *FrameWriter) Write(bytes encoding.BinaryMarshaler) error {
 	}
 	return nil
 }
-
