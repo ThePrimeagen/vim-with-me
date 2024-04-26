@@ -32,6 +32,7 @@ func (t *TCPCommand) MarshalBinary() (data []byte, err error) {
 }
 
 func (t *TCPCommand) UnmarshalBinary(bytes []byte) error {
+
 	if bytes[0] != VERSION {
 		return fmt.Errorf("version mismatch %d != %d", bytes[0], VERSION)
 	}
@@ -70,7 +71,7 @@ func (t *TCP) Send(command *TCPCommand) {
 	removals := make([]int, 0)
     slog.Debug("sending message", "msg", command)
 	for i, conn := range t.sockets {
-		err := conn.Write(command)
+		err := conn.Writer.Write(command)
 		if err != nil {
             if errors.Is(err, syscall.EPIPE) {
                 slog.Debug("connection closed by client", "index", i)
@@ -94,7 +95,7 @@ func (t *TCP) Send(command *TCPCommand) {
 
 func sendCommands(conn *Connection, cmds []*TCPCommand) error {
 	for _, cmd := range cmds {
-		err := conn.Write(cmd)
+		err := conn.Writer.Write(cmd)
 		if err != nil {
 			// TODO: Do i need to close the connection?
 			return err
@@ -153,21 +154,21 @@ func readConnection(tcp *TCP, conn *Connection) {
 }
 
 func (t *TCP) Start() {
+    id := 0
 	for {
 		conn, err := t.listener.Accept()
+        id++
 
 		if err != nil {
 			slog.Error("server error:", "error", err)
 		}
 
-		newConn := NewConnection(conn)
+		newConn := NewConnection(conn, id)
         slog.Debug("new connection", "id", newConn.Id)
         err = sendCommands(&newConn, t.welcomes)
 
         if err != nil {
 			slog.Error("could not send out welcome messages", "error", err)
-            // TODO: How do i close?
-            // newConn.Close()
             continue
         }
 

@@ -39,6 +39,6 @@ func SetupLogger() {
     case "info", "i":
         slog.SetLogLoggerLevel(slog.LevelInfo)
     default:
-        slog.SetLogLoggerLevel(slog.LevelError)
+        slog.SetLogLoggerLevel(slog.LevelWarn)
     }
 }

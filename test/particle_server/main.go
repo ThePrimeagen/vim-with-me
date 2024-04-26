@@ -1,7 +1,11 @@
 package main
 
 import (
+    _ "net/http/pprof"
+
+	"fmt"
 	"log/slog"
+	"net/http"
 	"time"
 
 	"github.com/theprimeagen/vim-with-me/pkg/commands"
@@ -17,8 +21,10 @@ func main() {
 		slog.Error("Error creating server: %s", err)
 	}
 
+    h := 36
+    w := 121
 	commander := commands.NewCommander()
-	renderer := window.NewRender(8, 61)
+	renderer := window.NewRender(h, w)
 
 	server.WelcomeMessage(commander.ToCommands())
 	server.WelcomeMessage(commands.OpenCommand(&renderer))
@@ -26,12 +32,17 @@ func main() {
     defer server.Close()
     go server.Start()
 
-    coffee := particles.NewCoffee(61, 8, 9.0)
+    coffee := particles.NewCoffee(w, h, 19.0)
     coffee.Start()
     renderer.Add(&coffee)
 
-    timer := time.NewTicker(16 * time.Millisecond)
-    for _ = range timer.C {
+    // Server for pprof
+    go func() {
+        fmt.Println(http.ListenAndServe("localhost:6060", nil))
+    }()
+
+    timer := time.NewTicker(20 * time.Millisecond)
+    for range timer.C {
         coffee.Update()
         partials := renderer.Render()
         server.Send(commands.PartialRender(partials))

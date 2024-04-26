@@ -135,9 +135,9 @@ func NewCoffee(width, height int, scale float64) Coffee {
 	return Coffee{
 		ParticleSystem: NewParticleSystem(
 			ParticleParams{
-				MaxLife:       6000,
-				MaxSpeed:      1.5,
-				ParticleCount: 700,
+				MaxLife:       6*6000,
+				MaxSpeed:      1.75,
+				ParticleCount: 1000,
 
 				reset:        reset,
 				render:       ascii,

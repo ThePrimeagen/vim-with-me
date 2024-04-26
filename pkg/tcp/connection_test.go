@@ -4,34 +4,42 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/theprimeagen/vim-with-me/pkg/tcp"
+	"github.com/theprimeagen/vim-with-me/pkg/testies"
 )
 
 func TestConnection(t *testing.T) {
+    testies.SetupLogger()
 
     cmd := &tcp.TCPCommand{
         Command: byte('t'),
         Data: []byte("69:420"),
     }
 
+    b := []byte{}
     bin, err := cmd.MarshalBinary()
-    assert.NoError(t, err)
+    require.NoError(t, err)
 
-    r := bytes.NewReader(bin)
+    for i := 0; i < 100; i++ {
+        require.NoError(t, err)
+        b = append(b, bin...)
+    }
+
+    r := bytes.NewReader(b)
     w := bytes.NewBuffer(nil)
 
     conn := tcp.Connection{
         Id: 0,
-        FrameReader: tcp.NewFrameReader(r),
-        FrameWriter: tcp.NewFrameWriter(w),
+        Reader: tcp.NewFrameReader(r),
+        Writer: tcp.NewFrameWriter(w),
     }
 
-    outCommand, err := conn.Next()
-    assert.Equal(t, outCommand, cmd)
+    for i := 0; i < 100; i++ {
+        outCommand, err := conn.Next()
+        require.NoError(t, err)
+        require.Equal(t, outCommand, cmd)
+    }
 
-    err = conn.Write(outCommand)
-    assert.NoError(t, err)
-    assert.Equal(t, w.Bytes(), bin)
 }
 

@@ -95,6 +95,8 @@ function App:_process(command)
     local data = command.data
     local cmds = self.commands
 
+    print("data", #data)
+
     if cmd == cmds:get("commands") then
         self.commands:parse(data)
     elseif cmd == cmds:get("partial") and self.window and self.cache then

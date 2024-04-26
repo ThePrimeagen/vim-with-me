@@ -47,8 +47,6 @@ var allCells = []Cell{
 	cell75, cell76,
 }
 
-var id int = 0
-
 func newTestRenderable(cells [][]Cell, loc Location, z int) TestRenderable {
     id++
 	return TestRenderable{
