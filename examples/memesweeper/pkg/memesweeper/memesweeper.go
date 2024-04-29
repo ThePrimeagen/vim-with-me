@@ -98,6 +98,10 @@ func (m *MemeSweeper) ReduceCount() {
 	m.board.ReduceOne()
 }
 
+func (m *MemeSweeper) Dimensions() (byte, byte) {
+    return byte(m.board.params.height + 1 + 1 + 1), byte(m.board.params.width + 1 + 15)
+}
+
 func (m *MemeSweeper) Chat(msg *chat.ChatMsg) {
     row, col, err := ParseChatMessage(msg.Msg)
     if err != nil {

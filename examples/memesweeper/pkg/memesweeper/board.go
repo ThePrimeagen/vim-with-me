@@ -1,9 +1,11 @@
 package memesweeper
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 	"strconv"
+	"time"
 
 	"github.com/theprimeagen/vim-with-me/pkg/window"
 )
@@ -66,12 +68,19 @@ type Board struct {
 }
 
 type BoardParams struct {
+	random        *rand.Rand
 	width, height int
 	row, col      int
 	bombCount     int
 }
 
 func NewBoard(params BoardParams) *Board {
+    if params.random == nil {
+        seed := int64(time.Now().UnixMilli())
+        random := rand.New(rand.NewSource(seed))
+        params.random = random
+    }
+
 	cells := make([][]*SweeperCell, 0)
 	for range params.height {
 		cell_row := make([]*SweeperCell, 0, params.height)
@@ -89,6 +98,7 @@ func NewBoard(params BoardParams) *Board {
 
 	return &Board{
 		params: params,
+		cells:  cells,
 
 		id:          window.GetNextId(),
 		countCount:  0,
@@ -140,7 +150,7 @@ func (r *Board) count(row, col int) int {
 
 		if r.cells[rowNext][colNext].bomb {
 			c++
-            r.countCount++
+			r.countCount++
 		}
 	}
 	return c
@@ -171,16 +181,29 @@ func (r *Board) revealSpot(row, col int) {
 	}
 }
 
+func (r *Board) debug() {
+    for _, row := range r.cells {
+        for _, cell := range row {
+            if cell.bomb {
+                fmt.Printf("%v* ", cell.revealed)
+            } else {
+                fmt.Printf("%v%d ", cell.revealed, cell.displayedAdjCount)
+            }
+        }
+        fmt.Println()
+    }
+}
+
 func (r *Board) init(row, col int) {
 	for range r.params.bombCount {
 		randomC := 0
 		randomR := 0
 		for {
 
-			randomR = rand.Intn(r.params.height)
-			randomC = rand.Intn(r.params.width)
+			randomR = r.params.random.Intn(r.params.height)
+			randomC = r.params.random.Intn(r.params.width)
 
-			if (randomC != col || randomR != row) && !r.cells[row][col].bomb {
+			if (randomC != col || randomR != row) && !r.cells[randomR][randomC].bomb {
 				break
 			}
 		}
@@ -191,7 +214,12 @@ func (r *Board) init(row, col int) {
 	params := r.params
 	for row := range params.height {
 		for c := range params.width {
-			r.cells[row][c].adjacentCount = r.count(row, c)
+            cell := r.cells[row][c]
+            if cell.bomb {
+                continue
+            }
+			cell.adjacentCount = r.count(row, c)
+			cell.displayedAdjCount = cell.adjacentCount
 		}
 	}
 
@@ -199,16 +227,17 @@ func (r *Board) init(row, col int) {
 }
 
 func (r *Board) ReduceOne() {
-    if r.countCount == 0 {
-        return
-    }
+	if r.countCount == 0 {
+		return
+	}
 
-    r.countCount--
+	r.countCount--
 
 	for {
 
-		row := rand.Intn(r.params.height)
-		c := rand.Intn(r.params.width)
+		row := r.params.random.Intn(r.params.height)
+		c := r.params.random.Intn(r.params.width)
+
 		cell := r.cells[row][c]
 
 		if cell.bomb || cell.displayedAdjCount == 0 {
@@ -219,16 +248,16 @@ func (r *Board) ReduceOne() {
 }
 
 func (r *Board) Render() (window.Location, [][]window.Cell) {
-    cells := make([][]window.Cell, 0)
+	cells := make([][]window.Cell, 0)
 	for row := range r.params.height {
-        cell_row := make([]window.Cell, 0)
+		cell_row := make([]window.Cell, 0)
 		for c := range r.params.width {
 			cell_row = append(cell_row, toWindowCell(r.cells[row][c]))
 		}
-        cells = append(cells, cell_row)
+		cells = append(cells, cell_row)
 	}
 
-    return window.NewLocation(r.params.row, r.params.col), cells
+	return window.NewLocation(r.params.row, r.params.col), cells
 }
 
 func (r *Board) Z() int {

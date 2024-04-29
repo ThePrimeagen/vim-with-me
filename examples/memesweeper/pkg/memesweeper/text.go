@@ -22,8 +22,8 @@ func NewText(row, col int, txt string) *Text {
 func (t *Text) SetText(txt string) {
     text_cells := make([]window.Cell, 0, len(txt))
 
-    for _, rune := range txt {
-        text_cells = append(text_cells, window.DefaultCell(byte(rune)))
+    for i, rune := range txt {
+        text_cells = append(text_cells, window.ForegroundCell(byte(rune), colors[i % len(colors)]))
     }
 
     t.cells = [][]window.Cell{

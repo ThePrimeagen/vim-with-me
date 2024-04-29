@@ -21,11 +21,13 @@ func newGrid(row, col int, width, height int) *grid {
 	}
 
 	for w := range width {
-		cells[1][w].Value = string('A' + w)[0]
+        value := byte('A' + w)
+		cells[1][w].Value = string(value)[0]
 	}
 
 	for h := range height {
-		cells[h][1].Value = string('1' + h)[0]
+        value := byte('1' + h)
+		cells[h][1].Value = string(value)[0]
 	}
 
     return &grid{row: row, col: col, cells: cells, id: window.GetNextId()}

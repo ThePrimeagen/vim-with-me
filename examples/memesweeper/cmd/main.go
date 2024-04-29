@@ -29,7 +29,10 @@ func main() {
 
     commander := commands.NewCommander()
     server.WelcomeMessage(commander.ToCommands())
-    server.WelcomeMessage(commands.OpenCommand(&ms.Renderer))
+    server.WelcomeMessage(commands.OpenCommand(&ms))
+
+    go server.Start()
+    defer server.Close()
 
     listenToChat := make(chan struct{}, 10)
 
