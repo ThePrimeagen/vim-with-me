@@ -38,13 +38,17 @@ func main() {
 
     go func() {
         for {
+            slog.Debug("main: chat waiting...")
             <-listenToChat
+            slog.Debug("main: chat active...")
+            outer:
             for {
                 select {
                 case msg := <-ch:
+                    slog.Debug("main: msg received", "msg", msg.Msg, "name", msg.Name)
                     ms.Chat(&msg)
                 case <-listenToChat:
-                    break;
+                    break outer;
                 }
             }
         }

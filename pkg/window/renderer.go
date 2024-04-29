@@ -42,6 +42,15 @@ func (c *Cell) String() string {
 	)
 }
 
+func DebugCells(cells [][]Cell) {
+    for _, cell_row := range cells {
+        for _, cell := range cell_row {
+            fmt.Printf("|%s|", string(cell.Value))
+        }
+        fmt.Println()
+    }
+}
+
 type CellWithLocation struct {
 	Cell
 	Location

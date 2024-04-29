@@ -2,6 +2,7 @@ package memesweeper
 
 import (
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/theprimeagen/vim-with-me/pkg/assert"
@@ -91,6 +92,7 @@ func NewMemeSweeper(state MemeSweeperState) MemeSweeper {
 }
 
 func (m *MemeSweeper) Pick(row, col int) {
+    slog.Debug("MemeSweeper#Pick", "row", row, "col", col)
 	m.board.PickSpot(row, col)
 }
 
@@ -117,6 +119,7 @@ func (m *MemeSweeper) Chat(msg *chat.ChatMsg) {
         return
     }
 
+    slog.Debug("MemeSweeper#Chat", "row", row, "col", col)
     m.chat.Add(row, c)
 }
 
@@ -136,6 +139,9 @@ func (m *MemeSweeper) Render() []*window.CellWithLocation {
 	now := time.Now().UnixMilli()
 	m.clock.SetText(getTime(now - m.startTime))
 	m.startTime = now
+
+    point := m.chat.Reset()
+    m.board.PickSpot(point.row, point.col)
 
 	return m.Renderer.Render()
 }

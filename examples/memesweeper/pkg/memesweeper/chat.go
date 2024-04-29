@@ -4,7 +4,6 @@ import (
 	"errors"
 	"log/slog"
 	"strconv"
-	"strings"
 )
 
 type Point struct {
@@ -49,6 +48,9 @@ func (c *ChatAggregator) Count() (int, int) {
 
 func (c *ChatAggregator) Reset() Point {
     slog.Debug("ChatAggregator#Reset", "points", len(c.points), "max", c.max)
+    for _, p := range c.points {
+        slog.Debug("    ChatAggregator#Reset#points", "point", p)
+    }
 	c.points = make([]*Point, 0, 100)
 
     out := c.max
@@ -57,27 +59,28 @@ func (c *ChatAggregator) Reset() Point {
     return out
 }
 
-func isCol(msg string) bool {
-    return len(msg) == 1 && msg[0] >= 'A' && msg[0] <= 'Z'
+func isCol(msg byte) bool {
+    return msg >= 'A' && msg <= 'Z'
 }
 
 func ParseChatMessage(msg string) (int, string, error) {
-
-	parts := strings.SplitN(msg, ":", 2)
-	if len(parts) != 2 {
-		return 0, "", errors.New("malformed message")
-	}
-
-    idx := 0
-    if isCol(parts[0]) {
-        idx = 1
+    if len(msg) != 2 {
+        return 0, "", errors.New("malformed chat msg")
     }
 
-    row, err := strconv.Atoi(parts[idx])
+    a := string(msg[0])
+    b := string(msg[1])
+
+    row := a
+    if isCol(a[0]) {
+        row = b
+    }
+
+    rowNum, err := strconv.Atoi(row)
     if err != nil {
         return 0, "", err
     }
 
-    return row, parts[0], nil
+    return rowNum, msg, nil
 }
 

@@ -1,6 +1,9 @@
 package memesweeper
 
-import "github.com/theprimeagen/vim-with-me/pkg/window"
+import (
+
+	"github.com/theprimeagen/vim-with-me/pkg/window"
+)
 
 type Text struct {
 	row, col, id int
@@ -29,6 +32,8 @@ func (t *Text) SetText(txt string) {
     t.cells = [][]window.Cell{
         text_cells,
     }
+
+    window.DebugCells(t.cells)
 }
 
 func (t *Text) Render() (window.Location, [][]window.Cell) {

@@ -32,7 +32,7 @@ var colors = []window.Color{
 }
 
 func toWindowCell(sCell *SweeperCell) window.Cell {
-	cell := window.DefaultCell(' ')
+	cell := window.DefaultCell('X')
 	if !sCell.revealed {
 		return cell
 	}
