@@ -10,7 +10,7 @@ local function create_tcp()
     return {
         tcp = tcp,
         next = next_cmd,
-        flush = flush_cmds
+        flush = flush_cmds,
     }
 end
 
@@ -55,8 +55,5 @@ describe("vim with me :: reconnecting test", function()
             table.insert(tcps, tcp)
             tcp.next()
         end
-
     end)
 end)
-
-

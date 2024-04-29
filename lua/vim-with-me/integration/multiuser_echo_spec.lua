@@ -12,7 +12,7 @@ local function create_tcp()
     return {
         tcp = tcp,
         next = next_cmd,
-        flush = flush_cmds
+        flush = flush_cmds,
     }
 end
 
@@ -90,4 +90,3 @@ describe("vim with me :: multiuser", function()
         end
     end)
 end)
-

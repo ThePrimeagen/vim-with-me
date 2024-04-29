@@ -9,7 +9,7 @@ local App = require("vim-with-me.app")
 ---@param command TCPCommandName
 ---@param opts {timeout: number?, debug: boolean?}?
 local function wait_for(app, received_cmds, command, opts)
-    opts = optsify(opts, {timeout = 1000, debug = false})
+    opts = optsify(opts, { timeout = 1000, debug = false })
     local found = false
     vim.wait(opts.timeout, function()
         for i, cmd in ipairs(received_cmds) do
@@ -40,11 +40,13 @@ describe("vim with me :: app_spec", function()
         local next_cmd, flush_cmds = int_utils.create_tcp_next(tcp)
         local count = 0
         local received_cmds = {}
-        local app = App:new(tcp):on_render(function()
-            count = count + 1
-        end):on_command(function(cmd)
-            table.insert(received_cmds, cmd)
-        end)
+        local app = App:new(tcp)
+            :on_render(function()
+                count = count + 1
+            end)
+            :on_command(function(cmd)
+                table.insert(received_cmds, cmd)
+            end)
 
         wait_for(app, received_cmds, "commands")
 

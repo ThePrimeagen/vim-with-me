@@ -2,28 +2,23 @@ package main
 
 import (
 	"fmt"
+	"log"
+
+	"github.com/gempir/go-twitch-irc/v4"
 )
 
-type Color struct {
-    Foo int
-}
-
-type Cell struct {
-	Foreground Color
-	Background Color
-	Value      byte
-}
-
 func main() {
+    client := twitch.NewAnonymousClient()
 
-    c := []Cell{Cell{
-        Foreground: Color{Foo: 1},
-        Background: Color{Foo: 10},
-        Value: 100,
-    }}
+    client.OnPrivateMessage(func(msg twitch.PrivateMessage) {
+        fmt.Printf("msg: %+v\n", msg)
+    })
 
-    d := c[0]
-    d.Value += 1
+    client.Join("theprimeagen")
+    err := client.Connect()
+    if err != nil {
+        log.Fatal("I AM DEAD AND DYLAN RAIDED ME", err)
+    }
 
-    fmt.Printf("values: %+v %+v\n", c, d)
+    for { }
 }

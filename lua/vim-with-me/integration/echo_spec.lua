@@ -16,6 +16,6 @@ describe("vim with me", function()
 
         local hello_back = next()
 
-        eq({command = 1, data = "world"}, hello_back)
+        eq({ command = 1, data = "world" }, hello_back)
     end)
 end)

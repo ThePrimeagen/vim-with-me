@@ -38,5 +38,5 @@ return {
     namespace = namespace,
     optsify = function(opts, default)
         return vim.tbl_extend("force", {}, default, opts or {})
-    end
+    end,
 }

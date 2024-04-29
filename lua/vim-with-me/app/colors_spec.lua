@@ -32,12 +32,10 @@ describe("app#color", function()
                     blue = 21,
                     foreground = false,
                 },
-                value = 'E',
-            }
+                value = "E",
+            },
         })
 
         -- TODO: Teej help, how do i check the color of a namespace at a particular place?
     end)
 end)
-
-

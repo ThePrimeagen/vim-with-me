@@ -62,7 +62,8 @@ function ColorSet:new(window, base_foreground, base_background)
         table.insert(color.namespaces, namespace_row)
 
         for c = 1, cols do
-            local namespace = vim.api.nvim_create_namespace(string.format("VWM%d_%d", r, c))
+            local namespace =
+                vim.api.nvim_create_namespace(string.format("VWM%d_%d", r, c))
             table.insert(namespace_row, namespace)
 
             color:color_cell({
@@ -70,8 +71,8 @@ function ColorSet:new(window, base_foreground, base_background)
                 cell = {
                     foreground = base_foreground,
                     background = base_background,
-                    value = 'E' -- nice
-                }
+                    value = "E", -- nice
+                },
             })
         end
     end
@@ -111,8 +112,20 @@ function ColorSet:color_cell(cell)
 
     vim.api.nvim_buf_clear_namespace(self.buffer, ns, row, row + 1)
 
-    vim.highlight.range(self.buffer, ns, fg_name, {row, col}, {row, col + 1})
-    vim.highlight.range(self.buffer, ns, bg_name, {row, col}, {row, col + 1})
+    vim.highlight.range(
+        self.buffer,
+        ns,
+        fg_name,
+        { row, col },
+        { row, col + 1 }
+    )
+    vim.highlight.range(
+        self.buffer,
+        ns,
+        bg_name,
+        { row, col },
+        { row, col + 1 }
+    )
 
     --[[
     vim.api.nvim_buf_add_highlight(self.buffer, ns, fg_name, row, col - 1, col + 1)

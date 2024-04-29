@@ -25,24 +25,36 @@ describe("vim with me :: cache", function()
             "XXX",
             "XXX",
         }, cache:to_string_rows())
-        vim.api.nvim_buf_set_lines(w.buffer, 0, -1, false, cache:to_string_rows())
+        vim.api.nvim_buf_set_lines(
+            w.buffer,
+            0,
+            -1,
+            false,
+            cache:to_string_rows()
+        )
 
         local expect = {
-            {"YXX", "XXX", "XXX"},
-            {"YYX", "XXX", "XXX"},
-            {"YYY", "XXX", "XXX"},
-            {"YYY", "YXX", "XXX"},
-            {"YYY", "YYX", "XXX"},
-            {"YYY", "YYY", "XXX"},
-            {"YYY", "YYY", "YXX"},
-            {"YYY", "YYY", "YYX"},
-            {"YYY", "YYY", "YYY"},
+            { "YXX", "XXX", "XXX" },
+            { "YYX", "XXX", "XXX" },
+            { "YYY", "XXX", "XXX" },
+            { "YYY", "YXX", "XXX" },
+            { "YYY", "YYX", "XXX" },
+            { "YYY", "YYY", "XXX" },
+            { "YYY", "YYY", "YXX" },
+            { "YYY", "YYY", "YYX" },
+            { "YYY", "YYY", "YYY" },
         }
 
         local updates = {
-            {1, 1}, {1, 2}, {1, 3},
-            {2, 1}, {2, 2}, {2, 3},
-            {3, 1}, {3, 2}, {3, 3},
+            { 1, 1 },
+            { 1, 2 },
+            { 1, 3 },
+            { 2, 1 },
+            { 2, 2 },
+            { 2, 3 },
+            { 3, 1 },
+            { 3, 2 },
+            { 3, 3 },
         }
 
         for i, item in pairs(updates) do
@@ -50,6 +62,5 @@ describe("vim with me :: cache", function()
             cache:render_into(w)
             eq(expect[i], vim.api.nvim_buf_get_lines(w.buffer, 0, -1, false))
         end
-
     end)
 end)

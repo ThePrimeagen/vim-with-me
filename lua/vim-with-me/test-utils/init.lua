@@ -4,7 +4,7 @@ local process = require("vim-with-me.tcp.process")
 ---@field processor fun(chunk: string?): TCPCommand | nil
 ---@field data string
 ---@field opts {replay_speed: number}
-local TCPReplayer = { }
+local TCPReplayer = {}
 TCPReplayer.__index = TCPReplayer
 
 ---@param tcp_data string

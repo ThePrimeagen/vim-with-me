@@ -72,10 +72,27 @@ function DisplayCache:render_into(window)
         for c, dirty in ipairs(dirty_row) do
             if dirty then
                 local loc = Locations.from_cache(r, c)
-                vim.api.nvim_buf_set_text(
+                local ok, _ = pcall(
+                    vim.api.nvim_buf_set_text,
                     window.buffer,
-                    loc.row, loc.col,
-                    loc.row, loc.col + 1, {self.data[r][c]})
+                    loc.row,
+                    loc.col,
+                    loc.row,
+                    loc.col + 1,
+                    { self.data[r][c] }
+                )
+
+                assert(
+                    ok,
+                    string.format(
+                        "unable to nvim_buf_set_text: %d %d %d %d",
+                        self.rows,
+                        self.cols,
+                        loc.row,
+                        loc.col
+                    )
+                )
+
                 dirty_row[c] = false
             end
         end

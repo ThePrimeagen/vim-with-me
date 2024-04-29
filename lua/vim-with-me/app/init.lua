@@ -53,7 +53,6 @@ end
 
 ---@param partials CellWithLocation
 function App:partial_render(partials)
-
     for _, partial in ipairs(partials) do
         self.cache:partial(partial)
     end
@@ -142,7 +141,13 @@ function App:with_window(dim, center)
     self.cache = DisplayCache:new(dim)
     self.color_set = ColorSet:new(self.window)
 
-    vim.api.nvim_buf_set_lines(self.window.buffer, 0, -1, false, self.cache:to_string_rows())
+    vim.api.nvim_buf_set_lines(
+        self.window.buffer,
+        0,
+        -1,
+        false,
+        self.cache:to_string_rows()
+    )
 
     return self
 end

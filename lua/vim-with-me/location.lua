@@ -22,4 +22,3 @@ return {
     to_line_api = to_line_api,
     from_cache = from_cache,
 }
-

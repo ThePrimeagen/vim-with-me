@@ -112,21 +112,17 @@ local function build_go_test_server(server_name, opts)
         print("executing: ", table.concat(server_info.cmd, " "))
     end
 
-    system.run(
-        server_info.cmd,
-        {
-            stdout = function(_, data)
-                table.insert(server_info.stdout, data)
-            end,
-            stderr = function(_, data)
-                table.insert(server_info.stderr, data)
-            end,
-        },
-        function(exit_info)
-            server_info.exit_code = exit_info.code
-            server_info.success = exit_info.code == 0
-        end
-    )
+    system.run(server_info.cmd, {
+        stdout = function(_, data)
+            table.insert(server_info.stdout, data)
+        end,
+        stderr = function(_, data)
+            table.insert(server_info.stderr, data)
+        end,
+    }, function(exit_info)
+        server_info.exit_code = exit_info.code
+        server_info.success = exit_info.code == 0
+    end)
 
     vim.wait(opts.timeout, function()
         return server_info.success ~= nil
@@ -147,8 +143,8 @@ local function run_test_server(server_info, port)
         end,
 
         env = {
-            LEVEL = LEVEL
-        }
+            LEVEL = LEVEL,
+        },
     })
     table.insert(running, run)
 end
@@ -181,8 +177,7 @@ local theprimeagen_partial =
     load("lua/vim-with-me/integration/theprimeagen.partial")
 local empty = load("lua/vim-with-me/integration/empty")
 
-local function before_each()
-end
+local function before_each() end
 
 local function after_each()
     for _, proc in ipairs(running) do

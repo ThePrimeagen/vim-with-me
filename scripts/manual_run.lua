@@ -21,13 +21,12 @@ local function server_run()
             error(vim.inspect(server_info.stderr))
             return
         end
+        IntUtils.run_test_server(server_info, PORT)
     else
         server_info = IntUtils.server_info_from_name(TEST_SERVER)
     end
 
-    IntUtils.run_test_server(server_info, PORT)
     vim.wait(100)
-
     tcp = IntUtils.create_tcp_connection(PORT)
 end
 

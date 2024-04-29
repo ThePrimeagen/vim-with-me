@@ -2,8 +2,9 @@ local LOCATION_ENCODING_LENGTH = 2
 local FOREGROUND = 1
 local COLOR = 3
 local COLOR_ENCODING_LENGTH = FOREGROUND + COLOR
-local CELL_ENCODING_LENGTH = COLOR_ENCODING_LENGTH*2 + 1
-local CELL_AND_LOC_ENCODING_LENGTH = CELL_ENCODING_LENGTH + LOCATION_ENCODING_LENGTH
+local CELL_ENCODING_LENGTH = COLOR_ENCODING_LENGTH * 2 + 1
+local CELL_AND_LOC_ENCODING_LENGTH = CELL_ENCODING_LENGTH
+    + LOCATION_ENCODING_LENGTH
 
 ---@class VWMLocation
 ---@field row number
@@ -30,7 +31,10 @@ local M = {}
 ---@param data string
 ---@return VWMLocation
 function M.parse_location(data)
-    assert(#data >= LOCATION_ENCODING_LENGTH, "not enough data provided to location parse")
+    assert(
+        #data >= LOCATION_ENCODING_LENGTH,
+        "not enough data provided to location parse"
+    )
     return {
         row = string.byte(data, 1, 1),
         col = string.byte(data, 2, 2),
@@ -40,7 +44,10 @@ end
 ---@param data string
 ---@return VWMColor
 function M.parse_color(data)
-    assert(#data >= COLOR_ENCODING_LENGTH, "not enough data provided to color parse")
+    assert(
+        #data >= COLOR_ENCODING_LENGTH,
+        "not enough data provided to color parse"
+    )
     return {
         foreground = string.byte(data, 1, 1) == 1,
         red = string.byte(data, 2, 2),
@@ -52,7 +59,10 @@ end
 ---@param data string
 ---@return Cell
 function M.parse_cell(data)
-    assert(#data >= CELL_ENCODING_LENGTH, "not enough data provided to cell parse")
+    assert(
+        #data >= CELL_ENCODING_LENGTH,
+        "not enough data provided to cell parse"
+    )
     return {
         value = string.sub(data, 1, 1),
         foreground = M.parse_color(string.sub(data, 2)),
