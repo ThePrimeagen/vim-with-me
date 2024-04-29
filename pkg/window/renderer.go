@@ -252,6 +252,10 @@ func (r *Renderer) place(renderable Render) {
 	}
 }
 
+func (r *Renderer) Clear() {
+    r.renderables = make([]Render, 0)
+}
+
 func (r *Renderer) Render() []*CellWithLocation {
 	for i := 0; i < len(r.renderables); i++ {
 		r.place(r.renderables[i])

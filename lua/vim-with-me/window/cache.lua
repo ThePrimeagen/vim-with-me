@@ -70,6 +70,7 @@ function DisplayCache:render_into(window)
     --- TODO: Make this even more fantastic by doing dirty contiguous regions instead of dirty cells
     for r, dirty_row in ipairs(self.dirty) do
         for c, dirty in ipairs(dirty_row) do
+
             if dirty then
                 local loc = Locations.from_cache(r, c)
                 local ok, _ = pcall(
