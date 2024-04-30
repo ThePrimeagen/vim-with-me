@@ -1,39 +1,159 @@
 package main
 
-
 import (
-    "fmt"
-    "net/http"
-    "time"
+	"context"
+	"flag"
+	"fmt"
+	"io"
+	"log/slog"
+	"net"
+	"net/http"
+
+	"github.com/imkira/go-observer/v2"
+	"github.com/theprimeagen/vim-with-me/pkg/assert"
+	"github.com/theprimeagen/vim-with-me/pkg/commands"
+	"github.com/theprimeagen/vim-with-me/pkg/tcp"
+	"github.com/theprimeagen/vim-with-me/pkg/window"
 )
+
+func toSSE(bytes []byte) []byte {
+    return []byte(fmt.Sprintf("event: cmd\ndata: %s\n\n", string(bytes)))
+}
+
+func toChannel(conn *tcp.Connection, ctx context.Context) chan *tcp.TCPCommand {
+	ch := make(chan *tcp.TCPCommand, 10)
+
+	go func() {
+	outer:
+		for {
+			select {
+			case <-ctx.Done():
+				break outer
+			default:
+			}
+
+			msg, err := conn.Next()
+			if err != nil {
+				slog.Error("error while reading from channel", "err", err)
+				break outer
+			}
+
+			ch <- msg
+		}
+	}()
+
+	return ch
+}
 
 // 1. Server side events (https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)
 // 2. CSS grid stuff
 // 3. Format going down to front end
 
+func runListener(prop observer.Property[[]byte], ctx context.Context, conn *tcp.Connection, renderer **window.Renderer) error {
 
-func main() {
-    http.HandleFunc("/events", eventsHandler)
-    http.ListenAndServe(":8080", nil)
+	connCh := toChannel(conn, ctx)
+
+	for msg := range connCh {
+        if msg.Command == commands.OPEN_WINDOW {
+            *renderer = window.NewRender(int(msg.Data[0]), int(msg.Data[1]))
+        } else if msg.Command == commands.PARTIAL_RENDER {
+            cells, err := commands.PartialRendersFromTCPCommand(msg)
+            assert.Assert(err == nil, "partial render failed to parse")
+            assert.Assert(cells != nil, "cells is nil")
+
+            (*renderer).FromRemoteRenderer(cells)
+        }
+
+        bytes, err := commands.Jsonify(msg)
+        if err != nil {
+            return err
+        }
+        prop.Update(toSSE(bytes))
+	}
+
+    return nil
 }
 
-func eventsHandler(w http.ResponseWriter, r *http.Request) {
-    // Set CORS headers to allow all origins. You may want to restrict this to specific origins in a production environment.
-    w.Header().Set("Access-Control-Allow-Origin", "*")
-    w.Header().Set("Access-Control-Expose-Headers", "Content-Type")
+type OpenCommand struct {
+    Rows int
+    Cols int
+}
 
-    w.Header().Set("Content-Type", "text/event-stream")
-    w.Header().Set("Cache-Control", "no-cache")
-    w.Header().Set("Connection", "keep-alive")
+type Commands map[string]int
 
-    // Simulate sending events (you can replace this with real data)
-    for i := 0; i < 10; i++ {
-        fmt.Fprintf(w, "data: %s\n\n", fmt.Sprintf("Event %d", i))
-        time.Sleep(2 * time.Second)
-        w.(http.Flusher).Flush()
-    }
+func sendCmd(w io.Writer, cmd *tcp.TCPCommand) {
+    jsonData, err := commands.Jsonify(cmd)
+    assert.Assert(err == nil, "should never fail marshaling render command")
 
-    // Simulate closing the connection
-    closeNotify := w.(http.CloseNotifier).CloseNotify()
-    <-closeNotify
+    w.Write(toSSE(jsonData))
+    w.(http.Flusher).Flush()
+}
+
+func main() {
+	var port uint = 0
+	host := ""
+
+	flag.StringVar(&host, "host", "127.0.0.1", "host to connect to")
+	flag.UintVar(&port, "port", 42069, "port to connect to")
+	flag.Parse()
+
+	c, err := net.Dial("tcp", fmt.Sprintf("%s:%d", host, port))
+	if err != nil {
+		slog.Error("error connecting client", "error", err)
+        return
+	}
+	conn := tcp.NewConnection(c, 0)
+    defer conn.Close()
+
+    var innerRenderer *window.Renderer = nil
+    var renderer **window.Renderer = &innerRenderer
+
+	ctx, cancel := context.WithCancel(context.Background())
+	_ = cancel
+
+	prop := observer.NewProperty([]byte{})
+
+	go func() {
+        err := runListener(prop, ctx, &conn, renderer)
+        slog.Warn("server finished", "error", err)
+        assert.Assert(err == nil, "we somehow errored :(")
+    }()
+
+	http.HandleFunc("/events", func(w http.ResponseWriter, r *http.Request) {
+		stream := prop.Observe()
+
+		// Set CORS headers to allow all origins. You may want to restrict this
+		// to specific origins in a production environment.
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Expose-Headers", "Content-Type")
+
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("Connection", "keep-alive")
+
+        assert.Assert(*renderer != nil, "SSE: renderer should always be defined before first connection")
+        sendCmd(w, commands.OpenCommand((*renderer)))
+        sendCmd(w, commands.PartialRender((*renderer).FullRender()))
+
+        outer:
+        for {
+            select {
+            case <-ctx.Done():
+                break outer
+            case <-stream.Changes():
+                stream.Next()
+                val := stream.Value()
+                assert.Assert(val != nil, "i should never receive a nil command")
+                if len(val) == 0 {
+                    continue
+                }
+
+                w.Write(val)
+                w.(http.Flusher).Flush()
+            }
+        }
+
+	})
+
+	http.ListenAndServe(":8080", nil)
 }

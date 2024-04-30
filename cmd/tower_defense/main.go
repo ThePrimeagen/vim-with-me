@@ -40,7 +40,7 @@ func main() {
     fmt.Printf("new tower defense\n")
     td := tower_defense.NewTD(params)
     server.WelcomeMessage(func() *tcp.TCPCommand { return td.Commander.ToCommands()} )
-    server.WelcomeMessage(func() *tcp.TCPCommand { return commands.OpenCommand(&td.Renderer) })
+    server.WelcomeMessage(func() *tcp.TCPCommand { return commands.OpenCommand(td.Renderer) })
 
     defer server.Close()
 

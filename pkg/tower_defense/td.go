@@ -12,7 +12,7 @@ import (
 
 type TD struct {
 	Commander commands.Commander
-	Renderer  window.Renderer
+	Renderer  *window.Renderer
 
     towers []*Tower
 	params TDParams

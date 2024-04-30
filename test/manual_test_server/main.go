@@ -55,7 +55,7 @@ func main() {
 	renderer := window.NewRender(3, 3)
 
 	server.WelcomeMessage(tcp.MakeWelcome(commander.ToCommands()))
-	server.WelcomeMessage(tcp.MakeWelcome(commands.OpenCommand(&renderer)))
+	server.WelcomeMessage(tcp.MakeWelcome(commands.OpenCommand(renderer)))
 
     ticker := time.NewTicker(time.Second)
 

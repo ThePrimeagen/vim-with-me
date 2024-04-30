@@ -4,6 +4,7 @@ go 1.22.0
 
 require (
 	github.com/gempir/go-twitch-irc/v4 v4.0.0
+	github.com/imkira/go-observer/v2 v2.0.0-20230629064422-8e0b61f11f1b
 	github.com/stretchr/testify v1.9.0
 )
 

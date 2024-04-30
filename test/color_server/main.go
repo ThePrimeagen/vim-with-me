@@ -52,7 +52,7 @@ func main() {
     cells := renderer.Render()
 
 	server.WelcomeMessage(func() *tcp.TCPCommand { return commander.ToCommands() })
-	server.WelcomeMessage(func() *tcp.TCPCommand { return commands.OpenCommand(&renderer) })
+	server.WelcomeMessage(func() *tcp.TCPCommand { return commands.OpenCommand(renderer) })
 	server.WelcomeMessage(func() *tcp.TCPCommand { return commands.PartialRender(cells) })
 
     fmt.Printf("Does this work?\n")

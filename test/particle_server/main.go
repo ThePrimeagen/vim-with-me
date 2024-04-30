@@ -26,7 +26,7 @@ func main() {
 	renderer := window.NewRender(h, w)
 
 	server.WelcomeMessage(tcp.MakeWelcome(commander.ToCommands()))
-	server.WelcomeMessage(tcp.MakeWelcome(commands.OpenCommand(&renderer)))
+	server.WelcomeMessage(tcp.MakeWelcome(commands.OpenCommand(renderer)))
 
     defer server.Close()
     go server.Start()

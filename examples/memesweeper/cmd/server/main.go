@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/theprimeagen/vim-with-me/examples/memesweeper/pkg/memesweeper"
-	"github.com/theprimeagen/vim-with-me/pkg/assert"
 	"github.com/theprimeagen/vim-with-me/pkg/chat"
 	"github.com/theprimeagen/vim-with-me/pkg/commands"
 	"github.com/theprimeagen/vim-with-me/pkg/tcp"

@@ -22,43 +22,43 @@ type Cell struct {
 }
 
 func ForegroundCell(value byte, foreground Color) Cell {
-    return Cell{
-        Value: value,
-        Foreground: foreground,
-        Background: DEFAULT_BACKGROUND,
-    }
+	return Cell{
+		Value:      value,
+		Foreground: foreground,
+		Background: DEFAULT_BACKGROUND,
+	}
 }
 
 func BackgroundCellOnly(background Color) Cell {
-    return Cell{
-        Value: CELL_VALUE_BACKGROUND_COLOR_ONLY,
-        Foreground: DEFAULT_FOREGROUND,
-        Background: background,
-    }
+	return Cell{
+		Value:      CELL_VALUE_BACKGROUND_COLOR_ONLY,
+		Foreground: DEFAULT_FOREGROUND,
+		Background: background,
+	}
 }
 
 func BackgroundCell(value byte, background Color) Cell {
-    return Cell{
-        Value: value,
-        Foreground: DEFAULT_FOREGROUND,
-        Background: background,
-    }
+	return Cell{
+		Value:      value,
+		Foreground: DEFAULT_FOREGROUND,
+		Background: background,
+	}
 }
 
 func DefaultCell(value byte) Cell {
-    return Cell{
-        Value: value,
-        Foreground: DEFAULT_FOREGROUND,
-        Background: DEFAULT_BACKGROUND,
-    }
+	return Cell{
+		Value:      value,
+		Foreground: DEFAULT_FOREGROUND,
+		Background: DEFAULT_BACKGROUND,
+	}
 }
 
 func EmptyCell() Cell {
-    return Cell{
-        Value: CELL_VALUE_NO_PLACE,
-        Foreground: DEFAULT_FOREGROUND,
-        Background: DEFAULT_BACKGROUND,
-    }
+	return Cell{
+		Value:      CELL_VALUE_NO_PLACE,
+		Foreground: DEFAULT_FOREGROUND,
+		Background: DEFAULT_BACKGROUND,
+	}
 }
 
 func (c *Cell) String() string {
@@ -71,27 +71,27 @@ func (c *Cell) String() string {
 }
 
 func (c *Cell) Merge(cell *Cell) {
-    if cell.Value == CELL_VALUE_NO_PLACE {
-        return
-    }
+	if cell.Value == CELL_VALUE_NO_PLACE {
+		return
+	}
 
-    if cell.Value == CELL_VALUE_BACKGROUND_COLOR_ONLY {
-        c.Background = cell.Background
-        return
-    }
+	if cell.Value == CELL_VALUE_BACKGROUND_COLOR_ONLY {
+		c.Background = cell.Background
+		return
+	}
 
-    c.Value = cell.Value
-    c.Background = cell.Background
-    c.Foreground = cell.Foreground
+	c.Value = cell.Value
+	c.Background = cell.Background
+	c.Foreground = cell.Foreground
 }
 
 func DebugCells(cells [][]Cell) {
-    for _, cell_row := range cells {
-        for _, cell := range cell_row {
-            fmt.Printf("|%s|", string(cell.Value))
-        }
-        fmt.Println()
-    }
+	for _, cell_row := range cells {
+		for _, cell := range cell_row {
+			fmt.Printf("|%s|", string(cell.Value))
+		}
+		fmt.Println()
+	}
 }
 
 type CellWithLocation struct {
@@ -100,10 +100,10 @@ type CellWithLocation struct {
 }
 
 func NewCellWithLocation(cell Cell, row, col int) *CellWithLocation {
-    return &CellWithLocation{
-        Cell: cell,
-        Location: NewLocation(row, col),
-    }
+	return &CellWithLocation{
+		Cell:     cell,
+		Location: NewLocation(row, col),
+	}
 }
 
 func (c *CellWithLocation) MarshalBinary() ([]byte, error) {
@@ -158,7 +158,7 @@ func (c *Cell) MarshalBinary() ([]byte, error) {
 }
 
 func (c *Cell) UnmarshalBinary(data []byte) error {
-	assert.Assert(len(data) < 1+COLOR_ENCODING_LENGTH*2, "i should never unmarshall without all the data")
+    assert.Assert(len(data) >= CELL_ENCODING_LENGTH, fmt.Sprintf("Cell#UnmarshalBinary not enough data to UnmarshalBinary: got %d -- expected %d", len(data), COLOR_ENCODING_LENGTH))
 
 	c.Value = data[0]
 	var foreground Color
@@ -179,7 +179,7 @@ func (c *Cell) UnmarshalBinary(data []byte) error {
 }
 
 func (c *Cell) EqualWithLocation(other *CellWithLocation) bool {
-    return c.Equal(&other.Cell)
+	return c.Equal(&other.Cell)
 }
 
 func (c *Cell) Equal(other *Cell) bool {
@@ -208,7 +208,7 @@ type Renderer struct {
 	previousPartialRender []*CellWithLocation
 }
 
-func NewRender(rows, cols int) Renderer {
+func NewRender(rows, cols int) *Renderer {
 	length := cols * rows
 	buffer := make([]Cell, 0, length)
 
@@ -226,7 +226,7 @@ func NewRender(rows, cols int) Renderer {
 	copy(clean, buffer)
 
 	slog.Debug("new renderer", "rows", rows, "cols", cols)
-	return Renderer{
+	return &Renderer{
 		buffer:                buffer,
 		previous:              previous,
 		clean:                 clean,
@@ -240,13 +240,13 @@ func NewRender(rows, cols int) Renderer {
 }
 
 func translateFromIdx(idx, rowSize, colSize int) (bool, int, int) {
-    row := idx / colSize
-    if row >= rowSize {
-        slog.Debug("translateFromIdx: exceeds", "idx", idx, "row", row, "rowSize", rowSize, "colSize", colSize)
-        return true, 0, 0
-    }
+	row := idx / colSize
+	if row >= rowSize {
+		slog.Debug("translateFromIdx: exceeds", "idx", idx, "row", row, "rowSize", rowSize, "colSize", colSize)
+		return true, 0, 0
+	}
 
-    return false, row, idx % colSize
+	return false, row, idx % colSize
 }
 
 func translate(loc *Location, offsetR, offsetC, rowSize, colSize int) (bool, int) {
@@ -264,12 +264,12 @@ func translate(loc *Location, offsetR, offsetC, rowSize, colSize int) (bool, int
 }
 
 func (r *Renderer) FromRemoteRenderer(cells []*CellWithLocation) {
-    for _, c := range cells {
-        exceeds, idx := translate(&c.Location, 0, 0, r.rows, r.cols)
-        assert.Assert(exceeds == false, "you should never render from a canvas that is too big")
+	for _, c := range cells {
+		exceeds, idx := translate(&c.Location, 0, 0, r.rows, r.cols)
+		assert.Assert(exceeds == false, "you should never render from a canvas that is too big")
 
-        r.buffer[idx].Merge(&c.Cell)
-    }
+		r.buffer[idx].Merge(&c.Cell)
+	}
 }
 
 func (r *Renderer) Add(renderable Render) {
@@ -315,9 +315,9 @@ func (r *Renderer) Dimensions() (byte, byte) {
 
 func (r *Renderer) place(renderable Render) {
 	location, cells := renderable.Render()
-    if cells == nil {
-        return
-    }
+	if cells == nil {
+		return
+	}
 
 	assert.Assert(len(cells) > 0, "must contain rendering data")
 	assert.Assert(len(cells[0]) > 0, "must contain rendering data")
@@ -332,25 +332,25 @@ func (r *Renderer) place(renderable Render) {
 				continue
 			}
 
-            cell := cells[row][col]
-            if cell.Value == CELL_VALUE_NO_PLACE {
-                continue
-            } else if cell.Value == CELL_VALUE_BACKGROUND_COLOR_ONLY {
-                r.buffer[idx].Background = cell.Background
-            } else {
-                r.buffer[idx] = cell
-            }
+			cell := cells[row][col]
+			if cell.Value == CELL_VALUE_NO_PLACE {
+				continue
+			} else if cell.Value == CELL_VALUE_BACKGROUND_COLOR_ONLY {
+				r.buffer[idx].Background = cell.Background
+			} else {
+				r.buffer[idx] = cell
+			}
 		}
 	}
 }
 
 func (r *Renderer) Clear() {
-    r.renderables = make([]Render, 0)
+	r.renderables = make([]Render, 0)
 }
 
 func (r *Renderer) Render() []*CellWithLocation {
 	for i := 0; i < len(r.renderables); i++ {
-        slog.Debug("Render#renderable", "id", r.renderables[i].Id(), "z", r.renderables[i].Z())
+		slog.Debug("Render#renderable", "id", r.renderables[i].Id(), "z", r.renderables[i].Z())
 		r.place(r.renderables[i])
 	}
 
@@ -358,8 +358,8 @@ func (r *Renderer) Render() []*CellWithLocation {
 	for i, cell := range r.buffer {
 		other := r.previous[i]
 		if !cell.Equal(&other) {
-            exceeds, row, col := translateFromIdx(i, r.rows, r.cols)
-            assert.Assert(exceeds == false, "exceeded bounds when partial rendering")
+			exceeds, row, col := translateFromIdx(i, r.rows, r.cols)
+			assert.Assert(exceeds == false, "exceeded bounds when partial rendering")
 
 			// I probably care about this...
 			// TODO(v1): LogValuer interface (LogAttr maybe?)
@@ -379,38 +379,38 @@ func (r *Renderer) Render() []*CellWithLocation {
 }
 
 var id int = 0
+
 func GetNextId() int {
-    id++
-    return id
+	id++
+	return id
 }
 
 func (r *Renderer) FullRender() []*CellWithLocation {
-    cells := make([]*CellWithLocation, 0)
-    for idx, cell := range r.previous {
-        exceeds, row, col := translateFromIdx(idx, r.rows, r.cols)
-        assert.Assert(exceeds == false, "somehow i have translated from our buffer and exceeded our buffer")
+	cells := make([]*CellWithLocation, 0)
+	for idx, cell := range r.previous {
+		exceeds, row, col := translateFromIdx(idx, r.rows, r.cols)
+		assert.Assert(exceeds == false, "somehow i have translated from our buffer and exceeded our buffer")
 
-        cells = append(cells, NewCellWithLocation(cell, row, col))
-    }
+		cells = append(cells, NewCellWithLocation(cell, row, col))
+	}
 	return cells
 }
 
 func printBuff(buffer []Cell, rows, cols int) string {
-    out := make([]string, 0)
+	out := make([]string, 0)
 	for row := 0; row < rows; row++ {
-        strRow := ""
+		strRow := ""
 		for col := 0; col < cols; col++ {
 			i := row*cols + col
 			strRow += fmt.Sprintf("|%s%s", buffer[i].Background.ColorCode(), string(buffer[i].Value))
 		}
-        strRow += "|"
-        out = append(out, strRow)
+		strRow += "|"
+		out = append(out, strRow)
 	}
 
-    return strings.Join(out, "\n")
+	return strings.Join(out, "\n")
 }
 
 func (r *Renderer) Debug() string {
 	return printBuff(r.previous, r.rows, r.cols)
 }
-

@@ -11,62 +11,62 @@ const COLOR = 3
 const COLOR_ENCODING_LENGTH = FOREGROUND + COLOR
 
 type Color struct {
-	red        byte
-	blue       byte
-	green      byte
-	foreground bool
+	Red        byte
+	Blue       byte
+	Green      byte
+	Foreground bool
 }
 
 func (c *Color) String() string {
-    return fmt.Sprintf("r=%d, g=%d, b=%d, f=%v", c.red, c.green, c.blue, c.foreground)
+    return fmt.Sprintf("r=%d, g=%d, b=%d, f=%v", c.Red, c.Green, c.Blue, c.Foreground)
 }
 
 func (c *Color) ColorCode() string {
-    if c.red > 0 && c.blue == 0 && c.green == 0 {
+    if c.Red > 0 && c.Blue == 0 && c.Green == 0 {
         return "r"
     }
-    if c.red == 0 && c.blue == 0 && c.green == 0 {
+    if c.Red == 0 && c.Blue == 0 && c.Green == 0 {
         return "B"
     }
     return "?"
 }
 
-var DEFAULT_BACKGROUND = Color{red: 0, blue: 0, green: 0}
-var DEFAULT_FOREGROUND = Color{red: 255, blue: 255, green: 255}
+var DEFAULT_BACKGROUND = Color{Red: 0, Blue: 0, Green: 0}
+var DEFAULT_FOREGROUND = Color{Red: 255, Blue: 255, Green: 255}
 
 func NewColor(r, g, b byte, f bool) Color {
 	return Color{
-		red:        r,
-        green:      g,
-		blue:       b,
-		foreground: f,
+		Red:        r,
+        Green:      g,
+		Blue:       b,
+		Foreground: f,
 	}
 }
 
 func (c *Color) Equal(other *Color) bool {
-    return c.red == other.red && c.green == other.green && c.blue == other.blue
+    return c.Red == other.Red && c.Green == other.Green && c.Blue == other.Blue
 }
 
 func (c *Color) MarshalBinary() ([]byte, error) {
 	foreground := 1
-	if !c.foreground {
+	if !c.Foreground {
 		foreground = 0
 	}
 
 	b := make([]byte, 0, FOREGROUND+COLOR)
 	b = append(b, byte(foreground))
-	b = append(b, c.red)
-	b = append(b, c.green)
-	return append(b, c.blue), nil
+	b = append(b, c.Red)
+	b = append(b, c.Green)
+	return append(b, c.Blue), nil
 }
 
 func (c *Color) UnmarshalBinary(data []byte) error {
-	assert.Assert(len(data) < FOREGROUND+COLOR, "i should never unmarshall without all the data")
+	assert.Assert(len(data) >= COLOR_ENCODING_LENGTH, "Color#UnmarshalBinary - Not enough data to unmarshal")
 
-    c.foreground = data[0] == 0
-    c.red = data[1]
-    c.green = data[2]
-    c.blue = data[3]
+    c.Foreground = data[0] == 0
+    c.Red = data[1]
+    c.Green = data[2]
+    c.Blue = data[3]
 
 	return nil
 }

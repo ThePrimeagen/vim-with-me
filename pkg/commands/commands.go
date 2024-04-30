@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"encoding/json"
+	"fmt"
 	"maps"
 
 	"github.com/theprimeagen/vim-with-me/pkg/assert"
@@ -103,6 +105,49 @@ func PartialRender(cells []*window.CellWithLocation) *tcp.TCPCommand {
 
 type Openable interface {
     Dimensions() (byte, byte)
+}
+
+type open struct {
+    Rows int
+    Cols int
+}
+
+func PartialRendersFromTCPCommand(cmd *tcp.TCPCommand) ([]*window.CellWithLocation, error) {
+    out := make([]*window.CellWithLocation, 0)
+    idx := 0
+    for idx < len(cmd.Data) {
+        var cell window.CellWithLocation
+        err := cell.UnmarshalBinary(cmd.Data[idx:])
+        if err != nil {
+            return nil, err
+        }
+
+        out = append(out, &cell)
+        idx += window.CELL_AND_LOC_ENCODING_LENGTH
+    }
+
+    return out, nil
+}
+
+// TODO(v1): Figure out a better way to do this
+func Jsonify(cmd *tcp.TCPCommand) ([]byte, error) {
+    switch (cmd.Command) {
+    case OPEN_WINDOW:
+        return json.Marshal(open{
+            Rows: int(cmd.Data[0]),
+            Cols: int(cmd.Data[1]),
+        })
+    case COMMANDS:
+        return []byte{}, nil
+    case PARTIAL_RENDER:
+        out, err := PartialRendersFromTCPCommand(cmd)
+        if err != nil {
+            return nil, err
+        }
+        return json.Marshal(out)
+    }
+
+    return nil, fmt.Errorf("unable to jsonify tcp command %d\n", cmd.Command)
 }
 
 func OpenCommand(window Openable) *tcp.TCPCommand {

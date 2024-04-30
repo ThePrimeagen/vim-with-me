@@ -1,0 +1,27 @@
+<html>
+    <head>
+    </head>
+    <body>
+    <script type="text/javascript">
+const evtSource = new EventSource("http://127.0.0.1:8080/events");
+
+evtSource.onopen = () => {
+    console.log("Open")
+};
+
+evtSource.addEventListener("cmd", (event) => {
+    console.log("cmd", event)
+});
+
+evtSource.onerror = (err) => {
+    console.log("Error", err)
+};
+
+evtSource.onclose = () => {
+    console.log("Closed")
+};
+
+    </script>
+
+    </body>
+</html>

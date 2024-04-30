@@ -86,7 +86,7 @@ func main() {
     }
 
 	ren := window.NewRender(3, 3)
-    open := commands.OpenCommand(&ren)
+    open := commands.OpenCommand(ren)
 
     open_data, err := open.MarshalBinary()
     if err != nil {

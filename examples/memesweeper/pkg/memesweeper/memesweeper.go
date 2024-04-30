@@ -46,7 +46,7 @@ func (ms MemeSweeperState) WithSeed(seed int64) MemeSweeperState {
 type MemeSweeper struct {
 	State    MemeSweeperState
 	board    *Board
-	Renderer window.Renderer
+	Renderer *window.Renderer
 	grid     grid
 	chat     *ChatAggregator
 
