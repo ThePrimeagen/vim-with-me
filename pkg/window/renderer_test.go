@@ -80,7 +80,6 @@ func has(cell Cell, cells []*CellWithLocation) bool {
     return false
 }
 
-/*
 func TestRender(t *testing.T) {
 	render := NewRender(5, 5)
 	renderers := []TestRenderable{
@@ -119,7 +118,6 @@ func TestRender(t *testing.T) {
     cells = render.Render()
     require.Equal(t, len(cells), 0)
 }
-*/
 
 func TestRenderHiddenValues(t *testing.T) {
 	render := NewRender(5, 5)
