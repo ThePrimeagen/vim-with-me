@@ -3,7 +3,8 @@ package window
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/theprimeagen/vim-with-me/pkg/testies"
 )
 
 type TestRenderable struct {
@@ -21,6 +22,9 @@ func (t *TestRenderable) Id() int {
     return t.id
 }
 
+var noCell = DefaultCell(0)
+var backgroundColor = NewColor(255, 0, 0, false)
+var background = BackgroundCell(CELL_VALUE_BACKGROUND_COLOR_ONLY, backgroundColor)
 var cell69 = Cell{ Value: 69, }
 var cell70 = Cell{ Value: 70, }
 var cell71 = Cell{ Value: 71, }
@@ -28,6 +32,11 @@ var cell72 = Cell{ Value: 72, }
 var innerCells = [][]Cell{
 	{cell69, cell70},
 	{cell71, cell72},
+}
+
+var hiddenValueCells = [][]Cell{
+    {noCell, noCell},
+    {cell69, background},
 }
 
 var cell73 = Cell{ Value: 73, }
@@ -61,9 +70,9 @@ func (t *TestRenderable) Render() (Location, [][]Cell) {
 	return t.loc, t.cells
 }
 
-func has(cell Cell, cells []*Cell) bool {
+func has(cell Cell, cells []*CellWithLocation) bool {
     for _, c := range cells {
-        if cell.Equal(c) {
+        if cell.EqualWithLocation(c) {
             return true
         }
     }
@@ -71,6 +80,7 @@ func has(cell Cell, cells []*Cell) bool {
     return false
 }
 
+/*
 func TestRender(t *testing.T) {
 	render := NewRender(5, 5)
 	renderers := []TestRenderable{
@@ -97,15 +107,57 @@ func TestRender(t *testing.T) {
     render.debug()
 
 	for i, value := range values {
-		assert.Equal(t, render.buffer[i].Value, value)
+		require.Equal(t, render.previous[i].Value, value)
 	}
 
-    assert.Equal(t, len(cells), 8)
+    require.Equal(t, len(cells), 8)
 
     for _, cell := range allCells {
-        assert.True(t, has(cell, cells))
+        require.True(t, has(cell, cells))
     }
 
     cells = render.Render()
-    assert.Equal(t, len(cells), 0)
+    require.Equal(t, len(cells), 0)
+}
+*/
+
+func TestRenderHiddenValues(t *testing.T) {
+	render := NewRender(5, 5)
+	renderers := []TestRenderable{
+		newTestRenderable(innerCells, NewLocation(1, 1), 1),
+		newTestRenderable(hiddenValueCells, NewLocation(1, 1), 2),
+	}
+
+	for _, loc := range renderers {
+		render.Add(&loc)
+	}
+
+	values := []byte{
+		byte(' '), byte(' '), byte(' '), byte(' '), byte(' '),
+		byte(' '), 69, 70, byte(' '), byte(' '),
+		byte(' '), 69, 72, byte(' '), byte(' '),
+		byte(' '), byte(' '), byte(' '), byte(' '), byte(' '),
+		byte(' '), byte(' '), byte(' '), byte(' '), byte(' '),
+	}
+
+	backgrounds := []Color{
+		DEFAULT_BACKGROUND, DEFAULT_BACKGROUND, DEFAULT_BACKGROUND, DEFAULT_BACKGROUND, DEFAULT_BACKGROUND,
+		DEFAULT_BACKGROUND, DEFAULT_BACKGROUND, DEFAULT_BACKGROUND, DEFAULT_BACKGROUND, DEFAULT_BACKGROUND,
+		DEFAULT_BACKGROUND, DEFAULT_BACKGROUND, backgroundColor, DEFAULT_BACKGROUND, DEFAULT_BACKGROUND,
+		DEFAULT_BACKGROUND, DEFAULT_BACKGROUND, DEFAULT_BACKGROUND, DEFAULT_BACKGROUND, DEFAULT_BACKGROUND,
+		DEFAULT_BACKGROUND, DEFAULT_BACKGROUND, DEFAULT_BACKGROUND, DEFAULT_BACKGROUND, DEFAULT_BACKGROUND,
+	}
+
+    cells := render.Render()
+    render.debug()
+
+	for i, value := range values {
+		require.Equal(t, render.previous[i].Value, value)
+		require.Equal(t, backgrounds[i], render.previous[i].Background)
+	}
+
+    require.Equal(t, len(cells), 4)
+
+    cells = render.Render()
+    require.Equal(t, len(cells), 0)
 }

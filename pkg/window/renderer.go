@@ -11,6 +11,9 @@ import (
 const CELL_ENCODING_LENGTH = COLOR_ENCODING_LENGTH*2 + 1
 const CELL_AND_LOC_ENCODING_LENGTH = CELL_ENCODING_LENGTH + LOCATION_ENCODING_LENGTH
 
+const CELL_VALUE_NO_PLACE = 0
+const CELL_VALUE_BACKGROUND_COLOR_ONLY = 1
+
 type Cell struct {
 	Foreground Color
 	Background Color
@@ -22,6 +25,14 @@ func ForegroundCell(value byte, foreground Color) Cell {
         Value: value,
         Foreground: foreground,
         Background: DEFAULT_BACKGROUND,
+    }
+}
+
+func BackgroundCell(value byte, background Color) Cell {
+    return Cell{
+        Value: value,
+        Foreground: DEFAULT_FOREGROUND,
+        Background: background,
     }
 }
 
@@ -128,6 +139,10 @@ func (c *Cell) UnmarshalBinary(data []byte) error {
 	return nil
 }
 
+func (c *Cell) EqualWithLocation(other *CellWithLocation) bool {
+    return c.Equal(&other.Cell)
+}
+
 func (c *Cell) Equal(other *Cell) bool {
 	return c.Value == other.Value &&
 		c.Foreground.Equal(&other.Foreground) &&
@@ -160,8 +175,8 @@ func NewRender(rows, cols int) Renderer {
 
 	for i := 0; i < int(length); i++ {
 		buffer = append(buffer, Cell{
-			Foreground: NewColor(255, 255, 255, true),
-			Background: NewColor(255, 255, 255, false),
+			Foreground: DEFAULT_FOREGROUND,
+			Background: DEFAULT_BACKGROUND,
 			Value:      byte(' '),
 		})
 	}
@@ -256,7 +271,14 @@ func (r *Renderer) place(renderable Render) {
 				continue
 			}
 
-			r.buffer[idx] = cells[row][col]
+            cell := cells[row][col]
+            if cell.Value == CELL_VALUE_NO_PLACE {
+                continue
+            } else if cell.Value == CELL_VALUE_BACKGROUND_COLOR_ONLY {
+                r.buffer[idx].Background = cell.Background
+            } else {
+                r.buffer[idx] = cell
+            }
 		}
 	}
 }
@@ -267,6 +289,7 @@ func (r *Renderer) Clear() {
 
 func (r *Renderer) Render() []*CellWithLocation {
 	for i := 0; i < len(r.renderables); i++ {
+        slog.Debug("Render#renderable", "id", r.renderables[i].Id(), "z", r.renderables[i].Z())
 		r.place(r.renderables[i])
 	}
 

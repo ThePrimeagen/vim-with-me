@@ -38,6 +38,10 @@ func (c *ChatAggregator) Add(row, col int) {
     c.points = append(c.points, &Point{row: row, col: col, count: 1})
 }
 
+func (c *ChatAggregator) Current() Point {
+    return c.max
+}
+
 func (c *ChatAggregator) Count() (int, int) {
     count := 0
     for _, p := range c.points {

@@ -123,25 +123,29 @@ func (m *MemeSweeper) Chat(msg *chat.ChatMsg) {
     m.chat.Add(row, c)
 }
 
+func (m *MemeSweeper) Tick(deltaMS int64) {
+    point := m.chat.Reset()
+    m.board.PickSpot(point.row, point.col)
+}
+
 func (m *MemeSweeper) Render() []*window.CellWithLocation {
     if m.board.state == LOSE {
         txt := NewText(0, 12, ";(")
+        m.Renderer.Clear()
         m.Renderer.Add(txt)
-        return m.Renderer.Render()
-    }
-
-    if m.board.state == WIN {
+    } else if m.board.state == WIN {
         txt := NewText(0, 12, "8)")
+        m.Renderer.Clear()
         m.Renderer.Add(txt)
-        return m.Renderer.Render()
+    } else {
+        now := time.Now().UnixMilli()
+        m.clock.SetText(getTime(now - m.startTime))
+        m.startTime = now
+
+        current := m.chat.Current()
+        if current.count != 0 {
+        }
     }
-
-	now := time.Now().UnixMilli()
-	m.clock.SetText(getTime(now - m.startTime))
-	m.startTime = now
-
-    point := m.chat.Reset()
-    m.board.PickSpot(point.row, point.col)
 
 	return m.Renderer.Render()
 }
