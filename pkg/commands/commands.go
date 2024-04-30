@@ -33,6 +33,15 @@ var commandMap = map[string]byte {
     "commands": COMMANDS,
 }
 
+var CommandNameLookup = map[byte]string {
+    RENDER: "render",
+    PARTIAL_RENDER: "partial",
+    CLOSE: "close",
+    ERROR: "error",
+    OPEN_WINDOW: "openWindow",
+    COMMANDS: "commands",
+}
+
 type Commander struct {
     extensions map[string]byte
     size byte
@@ -108,8 +117,8 @@ type Openable interface {
 }
 
 type open struct {
-    Rows int
-    Cols int
+    Rows int `json:"rows"`
+    Cols int `json:"cols"`
 }
 
 func PartialRendersFromTCPCommand(cmd *tcp.TCPCommand) ([]*window.CellWithLocation, error) {

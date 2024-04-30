@@ -11,10 +11,10 @@ const COLOR = 3
 const COLOR_ENCODING_LENGTH = FOREGROUND + COLOR
 
 type Color struct {
-	Red        byte
-	Blue       byte
-	Green      byte
-	Foreground bool
+    Red        byte `json:"red"`
+    Blue       byte `json:"blue"`
+    Green      byte `json:"green"`
+    Foreground bool `json:"foreground"`
 }
 
 func (c *Color) String() string {
@@ -36,10 +36,10 @@ var DEFAULT_FOREGROUND = Color{Red: 255, Blue: 255, Green: 255}
 
 func NewColor(r, g, b byte, f bool) Color {
 	return Color{
-		Red:        r,
+        Red:        r,
         Green:      g,
-		Blue:       b,
-		Foreground: f,
+        Blue:       b,
+        Foreground: f,
 	}
 }
 

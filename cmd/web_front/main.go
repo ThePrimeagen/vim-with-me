@@ -16,8 +16,8 @@ import (
 	"github.com/theprimeagen/vim-with-me/pkg/window"
 )
 
-func toSSE(bytes []byte) []byte {
-    return []byte(fmt.Sprintf("event: cmd\ndata: %s\n\n", string(bytes)))
+func toSSE(evt string, bytes []byte) []byte {
+    return []byte(fmt.Sprintf("event: %s\ndata: %s\n\n", evt, string(bytes)))
 }
 
 func toChannel(conn *tcp.Connection, ctx context.Context) chan *tcp.TCPCommand {
@@ -45,9 +45,7 @@ func toChannel(conn *tcp.Connection, ctx context.Context) chan *tcp.TCPCommand {
 	return ch
 }
 
-// 1. Server side events (https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)
 // 2. CSS grid stuff
-// 3. Format going down to front end
 
 func runListener(prop observer.Property[[]byte], ctx context.Context, conn *tcp.Connection, renderer **window.Renderer) error {
 
@@ -62,13 +60,15 @@ func runListener(prop observer.Property[[]byte], ctx context.Context, conn *tcp.
             assert.Assert(cells != nil, "cells is nil")
 
             (*renderer).FromRemoteRenderer(cells)
+            (*renderer).Render()
+            fmt.Printf("RENDER STATE: \n%s\n", (*renderer).Debug())
         }
 
         bytes, err := commands.Jsonify(msg)
         if err != nil {
             return err
         }
-        prop.Update(toSSE(bytes))
+        prop.Update(toSSE(commands.CommandNameLookup[msg.Command], bytes))
 	}
 
     return nil
@@ -85,7 +85,7 @@ func sendCmd(w io.Writer, cmd *tcp.TCPCommand) {
     jsonData, err := commands.Jsonify(cmd)
     assert.Assert(err == nil, "should never fail marshaling render command")
 
-    w.Write(toSSE(jsonData))
+    w.Write(toSSE(commands.CommandNameLookup[cmd.Command], jsonData))
     w.(http.Flusher).Flush()
 }
 
@@ -134,6 +134,7 @@ func main() {
         assert.Assert(*renderer != nil, "SSE: renderer should always be defined before first connection")
         sendCmd(w, commands.OpenCommand((*renderer)))
         sendCmd(w, commands.PartialRender((*renderer).FullRender()))
+        fmt.Printf("full render: %s\n", (*renderer).Debug())
 
         outer:
         for {

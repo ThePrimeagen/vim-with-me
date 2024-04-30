@@ -1,17 +1,87 @@
 <html>
     <head>
+<style>
+body { margin: 0; padding: 0;background-color: #333; }
+.cell { text-align: center; }
+</style>
     </head>
     <body>
+        <div id="container">
+        </div>
     <script type="text/javascript">
 const evtSource = new EventSource("http://127.0.0.1:8080/events");
+
+/* Function to add style element */
+function addStyle(styles) {
+
+    /* Create style document */
+    var css = document.createElement('style');
+    css.type = 'text/css';
+
+    if (css.styleSheet) {
+        css.styleSheet.cssText = styles;
+    } else {
+        css.appendChild(document.createTextNode(styles));
+    }
+
+    /* Append style to the tag name */
+    document.getElementsByTagName("head")[0].appendChild(css);
+}
+
+function getId(rowOrLocation, col) {
+    if (typeof rowOrLocation === "object") {
+        return getId(rowOrLocation.row, rowOrLocation.col);
+    }
+    return `cell_${rowOrLocation}_${col}`;
+}
+
+function toRGB(color) {
+    return `rgb(${color.red}, ${color.green}, ${color.blue})`;
+}
 
 evtSource.onopen = () => {
     console.log("Open")
 };
 
-evtSource.addEventListener("cmd", (event) => {
-    console.log("cmd", event)
+evtSource.addEventListener("openWindow", (event) => {
+    const open = JSON.parse(event.data)
+
+    const styles = `
+    #container {
+        display: grid;
+        grid-template-columns: repeat(${open.cols}, 1fr [col-start]);
+        height: 100%;
+    }`;
+    addStyle(styles);
+
+    for (let row = 0; row < open.rows; row++) {
+        for (let col = 0; col < open.cols; col++) {
+            const div = document.createElement("div");
+            div.classList.add("cell");
+            div.id = getId(row, col);
+            container.appendChild(div);
+        }
+    }
+
+    console.log("openWindow", open.rows, open.cols)
 });
+
+evtSource.addEventListener("partial", (event) => {
+    const cells = JSON.parse(event.data);
+    for (const cell of cells) {
+        const div = window[getId(cell.location)]
+        if (!div) {
+            console.log("you suck")
+            continue
+        }
+
+        console.log(div)
+        div.style.color = toRGB(cell.cell.foreground)
+        div.style.backgroundColor = toRGB(cell.cell.background)
+        div.innerText = String.fromCharCode(cell.cell.value)
+    }
+});
+
 
 evtSource.onerror = (err) => {
     console.log("Error", err)

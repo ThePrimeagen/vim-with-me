@@ -8,8 +8,8 @@ import (
 
 const LOCATION_ENCODING_LENGTH = 2
 type Location struct {
-    Row int
-    Col int
+    Row int `json:"row"`
+    Col int `json:"col"`
 }
 
 func NewLocation(r, c int) Location {

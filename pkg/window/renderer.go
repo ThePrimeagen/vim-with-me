@@ -16,9 +16,9 @@ const CELL_VALUE_NO_PLACE = 0
 const CELL_VALUE_BACKGROUND_COLOR_ONLY = 1
 
 type Cell struct {
-	Foreground Color
-	Background Color
-	Value      byte
+    Foreground Color `json:"foreground"`
+    Background Color `json:"background"`
+    Value      byte `json:"value"`
 }
 
 func ForegroundCell(value byte, foreground Color) Cell {
@@ -95,8 +95,8 @@ func DebugCells(cells [][]Cell) {
 }
 
 type CellWithLocation struct {
-	Cell
-	Location
+    Cell `json:"cell"`
+    Location `json:"location"`
 }
 
 func NewCellWithLocation(cell Cell, row, col int) *CellWithLocation {
@@ -211,6 +211,7 @@ type Renderer struct {
 func NewRender(rows, cols int) *Renderer {
 	length := cols * rows
 	buffer := make([]Cell, 0, length)
+    clean := make([]Cell, 0, length)
 
 	for i := 0; i < int(length); i++ {
 		buffer = append(buffer, Cell{
@@ -218,12 +219,11 @@ func NewRender(rows, cols int) *Renderer {
 			Background: DEFAULT_BACKGROUND,
 			Value:      byte(' '),
 		})
+		clean = append(clean, EmptyCell())
 	}
 
 	previous := make([]Cell, length, length)
-	clean := make([]Cell, length, length)
 	copy(previous, buffer)
-	copy(clean, buffer)
 
 	slog.Debug("new renderer", "rows", rows, "cols", cols)
 	return &Renderer{
@@ -369,11 +369,12 @@ func (r *Renderer) Render() []*CellWithLocation {
 				Cell:     cell,
 				Location: NewLocation(row, col),
 			})
+
+            r.previous[i].Merge(&cell)
 		}
 	}
 
 	r.previousPartialRender = out
-	copy(r.previous, r.buffer)
 	copy(r.buffer, r.clean)
 	return out
 }
