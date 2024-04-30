@@ -9,16 +9,16 @@ import (
 	"github.com/theprimeagen/vim-with-me/pkg/chat"
 	"github.com/theprimeagen/vim-with-me/pkg/testies"
 )
+const ROUND_TIME = 300
 
 func createChat() chan chat.ChatMsg {
     ch := make(chan chat.ChatMsg)
     go func() {
-        <-time.After(time.Millisecond * 150)
-        ch <- chat.ChatMsg{Msg: "2B"}
+        // ensure we are in a round
+        <-time.After(time.Millisecond * 50)
 
-        <-time.After(time.Millisecond * 100)
-        ch <- chat.ChatMsg{Msg: "B3"}
-        ch <- chat.ChatMsg{Msg: "B3"}
+        ch <- chat.ChatMsg{Msg: "2B"}
+        <-time.After(time.Millisecond * ROUND_TIME)
     }()
 
     return ch
@@ -30,7 +30,11 @@ func main() {
     ctx, cancel := context.WithCancel(context.Background())
     _ = cancel
 
-    state := memesweeper.NewMemeSweeperState(10, 5).WithDims(5, 10)
+    state := memesweeper.
+        NewMemeSweeperState(3, 3).
+        WithDims(5, 10).
+        WithSeed(42069)
+
     ms := memesweeper.NewMemeSweeper(state)
     ch := createChat()
 
@@ -56,11 +60,13 @@ func main() {
         ticker.Stop()
     }()
 
-    fmt.Println("starting round")
-    ms.StartRound()
-    <-time.After(time.Millisecond * 350)
-    fmt.Println("ending round")
-    ms.EndRound()
+    for {
+        fmt.Println("starting round")
+        ms.StartRound()
+        <-time.After(time.Millisecond * ROUND_TIME)
+        fmt.Println("ending round")
+        ms.EndRound()
+    }
 
     <-time.After(time.Millisecond * 250)
     fmt.Println("closing")

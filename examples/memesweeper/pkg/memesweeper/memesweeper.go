@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"math/rand"
 	"time"
 
 	"github.com/theprimeagen/vim-with-me/pkg/assert"
@@ -20,6 +21,7 @@ type MemeSweeperState struct {
 	Bombs   int
 	Width   int
 	Height  int
+	Rand    *rand.Rand
 }
 
 func NewMemeSweeperState(bombs, skips int) MemeSweeperState {
@@ -36,6 +38,12 @@ func (ms MemeSweeperState) WithDims(height, width int) MemeSweeperState {
 	return ms
 }
 
+func (ms MemeSweeperState) WithSeed(seed int64) MemeSweeperState {
+    ms.Rand = rand.New(rand.NewSource(seed))
+	return ms
+}
+
+
 type MemeSweeper struct {
 	State    MemeSweeperState
 	board    *Board
@@ -48,6 +56,10 @@ type MemeSweeper struct {
 	timePassed int64
 
 	currentPick *components.HighlightPoint
+}
+
+func getDimensions(params MemeSweeperState) (int, int) {
+	return params.Height + 1 + 1 + 1, params.Width + 1 + 15
 }
 
 func getTime(ms int64) string {
@@ -66,7 +78,8 @@ func NewMemeSweeper(state MemeSweeperState) MemeSweeper {
 		clock,
 	}
 
-	render := window.NewRender(state.Height, state.Width)
+	rows, cols := getDimensions(state)
+	render := window.NewRender(rows, cols)
 	params := BoardParams{
 		width:  state.Width,
 		height: state.Height,
@@ -74,12 +87,13 @@ func NewMemeSweeper(state MemeSweeperState) MemeSweeper {
 		row:       1,
 		col:       1,
 		bombCount: state.Bombs,
+		random:    state.Rand,
 	}
 
 	chatAgg := NewChatAggregator()
 
-    pickPos := components.NewCompositePosition(chatAgg, window.NewLocation(params.row, params.col))
-    pick := components.NewHighlightPoint(pickPos, 100, components.BACKGROUND_RED)
+	pickPos := components.NewCompositePosition(chatAgg, window.NewLocation(params.row, params.col))
+	pick := components.NewHighlightPoint(pickPos, 100, components.BACKGROUND_RED)
 	board := NewBoard(params)
 	grid := newGrid(0, 0, state.Width, state.Height)
 
@@ -112,7 +126,8 @@ func (m *MemeSweeper) ReduceCount() {
 }
 
 func (m *MemeSweeper) Dimensions() (byte, byte) {
-	return byte(m.board.params.height + 1 + 1 + 1), byte(m.board.params.width + 1 + 15)
+	rows, cols := getDimensions(m.State)
+	return byte(rows), byte(cols)
 }
 
 func (m *MemeSweeper) Chat(msg *chat.ChatMsg) error {
@@ -121,8 +136,8 @@ func (m *MemeSweeper) Chat(msg *chat.ChatMsg) error {
 		return err
 	}
 
-    // row is 1 based
-    row -= 1
+	// row is 1 based
+	row -= 1
 
 	if row >= m.State.Height {
 		return errors.New("row is too big")
@@ -136,17 +151,17 @@ func (m *MemeSweeper) Chat(msg *chat.ChatMsg) error {
 	slog.Debug("MemeSweeper#Chat", "row", row, "col", col)
 	m.chat.Add(row, c)
 
-    return nil
+	return nil
 }
 
 func (m *MemeSweeper) StartRound() {
-    m.currentPick.SetActiveState(true)
-    m.chat.SetActiveState(true)
+	m.currentPick.SetActiveState(true)
+	m.chat.SetActiveState(true)
 }
 
 func (m *MemeSweeper) EndRound() {
-    m.currentPick.SetActiveState(false)
-    m.chat.SetActiveState(false)
+	m.currentPick.SetActiveState(false)
+	m.chat.SetActiveState(false)
 
 	point := m.chat.Reset()
 	m.board.PickSpot(point.row, point.col)
@@ -163,9 +178,8 @@ func (m *MemeSweeper) EndRound() {
 }
 
 func (m *MemeSweeper) Render(timePassedMS int64) []*window.CellWithLocation {
-    m.timePassed += timePassedMS
+	m.timePassed += timePassedMS
 	m.clock.SetText(getTime(m.timePassed))
 
 	return m.Renderer.Render()
 }
-
