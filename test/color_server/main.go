@@ -5,6 +5,7 @@ import (
 	"log/slog"
 
 	"github.com/theprimeagen/vim-with-me/pkg/commands"
+	"github.com/theprimeagen/vim-with-me/pkg/tcp"
 	"github.com/theprimeagen/vim-with-me/pkg/testies"
 	"github.com/theprimeagen/vim-with-me/pkg/window"
 )
@@ -50,9 +51,9 @@ func main() {
 	renderer.Add(x)
     cells := renderer.Render()
 
-	server.WelcomeMessage(commander.ToCommands())
-	server.WelcomeMessage(commands.OpenCommand(&renderer))
-	server.WelcomeMessage(commands.PartialRender(cells))
+	server.WelcomeMessage(func() *tcp.TCPCommand { return commander.ToCommands() })
+	server.WelcomeMessage(func() *tcp.TCPCommand { return commands.OpenCommand(&renderer) })
+	server.WelcomeMessage(func() *tcp.TCPCommand { return commands.PartialRender(cells) })
 
     fmt.Printf("Does this work?\n")
 

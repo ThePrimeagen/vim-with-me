@@ -26,12 +26,12 @@ func main() {
         return
     }
 
-    state := memesweeper.NewMemeSweeperState(10, 5).WithDims(5, 10)
+    state := memesweeper.NewMemeSweeperState(15, 5).WithDims(6, 15)
     ms := memesweeper.NewMemeSweeper(state)
 
     commander := commands.NewCommander()
-    server.WelcomeMessage(commander.ToCommands())
-    server.WelcomeMessage(commands.OpenCommand(&ms))
+    server.WelcomeMessage(func() *tcp.TCPCommand { return commander.ToCommands() })
+    server.WelcomeMessage(func() *tcp.TCPCommand { return commands.OpenCommand(&ms) })
 
     go server.Start()
     defer server.Close()
@@ -83,7 +83,7 @@ func main() {
         cells := ms.Render(time.Now().UnixMilli() - start)
         cmds := commands.PartialRender(cells)
         server.Send(cmds)
-        <-time.After(time.Second * 10)
+        <-time.After(time.Second * 30)
         ms.Reset()
     }
 }

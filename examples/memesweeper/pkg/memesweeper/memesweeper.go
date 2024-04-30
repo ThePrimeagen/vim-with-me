@@ -64,7 +64,7 @@ func getDimensions(params MemeSweeperState) (int, int) {
 }
 
 func getTime(ms int64) string {
-	return fmt.Sprintf("Time: %ds", ms/1000)
+	return fmt.Sprintf("Time: I Suck")
 }
 
 func NewMemeSweeper(state MemeSweeperState) MemeSweeper {

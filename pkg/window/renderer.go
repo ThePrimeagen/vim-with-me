@@ -70,6 +70,21 @@ func (c *Cell) String() string {
 	)
 }
 
+func (c *Cell) Merge(cell *Cell) {
+    if cell.Value == CELL_VALUE_NO_PLACE {
+        return
+    }
+
+    if cell.Value == CELL_VALUE_BACKGROUND_COLOR_ONLY {
+        c.Background = cell.Background
+        return
+    }
+
+    c.Value = cell.Value
+    c.Background = cell.Background
+    c.Foreground = cell.Foreground
+}
+
 func DebugCells(cells [][]Cell) {
     for _, cell_row := range cells {
         for _, cell := range cell_row {
@@ -246,6 +261,15 @@ func translate(loc *Location, offsetR, offsetC, rowSize, colSize int) (bool, int
 
 		// Off the board on right or down
 	return exceeds, out
+}
+
+func (r *Renderer) FromRemoteRenderer(cells []*CellWithLocation) {
+    for _, c := range cells {
+        exceeds, idx := translate(&c.Location, 0, 0, r.rows, r.cols)
+        assert.Assert(exceeds == false, "you should never render from a canvas that is too big")
+
+        r.buffer[idx].Merge(&c.Cell)
+    }
 }
 
 func (r *Renderer) Add(renderable Render) {

@@ -9,6 +9,7 @@ import (
 
 	"github.com/theprimeagen/vim-with-me/pkg/chat"
 	"github.com/theprimeagen/vim-with-me/pkg/commands"
+	"github.com/theprimeagen/vim-with-me/pkg/tcp"
 	"github.com/theprimeagen/vim-with-me/pkg/testies"
 	"github.com/theprimeagen/vim-with-me/pkg/tower_defense"
 )
@@ -38,8 +39,8 @@ func main() {
 
     fmt.Printf("new tower defense\n")
     td := tower_defense.NewTD(params)
-    server.WelcomeMessage(td.Commander.ToCommands())
-    server.WelcomeMessage(commands.OpenCommand(&td.Renderer))
+    server.WelcomeMessage(func() *tcp.TCPCommand { return td.Commander.ToCommands()} )
+    server.WelcomeMessage(func() *tcp.TCPCommand { return commands.OpenCommand(&td.Renderer) })
 
     defer server.Close()
 

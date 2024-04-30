@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/theprimeagen/vim-with-me/pkg/commands"
+	"github.com/theprimeagen/vim-with-me/pkg/tcp"
 	"github.com/theprimeagen/vim-with-me/pkg/testies"
 )
 
@@ -18,7 +19,7 @@ func main() {
     defer server.Close()
 
     commander := commands.NewCommander()
-    server.WelcomeMessage(commander.ToCommands())
+    server.WelcomeMessage(func() *tcp.TCPCommand { return commander.ToCommands() })
 
 	log.Printf("starting server\n")
 

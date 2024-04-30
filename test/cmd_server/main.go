@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/theprimeagen/vim-with-me/pkg/commands"
+	"github.com/theprimeagen/vim-with-me/pkg/tcp"
 	"github.com/theprimeagen/vim-with-me/pkg/testies"
 	"github.com/theprimeagen/vim-with-me/pkg/window"
 )
@@ -42,7 +43,7 @@ func main() {
 
 	commander := commands.NewCommander()
 	commander.AddCommand("open")
-	server.WelcomeMessage(commander.ToCommands())
+	server.WelcomeMessage(func() *tcp.TCPCommand { return commander.ToCommands() })
 	win := window.NewSimpleWindow(24, 80)
 
 	defer server.Close()

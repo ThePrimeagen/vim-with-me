@@ -1,8 +1,6 @@
 package main
 
 import (
-    _ "net/http/pprof"
-
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -10,6 +8,7 @@ import (
 
 	"github.com/theprimeagen/vim-with-me/pkg/commands"
 	"github.com/theprimeagen/vim-with-me/pkg/particles"
+	"github.com/theprimeagen/vim-with-me/pkg/tcp"
 	"github.com/theprimeagen/vim-with-me/pkg/testies"
 	"github.com/theprimeagen/vim-with-me/pkg/window"
 )
@@ -26,8 +25,8 @@ func main() {
 	commander := commands.NewCommander()
 	renderer := window.NewRender(h, w)
 
-	server.WelcomeMessage(commander.ToCommands())
-	server.WelcomeMessage(commands.OpenCommand(&renderer))
+	server.WelcomeMessage(tcp.MakeWelcome(commander.ToCommands()))
+	server.WelcomeMessage(tcp.MakeWelcome(commands.OpenCommand(&renderer)))
 
     defer server.Close()
     go server.Start()

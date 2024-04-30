@@ -28,8 +28,8 @@ func hasBomb(row, col int, bombs []window.Location) bool {
 }
 
 func pickGoodSpot(board *Board, bombs []window.Location) (int, int) {
-    for r := range board.params.height {
-        for c := range board.params.width {
+    for r := range board.params.rows {
+        for c := range board.params.cols {
             if !hasBomb(r, c, bombs) && !board.cells[r][c].revealed {
                 return r, c
             }
@@ -49,8 +49,8 @@ func revealed(t *testing.T, board *Board, bools [][]bool) {
 func TestBoard(t *testing.T) {
     params := BoardParams{
         random: rand.New(rand.NewSource(69420)),
-        width: 3,
-        height: 3,
+        cols: 3,
+        rows: 3,
         row: 1,
         col: 1,
         bombCount: 2,
@@ -88,8 +88,8 @@ func TestBoard(t *testing.T) {
 func TestBoardWin(t *testing.T) {
     params := BoardParams{
         random: rand.New(rand.NewSource(69420)),
-        width: 3,
-        height: 3,
+        cols: 3,
+        rows: 3,
         row: 1,
         col: 1,
         bombCount: 2,

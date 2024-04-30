@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/theprimeagen/vim-with-me/pkg/commands"
+	"github.com/theprimeagen/vim-with-me/pkg/tcp"
 	"github.com/theprimeagen/vim-with-me/pkg/testies"
 	"github.com/theprimeagen/vim-with-me/pkg/window"
 )
@@ -53,8 +54,8 @@ func main() {
 	commander := commands.NewCommander()
 	renderer := window.NewRender(3, 3)
 
-	server.WelcomeMessage(commander.ToCommands())
-	server.WelcomeMessage(commands.OpenCommand(&renderer))
+	server.WelcomeMessage(tcp.MakeWelcome(commander.ToCommands()))
+	server.WelcomeMessage(tcp.MakeWelcome(commands.OpenCommand(&renderer)))
 
     ticker := time.NewTicker(time.Second)
 

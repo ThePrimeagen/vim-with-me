@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log/slog"
 	"strconv"
+	"strings"
 
 	"github.com/theprimeagen/vim-with-me/pkg/window"
 )
@@ -98,8 +99,8 @@ func ParseChatMessage(msg string) (int, string, error) {
         return 0, "", errors.New("malformed chat msg")
     }
 
-    a := string(msg[0])
-    b := string(msg[1])
+    a := strings.ToUpper(string(msg[0]))
+    b := strings.ToUpper(string(msg[1]))
 
     row := a
     col := b

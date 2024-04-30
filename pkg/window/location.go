@@ -19,6 +19,10 @@ func NewLocation(r, c int) Location {
     return Location{Row: int(r), Col: int(c)}
 }
 
+func (l *Location) ToRowCol() (int, int) {
+    return l.Row, l.Col
+}
+
 func (l *Location) MarshalBinary() (data []byte, err error) {
 	b := make([]byte, 0, 2)
 	b = append(b, byte(l.Row))

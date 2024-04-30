@@ -21,6 +21,8 @@ type TCPCommand struct {
 	Data    []byte
 }
 
+type WelcomeCB func() *TCPCommand
+
 func (t *TCPCommand) MarshalBinary() (data []byte, err error) {
 	length := uint16(len(t.Data))
 	lengthData := make([]byte, 2)
@@ -56,7 +58,7 @@ func (t *TCPCommand) UnmarshalBinary(bytes []byte) error {
 }
 
 type TCP struct {
-	welcomes     []*TCPCommand
+	welcomes     []WelcomeCB
 	sockets      []Connection
 	listener     net.Listener
 	mutex        sync.RWMutex
@@ -96,9 +98,11 @@ func (t *TCP) Send(command *TCPCommand) {
 	}
 }
 
-func sendCommands(conn *Connection, cmds []*TCPCommand) error {
-	for _, cmd := range cmds {
+func (t *TCP) welcome(conn *Connection) error {
+	for _, w := range t.welcomes {
+        cmd := w()
 		err := conn.Writer.Write(cmd)
+
 		if err != nil {
 			// TODO: Do i need to close the connection?
 			return err
@@ -108,8 +112,7 @@ func sendCommands(conn *Connection, cmds []*TCPCommand) error {
 	return nil
 }
 
-// TODO(v1) make this into func(conn) *TCPCommand
-func (t *TCP) WelcomeMessage(cmd *TCPCommand) {
+func (t *TCP) WelcomeMessage(cmd WelcomeCB) {
 	t.welcomes = append(t.welcomes, cmd)
 }
 
@@ -136,7 +139,7 @@ func NewTCPServer(port uint16) (*TCP, error) {
 	// TODO: Done channel
 	return &TCP{
 		sockets:     make([]Connection, 0, 10),
-		welcomes:    make([]*TCPCommand, 0, 10),
+		welcomes:    make([]WelcomeCB, 0, 10),
 		listener:    listener,
 		FromSockets: make(chan TCPCommandWrapper, 10),
 		mutex:       sync.RWMutex{},
@@ -173,7 +176,7 @@ func (t *TCP) Start() {
 
 		newConn := NewConnection(conn, id)
 		slog.Debug("new connection", "id", newConn.Id)
-		err = sendCommands(&newConn, t.welcomes)
+		err = t.welcome(&newConn)
 
 		if err != nil {
 			slog.Error("could not send out welcome messages", "error", err)
@@ -188,4 +191,10 @@ func (t *TCP) Start() {
 
 		go readConnection(t, &newConn)
 	}
+}
+
+func MakeWelcome(cmd *TCPCommand) WelcomeCB {
+    return func() *TCPCommand {
+        return cmd
+    }
 }

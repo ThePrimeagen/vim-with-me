@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/theprimeagen/vim-with-me/pkg/window"
+	"github.com/theprimeagen/vim-with-me/pkg/window/components"
 )
 
 type SweeperCell struct {
@@ -32,8 +33,11 @@ var colors = []window.Color{
 	window.NewColor(255, 255, 255, true),
 }
 
-func toWindowCell(sCell *SweeperCell) window.Cell {
-	cell := window.DefaultCell(' ')
+func toWindowCell(sCell *SweeperCell, row, col int) window.Cell {
+	cell := window.BackgroundCell(' ', components.BACKGROUND_GRAY)
+    if (row + col) % 2 == 0 {
+        cell.Background = window.DEFAULT_BACKGROUND
+    }
 	if !sCell.revealed {
 		return cell
 	}
@@ -283,7 +287,7 @@ func (r *Board) Render() (window.Location, [][]window.Cell) {
 	for row := range r.params.rows {
 		cell_row := make([]window.Cell, 0)
 		for c := range r.params.cols {
-			cell_row = append(cell_row, toWindowCell(r.cells[row][c]))
+			cell_row = append(cell_row, toWindowCell(r.cells[row][c], row, c))
 		}
 		cells = append(cells, cell_row)
 	}
