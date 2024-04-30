@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/theprimeagen/vim-with-me/pkg/testies"
 )
 
 type TestRenderable struct {

@@ -8,6 +8,7 @@ import (
 	"github.com/theprimeagen/vim-with-me/pkg/assert"
 	"github.com/theprimeagen/vim-with-me/pkg/chat"
 	"github.com/theprimeagen/vim-with-me/pkg/window"
+	"github.com/theprimeagen/vim-with-me/pkg/window/components"
 )
 
 type MemeSweeperState struct {
@@ -41,8 +42,9 @@ type MemeSweeper struct {
 	grid     grid
 	chat     ChatAggregator
 
-	texts     []*Text
-	clock     *Text
+	texts     []*components.Text
+	clock     *components.Text
+    next      *components.HighlightPoint
 	startTime int64
 }
 
@@ -54,11 +56,11 @@ func NewMemeSweeper(state MemeSweeperState) MemeSweeper {
     assert.Assert(state.Height > 0, "please set the height of the minesweeper game")
     assert.Assert(state.Width > 0, "please set the width of the minesweeper game")
 
-	clock := NewText(3, 14, getTime(0))
-	texts := []*Text{
-		NewText(0, 12, ":)"),
-		NewText(2, 13, "Skips: 5"),
-		NewText(3, 13, fmt.Sprintf("BombCount: %d", state.Bombs)),
+	clock := components.NewText(3, 14, getTime(0))
+	texts := []*components.Text{
+		components.NewText(0, 12, ":)"),
+		components.NewText(2, 13, "Skips: 5"),
+		components.NewText(3, 13, fmt.Sprintf("BombCount: %d", state.Bombs)),
 		clock,
 	}
 
@@ -123,18 +125,18 @@ func (m *MemeSweeper) Chat(msg *chat.ChatMsg) {
     m.chat.Add(row, c)
 }
 
-func (m *MemeSweeper) Tick(deltaMS int64) {
+func (m *MemeSweeper) PlayRound(deltaMS int64) {
     point := m.chat.Reset()
     m.board.PickSpot(point.row, point.col)
 }
 
 func (m *MemeSweeper) Render() []*window.CellWithLocation {
     if m.board.state == LOSE {
-        txt := NewText(0, 12, ";(")
+        txt := components.NewText(0, 12, ";(")
         m.Renderer.Clear()
         m.Renderer.Add(txt)
     } else if m.board.state == WIN {
-        txt := NewText(0, 12, "8)")
+        txt := components.NewText(0, 12, "8)")
         m.Renderer.Clear()
         m.Renderer.Add(txt)
     } else {

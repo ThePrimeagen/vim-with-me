@@ -28,6 +28,14 @@ func ForegroundCell(value byte, foreground Color) Cell {
     }
 }
 
+func BackgroundCellOnly(background Color) Cell {
+    return Cell{
+        Value: CELL_VALUE_BACKGROUND_COLOR_ONLY,
+        Foreground: DEFAULT_FOREGROUND,
+        Background: background,
+    }
+}
+
 func BackgroundCell(value byte, background Color) Cell {
     return Cell{
         Value: value,
@@ -39,6 +47,14 @@ func BackgroundCell(value byte, background Color) Cell {
 func DefaultCell(value byte) Cell {
     return Cell{
         Value: value,
+        Foreground: DEFAULT_FOREGROUND,
+        Background: DEFAULT_BACKGROUND,
+    }
+}
+
+func EmptyCell() Cell {
+    return Cell{
+        Value: CELL_VALUE_NO_PLACE,
         Foreground: DEFAULT_FOREGROUND,
         Background: DEFAULT_BACKGROUND,
     }

@@ -1,4 +1,4 @@
-package memesweeper
+package components
 
 import (
 
@@ -6,16 +6,28 @@ import (
 )
 
 type Text struct {
-	row, col, id int
+    window.RenderBase
+	row, col int
 
 	cells [][]window.Cell
 }
 
 func NewText(row, col int, txt string) *Text {
     t := &Text{
+        RenderBase: window.NewRenderBase(1),
         row: row,
         col: col,
-        id: window.GetNextId(),
+    }
+
+    t.SetText(txt)
+    return t
+}
+
+func NewTextZ(row, col, z int, txt string) *Text {
+    t := &Text{
+        RenderBase: window.NewRenderBase(z),
+        row: row,
+        col: col,
     }
 
     t.SetText(txt)
@@ -25,8 +37,8 @@ func NewText(row, col int, txt string) *Text {
 func (t *Text) SetText(txt string) {
     text_cells := make([]window.Cell, 0, len(txt))
 
-    for i, rune := range txt {
-        text_cells = append(text_cells, window.ForegroundCell(byte(rune), colors[i % len(colors)]))
+    for _, rune := range txt {
+        text_cells = append(text_cells, window.DefaultCell(byte(rune)))
     }
 
     t.cells = [][]window.Cell{
@@ -40,10 +52,3 @@ func (t *Text) Render() (window.Location, [][]window.Cell) {
     return window.NewLocation(t.row, t.col), t.cells
 }
 
-func (t *Text) Z() int {
-    return 1
-}
-
-func (t *Text) Id() int {
-    return t.id
-}
