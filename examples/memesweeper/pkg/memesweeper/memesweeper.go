@@ -59,7 +59,7 @@ type MemeSweeper struct {
 }
 
 func getDimensions(params MemeSweeperState) (int, int) {
-	return params.Height + 1 + 1 + 1, params.Width + 1 + 15
+	return params.Height + 1 + 1 + 1 + 1, params.Width + 1 + 15
 }
 
 func getTime(ms int64) string {
@@ -73,8 +73,8 @@ func NewMemeSweeper(state MemeSweeperState) MemeSweeper {
 	clock := components.NewText(3, 14, getTime(0))
 	smiley := components.NewText(0, 12, ":)")
 	texts := []*components.Text{
-		components.NewText(2, 13, "Skips: 5"),
-		components.NewText(3, 13, fmt.Sprintf("BombCount: %d", state.Bombs)),
+		components.NewText(3, 13, "Skips: 5"),
+		components.NewText(4, 13, fmt.Sprintf("BombCount: %d", state.Bombs)),
 		clock,
 		smiley,
 	}
@@ -85,7 +85,7 @@ func NewMemeSweeper(state MemeSweeperState) MemeSweeper {
 		width:  state.Width,
 		height: state.Height,
 
-		row:       1,
+		row:       2,
 		col:       1,
 		bombCount: state.Bombs,
 		random:    state.Rand,
@@ -96,7 +96,7 @@ func NewMemeSweeper(state MemeSweeperState) MemeSweeper {
 	pickPos := components.NewCompositePosition(chatAgg, window.NewLocation(params.row, params.col))
 	pick := components.NewHighlightPoint(pickPos, 100, components.BACKGROUND_RED)
 	board := NewBoard(params)
-	grid := newGrid(0, 0, state.Width, state.Height)
+	grid := newGrid(1, 0, state.Width, state.Height)
 
 	for _, t := range texts {
 		render.Add(t)
@@ -170,8 +170,10 @@ func (m *MemeSweeper) EndRound() {
 
 	if m.board.state == LOSE {
 		m.smiley.SetText(";(")
+        m.Renderer.Add(components.NewTextZ(0, 0, 100, "L Take"))
 	} else if m.board.state == WIN {
 		m.smiley.SetText("8)")
+        m.Renderer.Add(components.NewTextZ(0, 0, 100, "W Take"))
 	}
 }
 
