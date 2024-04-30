@@ -30,9 +30,9 @@ func NewMemeSweeperState(bombs, skips int) MemeSweeperState {
 }
 
 func (ms MemeSweeperState) WithDims(height, width int) MemeSweeperState {
-    ms.Height = height
-    ms.Width = width
-    return ms
+	ms.Height = height
+	ms.Width = width
+	return ms
 }
 
 type MemeSweeper struct {
@@ -40,12 +40,13 @@ type MemeSweeper struct {
 	board    *Board
 	Renderer window.Renderer
 	grid     grid
-	chat     ChatAggregator
+	chat     *ChatAggregator
 
-	texts     []*components.Text
-	clock     *components.Text
-    next      *components.HighlightPoint
-	startTime int64
+	texts      []*components.Text
+	clock      *components.Text
+	timePassed int64
+
+	currentPick *components.HighlightPoint
 }
 
 func getTime(ms int64) string {
@@ -53,8 +54,8 @@ func getTime(ms int64) string {
 }
 
 func NewMemeSweeper(state MemeSweeperState) MemeSweeper {
-    assert.Assert(state.Height > 0, "please set the height of the minesweeper game")
-    assert.Assert(state.Width > 0, "please set the width of the minesweeper game")
+	assert.Assert(state.Height > 0, "please set the height of the minesweeper game")
+	assert.Assert(state.Width > 0, "please set the width of the minesweeper game")
 
 	clock := components.NewText(3, 14, getTime(0))
 	texts := []*components.Text{
@@ -74,6 +75,9 @@ func NewMemeSweeper(state MemeSweeperState) MemeSweeper {
 		bombCount: state.Bombs,
 	}
 
+	chatAgg := NewChatAggregator()
+
+    pick := components.NewHighlightPoint(chatAgg, 100, components.BACKGROUND_RED)
 	board := NewBoard(params)
 	grid := newGrid(0, 0, state.Width, state.Height)
 
@@ -81,20 +85,23 @@ func NewMemeSweeper(state MemeSweeperState) MemeSweeper {
 		render.Add(t)
 	}
 	render.Add(board)
+	render.Add(pick)
 	render.Add(grid)
 
 	return MemeSweeper{
-		State:    state,
-		board:    board,
-		texts:    texts,
-		clock:    clock,
-		chat:     NewChatAggregator(),
-		Renderer: render,
+		State:       state,
+		board:       board,
+		texts:       texts,
+		clock:       clock,
+		chat:        chatAgg,
+		Renderer:    render,
+		timePassed:  0,
+		currentPick: pick,
 	}
 }
 
 func (m *MemeSweeper) Pick(row, col int) {
-    slog.Debug("MemeSweeper#Pick", "row", row, "col", col)
+	slog.Debug("MemeSweeper#Pick", "row", row, "col", col)
 	m.board.PickSpot(row, col)
 }
 
@@ -103,51 +110,55 @@ func (m *MemeSweeper) ReduceCount() {
 }
 
 func (m *MemeSweeper) Dimensions() (byte, byte) {
-    return byte(m.board.params.height + 1 + 1 + 1), byte(m.board.params.width + 1 + 15)
+	return byte(m.board.params.height + 1 + 1 + 1), byte(m.board.params.width + 1 + 15)
 }
 
 func (m *MemeSweeper) Chat(msg *chat.ChatMsg) {
-    row, col, err := ParseChatMessage(msg.Msg)
-    if err != nil {
-        return
-    }
+	row, col, err := ParseChatMessage(msg.Msg)
+	if err != nil {
+		return
+	}
 
-    if row >= m.State.Height {
-        return
-    }
+	if row >= m.State.Height {
+		return
+	}
 
-    c := int(col[0] - 'A')
-    if c >= m.State.Width {
-        return
-    }
+	c := int(col[0] - 'A')
+	if c >= m.State.Width {
+		return
+	}
 
-    slog.Debug("MemeSweeper#Chat", "row", row, "col", col)
-    m.chat.Add(row, c)
+	slog.Debug("MemeSweeper#Chat", "row", row, "col", col)
+	m.chat.Add(row, c)
 }
 
-func (m *MemeSweeper) PlayRound(deltaMS int64) {
-    point := m.chat.Reset()
-    m.board.PickSpot(point.row, point.col)
+func (m *MemeSweeper) StartRound() {
+    m.currentPick.SetActiveState(true)
+    m.chat.SetActiveState(true)
 }
 
-func (m *MemeSweeper) Render() []*window.CellWithLocation {
-    if m.board.state == LOSE {
-        txt := components.NewText(0, 12, ";(")
-        m.Renderer.Clear()
-        m.Renderer.Add(txt)
-    } else if m.board.state == WIN {
-        txt := components.NewText(0, 12, "8)")
-        m.Renderer.Clear()
-        m.Renderer.Add(txt)
-    } else {
-        now := time.Now().UnixMilli()
-        m.clock.SetText(getTime(now - m.startTime))
-        m.startTime = now
+func (m *MemeSweeper) EndRound() {
+    m.currentPick.SetActiveState(false)
+    m.chat.SetActiveState(false)
 
-        current := m.chat.Current()
-        if current.count != 0 {
-        }
-    }
+	point := m.chat.Reset()
+	m.board.PickSpot(point.row, point.col)
+
+	if m.board.state == LOSE {
+		txt := components.NewText(0, 12, ";(")
+		m.Renderer.Clear()
+		m.Renderer.Add(txt)
+	} else if m.board.state == WIN {
+		txt := components.NewText(0, 12, "8)")
+		m.Renderer.Clear()
+		m.Renderer.Add(txt)
+	}
+}
+
+func (m *MemeSweeper) Render(timePassedMS int64) []*window.CellWithLocation {
+    m.timePassed += timePassedMS
+	m.clock.SetText(getTime(m.timePassed))
 
 	return m.Renderer.Render()
 }
+

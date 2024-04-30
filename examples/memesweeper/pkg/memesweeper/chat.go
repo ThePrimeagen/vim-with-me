@@ -4,6 +4,8 @@ import (
 	"errors"
 	"log/slog"
 	"strconv"
+
+	"github.com/theprimeagen/vim-with-me/pkg/window"
 )
 
 type Point struct {
@@ -15,16 +17,22 @@ type Point struct {
 type ChatAggregator struct {
 	points []*Point
     max Point
+    active bool
 }
 
-func NewChatAggregator() ChatAggregator {
-	return ChatAggregator{
+func NewChatAggregator() *ChatAggregator {
+	return &ChatAggregator{
 		points: make([]*Point, 0, 100),
         max: Point{row: 0, col: 0, count: 0},
+        active: false,
 	}
 }
 
 func (c *ChatAggregator) Add(row, col int) {
+    if !c.active {
+        return
+    }
+
     for _, p := range c.points {
         if p.row == row && p.col == col {
             p.count++
@@ -38,8 +46,16 @@ func (c *ChatAggregator) Add(row, col int) {
     c.points = append(c.points, &Point{row: row, col: col, count: 1})
 }
 
+func (c *ChatAggregator) SetActiveState(state bool) {
+    c.active = true
+}
+
 func (c *ChatAggregator) Current() Point {
     return c.max
+}
+
+func (c *ChatAggregator) Position() window.Location {
+    return window.NewLocation(c.max.row, c.max.col)
 }
 
 func (c *ChatAggregator) Count() (int, int) {

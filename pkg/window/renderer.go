@@ -273,6 +273,9 @@ func (r *Renderer) Dimensions() (byte, byte) {
 
 func (r *Renderer) place(renderable Render) {
 	location, cells := renderable.Render()
+    if cells == nil {
+        return
+    }
 
 	assert.Assert(len(cells) > 0, "must contain rendering data")
 	assert.Assert(len(cells[0]) > 0, "must contain rendering data")
