@@ -64,11 +64,9 @@ func main() {
         }
     }()
 
-    server.OnConnection(func(conn *tcp.Connection) {
+    server.WelcomeMessage(func() *tcp.TCPCommand {
         cells := ms.Renderer.FullRender()
-        cmd := commands.PartialRender(cells)
-        err := conn.Writer.Write(cmd)
-        assert.Assert(err == nil, "my connection got an error... wtf")
+        return commands.PartialRender(cells)
     })
 
     for {

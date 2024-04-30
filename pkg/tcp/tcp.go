@@ -14,8 +14,6 @@ import (
 var VERSION byte = 1
 var HEADER_SIZE = 4
 
-type OnConnectionCB func(conn *Connection)
-
 type TCPCommand struct {
 	Command byte
 	Data    []byte
@@ -64,7 +62,6 @@ type TCP struct {
 	mutex        sync.RWMutex
 	FromSockets  chan TCPCommandWrapper
 	NewSocket    chan *Connection
-	onConnection OnConnectionCB
 }
 
 func (t *TCP) ConnectionCount() int {
@@ -118,11 +115,6 @@ func (t *TCP) WelcomeMessage(cmd WelcomeCB) {
 
 func (t *TCP) Close() {
 	t.listener.Close()
-}
-
-// TODO(v1): Remove this and make the WelcomeMessage take in a func that produces commands
-func (t *TCP) OnConnection(cb OnConnectionCB) {
-	t.onConnection = cb
 }
 
 type TCPCommandWrapper struct {
@@ -182,8 +174,6 @@ func (t *TCP) Start() {
 			slog.Error("could not send out welcome messages", "error", err)
 			continue
 		}
-
-        t.onConnection(&newConn)
 
 		t.mutex.Lock()
 		t.sockets = append(t.sockets, newConn)
