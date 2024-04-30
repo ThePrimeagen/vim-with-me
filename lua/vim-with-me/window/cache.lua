@@ -63,6 +63,7 @@ function DisplayCache:place(row, col, item)
     )
     self.data[row][col] = item
     self.dirty[row][col] = true
+    print("partial", row, col, item)
 end
 
 ---@param window WindowDetails

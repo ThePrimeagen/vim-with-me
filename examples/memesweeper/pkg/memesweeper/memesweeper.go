@@ -53,6 +53,7 @@ type MemeSweeper struct {
 	texts      []*components.Text
 	clock      *components.Text
 	smiley     *components.Text
+	control    *components.Text
 	timePassed int64
 
 	currentPick *components.HighlightPoint
@@ -72,8 +73,8 @@ func NewMemeSweeper(state MemeSweeperState) MemeSweeper {
 
 	clock := components.NewText(3, 14, getTime(0))
 	smiley := components.NewText(0, 12, ":)")
+	control := components.NewText(0, 0, "Waiting...")
 	texts := []*components.Text{
-		components.NewText(3, 13, "Skips: 5"),
 		components.NewText(4, 13, fmt.Sprintf("BombCount: %d", state.Bombs)),
 		clock,
 		smiley,
@@ -82,8 +83,8 @@ func NewMemeSweeper(state MemeSweeperState) MemeSweeper {
 	rows, cols := getDimensions(state)
 	render := window.NewRender(rows, cols)
 	params := BoardParams{
-		width:  state.Width,
-		height: state.Height,
+		cols: state.Width,
+		rows: state.Height,
 
 		row:       2,
 		col:       1,
@@ -110,6 +111,7 @@ func NewMemeSweeper(state MemeSweeperState) MemeSweeper {
 		board:       board,
 		texts:       texts,
 		clock:       clock,
+		control:     control,
 		smiley:      smiley,
 		chat:        chatAgg,
 		Renderer:    render,
@@ -157,11 +159,13 @@ func (m *MemeSweeper) Chat(msg *chat.ChatMsg) error {
 }
 
 func (m *MemeSweeper) StartRound() {
+	m.control.SetText("Pick Pos!")
 	m.currentPick.SetActiveState(true)
 	m.chat.SetActiveState(true)
 }
 
 func (m *MemeSweeper) EndRound() {
+	m.control.SetText("Waiting...")
 	m.currentPick.SetActiveState(false)
 	m.chat.SetActiveState(false)
 
@@ -170,11 +174,27 @@ func (m *MemeSweeper) EndRound() {
 
 	if m.board.state == LOSE {
 		m.smiley.SetText(";(")
-        m.Renderer.Add(components.NewTextZ(0, 0, 100, "L Take"))
+        m.control.SetText("L Take")
 	} else if m.board.state == WIN {
 		m.smiley.SetText("8)")
-        m.Renderer.Add(components.NewTextZ(0, 0, 100, "W Take"))
+        m.control.SetText("W Take")
 	}
+}
+
+func (m *MemeSweeper) RevealBombs() {
+	m.board.RevealBombs()
+}
+
+func (m *MemeSweeper) Reset() {
+	m.chat.Reset()
+	m.chat.SetActiveState(false)
+	m.board.Reset()
+	m.currentPick.SetActiveState(false)
+
+	m.smiley.SetText(":)")
+	m.control.SetText("Waiting...")
+	m.clock.SetText(getTime(0))
+	m.timePassed = 0
 }
 
 func (m *MemeSweeper) GameOver() bool {
@@ -182,8 +202,10 @@ func (m *MemeSweeper) GameOver() bool {
 }
 
 func (m *MemeSweeper) Render(timePassedMS int64) []*window.CellWithLocation {
-	m.timePassed += timePassedMS
-	m.clock.SetText(getTime(m.timePassed))
+	if !m.GameOver() {
+		m.timePassed += timePassedMS
+		m.clock.SetText(getTime(m.timePassed))
+	}
 
 	return m.Renderer.Render()
 }

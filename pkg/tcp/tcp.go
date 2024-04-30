@@ -14,6 +14,8 @@ import (
 var VERSION byte = 1
 var HEADER_SIZE = 4
 
+type OnConnectionCB func(conn *Connection)
+
 type TCPCommand struct {
 	Command byte
 	Data    []byte
@@ -54,30 +56,31 @@ func (t *TCPCommand) UnmarshalBinary(bytes []byte) error {
 }
 
 type TCP struct {
-	welcomes    []*TCPCommand
-	sockets     []Connection
-	listener    net.Listener
-	mutex       sync.RWMutex
-	FromSockets chan TCPCommandWrapper
-	NewSocket chan *Connection
+	welcomes     []*TCPCommand
+	sockets      []Connection
+	listener     net.Listener
+	mutex        sync.RWMutex
+	FromSockets  chan TCPCommandWrapper
+	NewSocket    chan *Connection
+	onConnection OnConnectionCB
 }
 
 func (t *TCP) ConnectionCount() int {
-    return len(t.sockets)
+	return len(t.sockets)
 }
 
 func (t *TCP) Send(command *TCPCommand) {
 	t.mutex.RLock()
 	removals := make([]int, 0)
-    slog.Debug("sending message", "msg", command)
+	slog.Debug("sending message", "msg", command)
 	for i, conn := range t.sockets {
 		err := conn.Writer.Write(command)
 		if err != nil {
-            if errors.Is(err, syscall.EPIPE) {
-                slog.Debug("connection closed by client", "index", i)
-            } else {
-                slog.Error("removing due to error", "index", i, "error", err)
-            }
+			if errors.Is(err, syscall.EPIPE) {
+				slog.Debug("connection closed by client", "index", i)
+			} else {
+				slog.Error("removing due to error", "index", i, "error", err)
+			}
 			removals = append(removals, i)
 		}
 	}
@@ -114,6 +117,11 @@ func (t *TCP) Close() {
 	t.listener.Close()
 }
 
+// TODO(v1): Remove this and make the WelcomeMessage take in a func that produces commands
+func (t *TCP) OnConnection(cb OnConnectionCB) {
+	t.onConnection = cb
+}
+
 type TCPCommandWrapper struct {
 	Conn    *Connection
 	Command *TCPCommand
@@ -125,7 +133,7 @@ func NewTCPServer(port uint16) (*TCP, error) {
 		return nil, err
 	}
 
-    // TODO: Done channel
+	// TODO: Done channel
 	return &TCP{
 		sockets:     make([]Connection, 0, 10),
 		welcomes:    make([]*TCPCommand, 0, 10),
@@ -138,14 +146,14 @@ func NewTCPServer(port uint16) (*TCP, error) {
 func readConnection(tcp *TCP, conn *Connection) {
 	for {
 		cmd, err := conn.Next()
-        slog.Debug("new command", "id", conn.Id, "cmd", cmd)
+		slog.Debug("new command", "id", conn.Id, "cmd", cmd)
 
 		if err != nil {
-            if errors.Is(err, io.EOF) {
-                slog.Debug("socket received EOF", "id", conn.Id, "error", err)
-            } else {
-                slog.Error("received error while reading from socket", "id", conn.Id, "error", err)
-            }
+			if errors.Is(err, io.EOF) {
+				slog.Debug("socket received EOF", "id", conn.Id, "error", err)
+			} else {
+				slog.Error("received error while reading from socket", "id", conn.Id, "error", err)
+			}
 			break
 		}
 
@@ -154,28 +162,30 @@ func readConnection(tcp *TCP, conn *Connection) {
 }
 
 func (t *TCP) Start() {
-    id := 0
+	id := 0
 	for {
 		conn, err := t.listener.Accept()
-        id++
+		id++
 
 		if err != nil {
 			slog.Error("server error:", "error", err)
 		}
 
 		newConn := NewConnection(conn, id)
-        slog.Debug("new connection", "id", newConn.Id)
-        err = sendCommands(&newConn, t.welcomes)
+		slog.Debug("new connection", "id", newConn.Id)
+		err = sendCommands(&newConn, t.welcomes)
 
-        if err != nil {
+		if err != nil {
 			slog.Error("could not send out welcome messages", "error", err)
-            continue
-        }
+			continue
+		}
+
+        t.onConnection(&newConn)
 
 		t.mutex.Lock()
 		t.sockets = append(t.sockets, newConn)
 		t.mutex.Unlock()
 
-        go readConnection(t, &newConn)
+		go readConnection(t, &newConn)
 	}
 }

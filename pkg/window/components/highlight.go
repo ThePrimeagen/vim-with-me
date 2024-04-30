@@ -14,7 +14,7 @@ func NewHighlightPoint(pos Position, z int, color window.Color) *HighlightPoint 
 		RenderBase: window.NewRenderBase(z),
 		position:   pos,
 		color:      color,
-		active:     true,
+		active:     false,
 	}
 }
 

@@ -6,13 +6,12 @@ import (
 	"time"
 
 	"github.com/theprimeagen/vim-with-me/examples/memesweeper/pkg/memesweeper"
+	"github.com/theprimeagen/vim-with-me/pkg/assert"
 	"github.com/theprimeagen/vim-with-me/pkg/chat"
 	"github.com/theprimeagen/vim-with-me/pkg/commands"
+	"github.com/theprimeagen/vim-with-me/pkg/tcp"
 	"github.com/theprimeagen/vim-with-me/pkg/testies"
 )
-
-func run() {
-}
 
 func main() {
     testies.SetupLogger()
@@ -37,30 +36,55 @@ func main() {
     go server.Start()
     defer server.Close()
 
+    start := time.Now().UnixMilli()
     go func() {
         ticker := time.NewTicker(time.Millisecond * 16)
         outer:
         for {
-            start := time.Now().UnixMilli()
             select {
             case <-ctx.Done():
                 break outer
             case msg := <-ch:
+                if ms.GameOver() {
+                    break
+                }
                 slog.Debug("main: msg received", "msg", msg.Msg, "name", msg.Name)
                 ms.Chat(&msg)
             case <-ticker.C:
+                if ms.GameOver() {
+                    break
+                }
                 cells := ms.Render(time.Now().UnixMilli() - start)
+                if len(cells) == 0 {
+                    break
+                }
                 cmds := commands.PartialRender(cells)
                 server.Send(cmds)
             }
         }
     }()
 
+    server.OnConnection(func(conn *tcp.Connection) {
+        cells := ms.Renderer.FullRender()
+        cmd := commands.PartialRender(cells)
+        err := conn.Writer.Write(cmd)
+        assert.Assert(err == nil, "my connection got an error... wtf")
+    })
+
     for {
-        ms.StartRound()
+        for !ms.GameOver() {
+            <-time.After(time.Second * 7)
+            ms.StartRound()
+            <-time.After(time.Second * 12)
+            ms.EndRound()
+        }
+
+        ms.RevealBombs()
+        cells := ms.Render(time.Now().UnixMilli() - start)
+        cmds := commands.PartialRender(cells)
+        server.Send(cmds)
         <-time.After(time.Second * 10)
-        ms.EndRound()
-        <-time.After(time.Second * 5)
+        ms.Reset()
     }
 }
 

@@ -45,6 +45,19 @@ function Commands:parse(str)
     end
 end
 
+---@param cmd TCPCommand
+function Commands:pretty_print(cmd)
+    local name = ""
+    for k, v in pairs(self._commands) do
+        if v == cmd.command then
+            name = k
+            break
+        end
+    end
+
+    print("cmd", name, #cmd.data)
+end
+
 return {
     Commands = Commands,
 }

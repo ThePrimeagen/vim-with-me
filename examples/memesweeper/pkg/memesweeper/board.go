@@ -13,6 +13,7 @@ import (
 type SweeperCell struct {
 	bomb     bool
 	revealed bool
+	killed   bool
 
 	adjacentCount     int
 	displayedAdjCount int
@@ -32,14 +33,20 @@ var colors = []window.Color{
 }
 
 func toWindowCell(sCell *SweeperCell) window.Cell {
-	cell := window.DefaultCell('X')
+	cell := window.DefaultCell(' ')
 	if !sCell.revealed {
 		return cell
 	}
 
-	if sCell.bomb {
+	if sCell.bomb && sCell.killed {
+		cell.Value = 'x'
+		cell.Foreground = colors[0]
+	} else if sCell.bomb {
 		cell.Value = '*'
 		cell.Foreground = colors[0]
+	} else if sCell.displayedAdjCount == 0 {
+		cell.Value = '.'
+		cell.Foreground = window.DEFAULT_FOREGROUND
 	} else {
 		str := strconv.Itoa(sCell.displayedAdjCount)
 		cell.Value = str[0]
@@ -68,26 +75,22 @@ type Board struct {
 }
 
 type BoardParams struct {
-	random        *rand.Rand
-	width, height int
-	row, col      int
-	bombCount     int
+	random    *rand.Rand
+	cols      int
+	rows      int
+	row, col  int
+	bombCount int
 }
 
-func NewBoard(params BoardParams) *Board {
-    if params.random == nil {
-        seed := int64(time.Now().UnixMilli())
-        random := rand.New(rand.NewSource(seed))
-        params.random = random
-    }
-
+func newSweeperCells(rows, cols int) [][]*SweeperCell {
 	cells := make([][]*SweeperCell, 0)
-	for range params.height {
-		cell_row := make([]*SweeperCell, 0, params.height)
-		for range params.width {
+	for range rows {
+		cell_row := make([]*SweeperCell, 0, rows)
+		for range cols {
 			cell_row = append(cell_row, &SweeperCell{
 				bomb:     false,
 				revealed: false,
+				killed:   false,
 
 				adjacentCount:     0,
 				displayedAdjCount: 0,
@@ -96,15 +99,42 @@ func NewBoard(params BoardParams) *Board {
 		cells = append(cells, cell_row)
 	}
 
+	return cells
+}
+
+func NewBoard(params BoardParams) *Board {
+	if params.random == nil {
+		seed := int64(time.Now().UnixMilli())
+		random := rand.New(rand.NewSource(seed))
+		params.random = random
+	}
+
 	return &Board{
 		params: params,
-		cells:  cells,
+		cells:  newSweeperCells(params.rows, params.cols),
 
 		id:          window.GetNextId(),
 		countCount:  0,
 		state:       INIT,
 		revealCount: 0,
 	}
+}
+
+func (r *Board) RevealBombs() {
+	for _, row := range r.cells {
+		for _, cell := range row {
+			if cell.bomb {
+				cell.revealed = true
+			}
+		}
+	}
+}
+
+func (r *Board) Reset() {
+    r.countCount = 0
+    r.state = INIT
+    r.revealCount = 0
+    r.cells = newSweeperCells(r.params.rows, r.params.cols)
 }
 
 func (r *Board) PickSpot(row, col int) {
@@ -117,10 +147,11 @@ func (r *Board) PickSpot(row, col int) {
 
 	if cell.bomb {
 		r.state = LOSE
+		cell.killed = true
 		return
 	}
 
-	if r.revealCount == r.params.height*r.params.width-r.params.bombCount {
+	if r.revealCount == r.params.rows*r.params.cols-r.params.bombCount {
 		r.state = WIN
 	}
 }
@@ -144,7 +175,7 @@ func (r *Board) count(row, col int) int {
 		rowNext := row + d[0]
 		colNext := col + d[1]
 
-		if rowNext >= r.params.height || colNext >= r.params.width || rowNext < 0 || colNext < 0 {
+		if rowNext >= r.params.rows || colNext >= r.params.cols || rowNext < 0 || colNext < 0 {
 			continue
 		}
 
@@ -173,7 +204,7 @@ func (r *Board) revealSpot(row, col int) {
 		rowNext := row + d[0]
 		colNext := col + d[1]
 
-		if rowNext >= r.params.height || colNext >= r.params.width || rowNext < 0 || colNext < 0 {
+		if rowNext >= r.params.rows || colNext >= r.params.cols || rowNext < 0 || colNext < 0 {
 			continue
 		}
 
@@ -182,16 +213,16 @@ func (r *Board) revealSpot(row, col int) {
 }
 
 func (r *Board) debug() {
-    for _, row := range r.cells {
-        for _, cell := range row {
-            if cell.bomb {
-                fmt.Printf("%v* ", cell.revealed)
-            } else {
-                fmt.Printf("%v%d ", cell.revealed, cell.displayedAdjCount)
-            }
-        }
-        fmt.Println()
-    }
+	for _, row := range r.cells {
+		for _, cell := range row {
+			if cell.bomb {
+				fmt.Printf("%v* ", cell.revealed)
+			} else {
+				fmt.Printf("%v%d ", cell.revealed, cell.displayedAdjCount)
+			}
+		}
+		fmt.Println()
+	}
 }
 
 func (r *Board) init(row, col int) {
@@ -200,8 +231,8 @@ func (r *Board) init(row, col int) {
 		randomR := 0
 		for {
 
-			randomR = r.params.random.Intn(r.params.height)
-			randomC = r.params.random.Intn(r.params.width)
+			randomR = r.params.random.Intn(r.params.rows)
+			randomC = r.params.random.Intn(r.params.cols)
 
 			if (randomC != col || randomR != row) && !r.cells[randomR][randomC].bomb {
 				break
@@ -212,12 +243,12 @@ func (r *Board) init(row, col int) {
 	}
 
 	params := r.params
-	for row := range params.height {
-		for c := range params.width {
-            cell := r.cells[row][c]
-            if cell.bomb {
-                continue
-            }
+	for row := range params.rows {
+		for c := range params.cols {
+			cell := r.cells[row][c]
+			if cell.bomb {
+				continue
+			}
 			cell.adjacentCount = r.count(row, c)
 			cell.displayedAdjCount = cell.adjacentCount
 		}
@@ -235,8 +266,8 @@ func (r *Board) ReduceOne() {
 
 	for {
 
-		row := r.params.random.Intn(r.params.height)
-		c := r.params.random.Intn(r.params.width)
+		row := r.params.random.Intn(r.params.rows)
+		c := r.params.random.Intn(r.params.cols)
 
 		cell := r.cells[row][c]
 
@@ -249,9 +280,9 @@ func (r *Board) ReduceOne() {
 
 func (r *Board) Render() (window.Location, [][]window.Cell) {
 	cells := make([][]window.Cell, 0)
-	for row := range r.params.height {
+	for row := range r.params.rows {
 		cell_row := make([]window.Cell, 0)
-		for c := range r.params.width {
+		for c := range r.params.cols {
 			cell_row = append(cell_row, toWindowCell(r.cells[row][c]))
 		}
 		cells = append(cells, cell_row)

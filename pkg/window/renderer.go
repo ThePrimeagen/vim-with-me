@@ -84,6 +84,13 @@ type CellWithLocation struct {
 	Location
 }
 
+func NewCellWithLocation(cell Cell, row, col int) *CellWithLocation {
+    return &CellWithLocation{
+        Cell: cell,
+        Location: NewLocation(row, col),
+    }
+}
+
 func (c *CellWithLocation) MarshalBinary() ([]byte, error) {
 	loc, err := c.Location.MarshalBinary()
 	if err != nil {
@@ -217,6 +224,16 @@ func NewRender(rows, cols int) Renderer {
 	}
 }
 
+func translateFromIdx(idx, rowSize, colSize int) (bool, int, int) {
+    row := idx / colSize
+    if row >= rowSize {
+        slog.Debug("translateFromIdx: exceeds", "idx", idx, "row", row, "rowSize", rowSize, "colSize", colSize)
+        return true, 0, 0
+    }
+
+    return false, row, idx % colSize
+}
+
 func translate(loc *Location, offsetR, offsetC, rowSize, colSize int) (bool, int) {
 	out := (loc.Row+offsetR)*colSize + loc.Col + offsetC
 
@@ -317,8 +334,8 @@ func (r *Renderer) Render() []*CellWithLocation {
 	for i, cell := range r.buffer {
 		other := r.previous[i]
 		if !cell.Equal(&other) {
-			row := i / r.cols
-			col := i % r.cols
+            exceeds, row, col := translateFromIdx(i, r.rows, r.cols)
+            assert.Assert(exceeds == false, "exceeded bounds when partial rendering")
 
 			// I probably care about this...
 			// TODO(v1): LogValuer interface (LogAttr maybe?)
@@ -343,9 +360,15 @@ func GetNextId() int {
     return id
 }
 
-func (r *Renderer) FullRender() []*Cell {
-	assert.Assert(false, "please implement me")
-	return nil
+func (r *Renderer) FullRender() []*CellWithLocation {
+    cells := make([]*CellWithLocation, 0)
+    for idx, cell := range r.previous {
+        exceeds, row, col := translateFromIdx(idx, r.rows, r.cols)
+        assert.Assert(exceeds == false, "somehow i have translated from our buffer and exceeded our buffer")
+
+        cells = append(cells, NewCellWithLocation(cell, row, col))
+    }
+	return cells
 }
 
 func printBuff(buffer []Cell, rows, cols int) string {

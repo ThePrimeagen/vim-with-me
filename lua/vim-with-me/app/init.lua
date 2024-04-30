@@ -3,6 +3,7 @@ local ColorSet = require("vim-with-me.app.colors")
 local window = require("vim-with-me.window")
 local Commands = require("vim-with-me.app.commands")
 local parse = require("vim-with-me.tcp.parse")
+local tcp_utils = require("vim-with-me.tcp.utils")
 
 ---@class VWMApp
 ---@field public window WindowDetails | nil
@@ -18,7 +19,6 @@ App.__index = App
 ---@param conn TCP
 ---@return VWMApp
 function App:new(conn)
-    print("app", conn.new)
     assert(conn:connected(), "connection not established")
 
     local app = setmetatable({
@@ -94,7 +94,9 @@ function App:_process(command)
     local data = command.data
     local cmds = self.commands
 
-    print("data", #data)
+    if DEBUG ~= nil then
+        self.commands:pretty_print(command)
+    end
 
     if cmd == cmds:get("commands") then
         self.commands:parse(data)
