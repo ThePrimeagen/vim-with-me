@@ -39,10 +39,9 @@ func (ms MemeSweeperState) WithDims(height, width int) MemeSweeperState {
 }
 
 func (ms MemeSweeperState) WithSeed(seed int64) MemeSweeperState {
-    ms.Rand = rand.New(rand.NewSource(seed))
+	ms.Rand = rand.New(rand.NewSource(seed))
 	return ms
 }
-
 
 type MemeSweeper struct {
 	State    MemeSweeperState
@@ -53,6 +52,7 @@ type MemeSweeper struct {
 
 	texts      []*components.Text
 	clock      *components.Text
+	smiley     *components.Text
 	timePassed int64
 
 	currentPick *components.HighlightPoint
@@ -71,11 +71,12 @@ func NewMemeSweeper(state MemeSweeperState) MemeSweeper {
 	assert.Assert(state.Width > 0, "please set the width of the minesweeper game")
 
 	clock := components.NewText(3, 14, getTime(0))
+	smiley := components.NewText(0, 12, ":)")
 	texts := []*components.Text{
-		components.NewText(0, 12, ":)"),
 		components.NewText(2, 13, "Skips: 5"),
 		components.NewText(3, 13, fmt.Sprintf("BombCount: %d", state.Bombs)),
 		clock,
+		smiley,
 	}
 
 	rows, cols := getDimensions(state)
@@ -109,6 +110,7 @@ func NewMemeSweeper(state MemeSweeperState) MemeSweeper {
 		board:       board,
 		texts:       texts,
 		clock:       clock,
+		smiley:      smiley,
 		chat:        chatAgg,
 		Renderer:    render,
 		timePassed:  0,
@@ -167,14 +169,14 @@ func (m *MemeSweeper) EndRound() {
 	m.board.PickSpot(point.row, point.col)
 
 	if m.board.state == LOSE {
-		txt := components.NewText(0, 12, ";(")
-		m.Renderer.Clear()
-		m.Renderer.Add(txt)
+		m.smiley.SetText(";(")
 	} else if m.board.state == WIN {
-		txt := components.NewText(0, 12, "8)")
-		m.Renderer.Clear()
-		m.Renderer.Add(txt)
+		m.smiley.SetText("8)")
 	}
+}
+
+func (m *MemeSweeper) GameOver() bool {
+	return m.board.state != PLAYING && m.board.state != INIT
 }
 
 func (m *MemeSweeper) Render(timePassedMS int64) []*window.CellWithLocation {

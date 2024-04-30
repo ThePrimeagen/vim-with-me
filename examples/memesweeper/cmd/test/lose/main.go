@@ -60,7 +60,8 @@ func main() {
         ticker.Stop()
     }()
 
-    for {
+    for !ms.GameOver() {
+
         fmt.Println("starting round")
         ms.StartRound()
         <-time.After(time.Millisecond * ROUND_TIME)
