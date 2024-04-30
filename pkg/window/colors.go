@@ -21,6 +21,16 @@ func (c *Color) String() string {
     return fmt.Sprintf("r=%d, g=%d, b=%d, f=%v", c.red, c.green, c.blue, c.foreground)
 }
 
+func (c *Color) ColorCode() string {
+    if c.red > 0 && c.blue == 0 && c.green == 0 {
+        return "r"
+    }
+    if c.red == 0 && c.blue == 0 && c.green == 0 {
+        return "B"
+    }
+    return "?"
+}
+
 var DEFAULT_BACKGROUND = Color{red: 0, blue: 0, green: 0}
 var DEFAULT_FOREGROUND = Color{red: 255, blue: 255, green: 255}
 

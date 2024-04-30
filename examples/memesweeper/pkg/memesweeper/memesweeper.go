@@ -77,7 +77,8 @@ func NewMemeSweeper(state MemeSweeperState) MemeSweeper {
 
 	chatAgg := NewChatAggregator()
 
-    pick := components.NewHighlightPoint(chatAgg, 100, components.BACKGROUND_RED)
+    pickPos := components.NewCompositePosition(chatAgg, window.NewLocation(params.row, params.col))
+    pick := components.NewHighlightPoint(pickPos, 100, components.BACKGROUND_RED)
 	board := NewBoard(params)
 	grid := newGrid(0, 0, state.Width, state.Height)
 
@@ -118,6 +119,9 @@ func (m *MemeSweeper) Chat(msg *chat.ChatMsg) {
 	if err != nil {
 		return
 	}
+
+    // row is 1 based
+    row -= 1
 
 	if row >= m.State.Height {
 		return

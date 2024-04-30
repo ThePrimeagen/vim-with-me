@@ -12,7 +12,7 @@ func TestParseChat(t *testing.T) {
     msgType := "message"
     msg := "t:0:0"
 
-    chat, err := parse(fmt.Sprintf("%s:%s:%s", msgType, name, msg))
+    chat, err := toChatMsg(fmt.Sprintf("%s:%s:%s", msgType, name, msg))
     require.NoError(t, err)
     require.Equal(t, &ChatMsg{
         Name: name,
@@ -27,7 +27,7 @@ func TestParseBit(t *testing.T) {
     bits := "69"
     msg := "i like armoranth"
 
-    chat, err := parse(fmt.Sprintf("%s:%s:%s:%s", msgType, name, bits, msg))
+    chat, err := toChatMsg(fmt.Sprintf("%s:%s:%s:%s", msgType, name, bits, msg))
     require.NoError(t, err)
     require.Equal(t, &ChatMsg{
         Name: name,
@@ -41,7 +41,7 @@ func TestBadMessage(t *testing.T) {
     msgType := "aoeu"
     msg := "i like piq more"
 
-    chat, err := parse(fmt.Sprintf("%s:%s:%s", name, msgType, msg))
+    chat, err := toChatMsg(fmt.Sprintf("%s:%s:%s", name, msgType, msg))
     require.Error(t, err)
     require.Nil(t, chat)
 }

@@ -2,9 +2,6 @@ package components
 
 import "github.com/theprimeagen/vim-with-me/pkg/window"
 
-type Position interface {
-	Position() window.Location
-}
 type HighlightPoint struct {
 	window.RenderBase
 	position Position

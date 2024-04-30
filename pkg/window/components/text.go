@@ -44,8 +44,6 @@ func (t *Text) SetText(txt string) {
     t.cells = [][]window.Cell{
         text_cells,
     }
-
-    window.DebugCells(t.cells)
 }
 
 func (t *Text) Render() (window.Location, [][]window.Cell) {

@@ -2,63 +2,69 @@ package main
 
 import (
 	"context"
-	"log/slog"
+	"fmt"
 	"time"
 
 	"github.com/theprimeagen/vim-with-me/examples/memesweeper/pkg/memesweeper"
 	"github.com/theprimeagen/vim-with-me/pkg/chat"
-	"github.com/theprimeagen/vim-with-me/pkg/commands"
 	"github.com/theprimeagen/vim-with-me/pkg/testies"
 )
 
+func createChat() chan chat.ChatMsg {
+    ch := make(chan chat.ChatMsg)
+    go func() {
+        <-time.After(time.Millisecond * 150)
+        ch <- chat.ChatMsg{Msg: "B2"}
+
+        <-time.After(time.Millisecond * 100)
+        ch <- chat.ChatMsg{Msg: "B3"}
+        ch <- chat.ChatMsg{Msg: "B3"}
+    }()
+
+    return ch
+}
+
 func main() {
     testies.SetupLogger()
-    server, err := testies.CreateServerFromArgs()
 
     ctx, cancel := context.WithCancel(context.Background())
     _ = cancel
 
-    ch, err := chat.NewTwitchChat(ctx)
-    if err != nil {
-        slog.Error("chat.Start()", "err", err)
-        return
-    }
-
     state := memesweeper.NewMemeSweeperState(10, 5).WithDims(5, 10)
     ms := memesweeper.NewMemeSweeper(state)
-
-    commander := commands.NewCommander()
-    server.WelcomeMessage(commander.ToCommands())
-    server.WelcomeMessage(commands.OpenCommand(&ms))
-
-    go server.Start()
-    defer server.Close()
+    ch := createChat()
 
     go func() {
-        ticker := time.NewTicker(time.Millisecond * 16)
+        ticker := time.NewTicker(time.Millisecond * 100)
         outer:
         for {
             start := time.Now().UnixMilli()
             select {
             case <-ctx.Done():
+                fmt.Println("done")
                 break outer
             case msg := <-ch:
-                slog.Debug("main: msg received", "msg", msg.Msg, "name", msg.Name)
+                fmt.Printf("msg received \"%s\"\n", msg.Msg)
                 ms.Chat(&msg)
             case <-ticker.C:
-                cells := ms.Render(time.Now().UnixMilli() - start)
-                cmds := commands.PartialRender(cells)
-                server.Send(cmds)
+                fmt.Println("rendering")
+                ms.Render(time.Now().UnixMilli() - start)
+                ms.Renderer.Debug()
             }
         }
+
+        ticker.Stop()
     }()
 
-    for {
-        ms.StartRound()
-        <-time.After(time.Second * 10)
-        ms.EndRound()
-        <-time.After(time.Second * 5)
-    }
+    fmt.Println("starting round")
+    ms.StartRound()
+    <-time.After(time.Millisecond * 350)
+    fmt.Println("ending round")
+    ms.EndRound()
+
+    <-time.After(time.Millisecond * 250)
+    fmt.Println("closing")
+    cancel()
 }
 
 

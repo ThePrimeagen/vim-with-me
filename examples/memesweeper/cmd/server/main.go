@@ -11,6 +11,9 @@ import (
 	"github.com/theprimeagen/vim-with-me/pkg/testies"
 )
 
+func run() {
+}
+
 func main() {
     testies.SetupLogger()
     server, err := testies.CreateServerFromArgs()
@@ -34,36 +37,31 @@ func main() {
     go server.Start()
     defer server.Close()
 
-    listenToChat := make(chan struct{}, 10)
-
     go func() {
+        ticker := time.NewTicker(time.Millisecond * 16)
+        outer:
         for {
-            slog.Debug("main: chat waiting...")
-            <-listenToChat
-            slog.Debug("main: chat active...")
-            outer:
-            for {
-                select {
-                case msg := <-ch:
-                    slog.Debug("main: msg received", "msg", msg.Msg, "name", msg.Name)
-                    ms.Chat(&msg)
-                case <-listenToChat:
-                    break outer;
-                }
+            start := time.Now().UnixMilli()
+            select {
+            case <-ctx.Done():
+                break outer
+            case msg := <-ch:
+                slog.Debug("main: msg received", "msg", msg.Msg, "name", msg.Name)
+                ms.Chat(&msg)
+            case <-ticker.C:
+                cells := ms.Render(time.Now().UnixMilli() - start)
+                cmds := commands.PartialRender(cells)
+                server.Send(cmds)
             }
         }
     }()
 
     for {
-        listenToChat <- struct{}{}
+        ms.StartRound()
         <-time.After(time.Second * 10)
-        listenToChat <- struct{}{}
-
-        cells := ms.Render()
-        cmds := commands.PartialRender(cells)
-        server.Send(cmds)
-
+        ms.EndRound()
         <-time.After(time.Second * 5)
     }
 }
+
 

@@ -349,20 +349,16 @@ func (r *Renderer) FullRender() []*Cell {
 
 func printBuff(buffer []Cell, rows, cols int) {
 	for row := 0; row < rows; row++ {
-		toPrint := make([]int, 0)
 		for col := 0; col < cols; col++ {
 			i := row*cols + col
-			toPrint = append(toPrint, int(buffer[i].Value))
+			fmt.Printf("|%s%s", buffer[i].Background.ColorCode(), string(buffer[i].Value))
 		}
-		fmt.Printf("%+v\n", toPrint)
+		fmt.Printf("|\n")
 	}
 
 }
 
-func (r *Renderer) debug() {
-	fmt.Println("buffer")
-	printBuff(r.buffer, r.rows, r.cols)
-
-	fmt.Println("previous")
+func (r *Renderer) Debug() {
 	printBuff(r.previous, r.rows, r.cols)
 }
+

@@ -102,7 +102,7 @@ func TestRender(t *testing.T) {
 	}
 
     cells := render.Render()
-    render.debug()
+    render.Debug()
 
 	for i, value := range values {
 		require.Equal(t, render.previous[i].Value, value)
@@ -146,7 +146,7 @@ func TestRenderHiddenValues(t *testing.T) {
 	}
 
     cells := render.Render()
-    render.debug()
+    render.Debug()
 
 	for i, value := range values {
 		require.Equal(t, render.previous[i].Value, value)
