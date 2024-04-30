@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"slices"
+	"strings"
 
 	"github.com/theprimeagen/vim-with-me/pkg/assert"
 )
@@ -347,18 +348,22 @@ func (r *Renderer) FullRender() []*Cell {
 	return nil
 }
 
-func printBuff(buffer []Cell, rows, cols int) {
+func printBuff(buffer []Cell, rows, cols int) string {
+    out := make([]string, 0)
 	for row := 0; row < rows; row++ {
+        strRow := ""
 		for col := 0; col < cols; col++ {
 			i := row*cols + col
-			fmt.Printf("|%s%s", buffer[i].Background.ColorCode(), string(buffer[i].Value))
+			strRow += fmt.Sprintf("|%s%s", buffer[i].Background.ColorCode(), string(buffer[i].Value))
 		}
-		fmt.Printf("|\n")
+        strRow += "|"
+        out = append(out, strRow)
 	}
 
+    return strings.Join(out, "\n")
 }
 
-func (r *Renderer) Debug() {
-	printBuff(r.previous, r.rows, r.cols)
+func (r *Renderer) Debug() string {
+	return printBuff(r.previous, r.rows, r.cols)
 }
 

@@ -14,7 +14,7 @@ func createChat() chan chat.ChatMsg {
     ch := make(chan chat.ChatMsg)
     go func() {
         <-time.After(time.Millisecond * 150)
-        ch <- chat.ChatMsg{Msg: "B2"}
+        ch <- chat.ChatMsg{Msg: "2B"}
 
         <-time.After(time.Millisecond * 100)
         ch <- chat.ChatMsg{Msg: "B3"}
@@ -45,11 +45,11 @@ func main() {
                 break outer
             case msg := <-ch:
                 fmt.Printf("msg received \"%s\"\n", msg.Msg)
-                ms.Chat(&msg)
+                fmt.Printf("chat: %v\n", ms.Chat(&msg))
             case <-ticker.C:
                 fmt.Println("rendering")
                 ms.Render(time.Now().UnixMilli() - start)
-                ms.Renderer.Debug()
+                fmt.Println(ms.Renderer.Debug())
             }
         }
 

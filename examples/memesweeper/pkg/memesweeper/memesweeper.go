@@ -1,6 +1,7 @@
 package memesweeper
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
@@ -114,26 +115,28 @@ func (m *MemeSweeper) Dimensions() (byte, byte) {
 	return byte(m.board.params.height + 1 + 1 + 1), byte(m.board.params.width + 1 + 15)
 }
 
-func (m *MemeSweeper) Chat(msg *chat.ChatMsg) {
+func (m *MemeSweeper) Chat(msg *chat.ChatMsg) error {
 	row, col, err := ParseChatMessage(msg.Msg)
 	if err != nil {
-		return
+		return err
 	}
 
     // row is 1 based
     row -= 1
 
 	if row >= m.State.Height {
-		return
+		return errors.New("row is too big")
 	}
 
 	c := int(col[0] - 'A')
 	if c >= m.State.Width {
-		return
+		return errors.New("col is too big")
 	}
 
 	slog.Debug("MemeSweeper#Chat", "row", row, "col", col)
 	m.chat.Add(row, c)
+
+    return nil
 }
 
 func (m *MemeSweeper) StartRound() {

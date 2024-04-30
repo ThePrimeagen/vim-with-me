@@ -16,42 +16,52 @@ type Point struct {
 
 type ChatAggregator struct {
 	points []*Point
-    max Point
+    max *Point
     active bool
 }
 
 func NewChatAggregator() *ChatAggregator {
+    max := &Point{row: 0, col: 0, count: 0}
 	return &ChatAggregator{
 		points: make([]*Point, 0, 100),
-        max: Point{row: 0, col: 0, count: 0},
+        max: max,
         active: false,
 	}
 }
 
 func (c *ChatAggregator) Add(row, col int) {
     if !c.active {
+        slog.Debug("ChatAggregator#Add inactive", "row", row, "col", col)
         return
     }
 
+    slog.Debug("ChatAggregator#Add placed", "row", row, "col", col, "max", c.max)
     for _, p := range c.points {
         if p.row == row && p.col == col {
             p.count++
+            slog.Debug("ChatAggregator#Add incrementing", "count", p.count)
             if c.max.count < p.count {
-                c.max = *p
+                c.max = p
+                slog.Debug("ChatAggregator#Add new max", "max", c.max)
             }
             return
         }
     }
 
-    c.points = append(c.points, &Point{row: row, col: col, count: 1})
+    point := &Point{row: row, col: col, count: 1}
+    c.points = append(c.points, point)
+    if c.max.count < point.count {
+        c.max = point
+        slog.Debug("ChatAggregator#Add new max", "max", c.max)
+    }
 }
 
 func (c *ChatAggregator) SetActiveState(state bool) {
-    c.active = true
+    c.active = state
 }
 
 func (c *ChatAggregator) Current() Point {
-    return c.max
+    return *c.max
 }
 
 func (c *ChatAggregator) Position() window.Location {
@@ -74,9 +84,9 @@ func (c *ChatAggregator) Reset() Point {
 	c.points = make([]*Point, 0, 100)
 
     out := c.max
-    c.max = Point{row: 0, col: 0, count: 0}
+    c.max = &Point{row: 0, col: 0, count: 0}
 
-    return out
+    return *out
 }
 
 func isCol(msg byte) bool {
@@ -92,8 +102,10 @@ func ParseChatMessage(msg string) (int, string, error) {
     b := string(msg[1])
 
     row := a
+    col := b
     if isCol(a[0]) {
         row = b
+        col = a
     }
 
     rowNum, err := strconv.Atoi(row)
@@ -101,6 +113,6 @@ func ParseChatMessage(msg string) (int, string, error) {
         return 0, "", err
     }
 
-    return rowNum, msg, nil
+    return rowNum, col, nil
 }
 
