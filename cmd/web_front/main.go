@@ -145,6 +145,8 @@ func main() {
                 stream.Next()
                 val := stream.Value()
                 assert.Assert(val != nil, "i should never receive a nil command")
+
+                fmt.Printf("render: %d\n", len(val))
                 if len(val) == 0 {
                     continue
                 }

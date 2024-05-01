@@ -1,4 +1,4 @@
-* fix errors
-* all integration tests pass
-* memesweeper
+* fix all integration tests
+* GameRunner and GameReplicator
+* Launch doom
 

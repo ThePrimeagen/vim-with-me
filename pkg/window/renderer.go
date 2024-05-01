@@ -182,6 +182,9 @@ func (c *Cell) EqualWithLocation(other *CellWithLocation) bool {
 	return c.Equal(&other.Cell)
 }
 
+func (c *Cell) IsEmpty() bool {
+    return c.Value == CELL_VALUE_NO_PLACE
+}
 func (c *Cell) Equal(other *Cell) bool {
 	return c.Value == other.Value &&
 		c.Foreground.Equal(&other.Foreground) &&
@@ -364,6 +367,10 @@ func (r *Renderer) Render() []*CellWithLocation {
 			// I probably care about this...
 			// TODO(v1): LogValuer interface (LogAttr maybe?)
 			slog.Debug("partial render cell with location", "row", row, "col", col, "cell", cell.String())
+
+            if cell.IsEmpty() {
+                continue
+            }
 
 			out = append(out, &CellWithLocation{
 				Cell:     cell,
