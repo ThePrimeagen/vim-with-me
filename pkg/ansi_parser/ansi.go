@@ -27,7 +27,7 @@ func nextAnsiChunk(data []byte) (bool, int, *ansi.StyledText, error) {
 
     var styles []*ansi.StyledText = nil
     var err error = nil
-    var out int = 0
+    out := 0
     var complete = true
     if nextEsc == 0 {
         styles, err = ansi.Parse(string(data))
