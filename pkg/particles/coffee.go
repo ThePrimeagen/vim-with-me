@@ -23,7 +23,6 @@ func (c *Coffee) Z() int {
 	return c.z
 }
 
-
 func reset(p *Particle, params *ParticleParams) {
 	p.Lifetime = int64(math.Floor(float64(params.MaxLife) * rand.Float64()))
 	p.Speed = params.MaxSpeed * rand.Float64()
@@ -84,23 +83,23 @@ func NewCoffee(width, height int, scale float64) Coffee {
 		direction := row +
 			int(((time.Now().UnixMilli()-startTime)/2000)%2)
 
-        /**
-        white = FF FF FF
-        yellow = FF FF 00
-        orange = FF 88 00
-        red = FF 00 00
-        */
+		/**
+		  white = FF FF FF
+		  yellow = FF FF 00
+		  orange = FF 88 00
+		  red = FF 00 00
+		*/
 
-        normalLife := math.Min(0.9999, math.Max(0.0001, float64(stats.totalLifetime) / float64(params.MaxLife)))
-        halfCol := float64(params.X / 2)
+		normalLife := math.Min(0.9999, math.Max(0.0001, float64(stats.totalLifetime)/float64(params.MaxLife)))
+		halfCol := float64(params.X / 2)
 
-        colDist := math.Abs(halfCol - float64(col))
-        //rowSq := float64(row * row)
-        colNormal := math.Max(0, 1 - colDist / halfCol)
+		colDist := math.Abs(halfCol - float64(col))
+		//rowSq := float64(row * row)
+		colNormal := math.Max(0, 1-colDist/halfCol)
 
-        normal := normalLife * colNormal
-        green := byte(255 * normal)
-        color := window.NewColor(255, green, 0, true)
+		normal := normalLife * colNormal
+		green := byte(255 * normal)
+		color := window.NewColor(255, green, 0, true)
 
 		if countParticles(row, col, counts) > 3 {
 			if direction%2 == 0 {
@@ -135,8 +134,8 @@ func NewCoffee(width, height int, scale float64) Coffee {
 	return Coffee{
 		ParticleSystem: NewParticleSystem(
 			ParticleParams{
-				MaxLife:       6*6000,
-				MaxSpeed:      1.75,
+				MaxLife:       2 * 6000,
+				MaxSpeed:      1.75 * 3,
 				ParticleCount: 1000,
 
 				reset:        reset,
@@ -148,7 +147,7 @@ func NewCoffee(width, height int, scale float64) Coffee {
 				Y:    height,
 			},
 		),
-        z: 1,
-        id: window.GetNextId(),
+		z:  1,
+		id: window.GetNextId(),
 	}
 }
