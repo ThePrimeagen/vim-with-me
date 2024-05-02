@@ -28,14 +28,13 @@ func nextAnsiChunk(data []byte) (bool, int, *ansi.StyledText, error) {
     var styles []*ansi.StyledText = nil
     var err error = nil
     out := 0
-    var complete = true
-    if nextEsc == 0 {
-        styles, err = ansi.Parse(string(data))
-        out = len(data)
-        complete = false
-    } else {
+    var complete = nextEsc != 0
+    if complete {
         out = nextEsc
         styles, err = ansi.Parse(string(data[:nextEsc]))
+    } else {
+        styles, err = ansi.Parse(string(data))
+        out = len(data)
     }
 
     if styles != nil && len(styles) != 0 {
