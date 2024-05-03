@@ -22,26 +22,26 @@ type Ansi8BitFramer struct {
 }
 
 func nextAnsiChunk(data []byte) (bool, int, *ansi.StyledText, error) {
-    assert.Assert(data[0] == '', "the ansi chunks should always start on an escape")
-    nextEsc := bytes.Index(data[1:], escape) + 1
+	assert.Assert(data[0] == '', "the ansi chunks should always start on an escape")
+	nextEsc := bytes.Index(data[1:], escape) + 1
 
-    var styles []*ansi.StyledText = nil
-    var err error = nil
-    out := 0
-    var complete = nextEsc != 0
-    if complete {
-        out = nextEsc
-        styles, err = ansi.Parse(string(data[:nextEsc]))
-    } else {
-        styles, err = ansi.Parse(string(data))
-        out = len(data)
-    }
+	var styles []*ansi.StyledText = nil
+	var err error = nil
+	out := 0
+	var complete = nextEsc != 0
+	if complete {
+		out = nextEsc
+		styles, err = ansi.Parse(string(data[:nextEsc]))
+	} else {
+		styles, err = ansi.Parse(string(data))
+		out = len(data)
+	}
 
-    if styles != nil && len(styles) != 0 {
-        assert.Assert(len(styles) == 1, "there must only be one style at a time parsed")
-        return complete, out, styles[0], err
-    }
-    return complete, out, nil, err
+	if styles != nil && len(styles) != 0 {
+		assert.Assert(len(styles) == 1, "there must only be one style at a time parsed")
+		return complete, out, styles[0], err
+	}
+	return complete, out, nil, err
 }
 
 // TODO: I could also use a ctx to close out everything
@@ -69,75 +69,75 @@ func RGBTo8BitColor(hex ansi.Rgb) uint {
 }
 
 func remainingIsRegisteredNurse(data []byte) bool {
-    if len(data) != 3 {
-        return false
-    }
+	if len(data) != 3 {
+		return false
+	}
 
-    return data[1] == '\r' && data[2] == '\n'
+	return data[1] == '\r' && data[2] == '\n'
 }
 
 func (framer *Ansi8BitFramer) place(color, char byte) {
-    framer.buffer[framer.currentIdx] = color
-    framer.buffer[framer.currentIdx+1] = char
-    framer.currentIdx += 2
-    framer.currentCol++
+	framer.buffer[framer.currentIdx] = color
+	framer.buffer[framer.currentIdx+1] = char
+	framer.currentIdx += 2
+	framer.currentCol++
 }
 
 func (framer *Ansi8BitFramer) fillRemainingRow() {
-    for framer.currentCol < framer.cols {
-        framer.place(0, ' ')
-    }
+	for framer.currentCol < framer.cols {
+		framer.place(0, ' ')
+	}
 }
 
 func (framer *Ansi8BitFramer) Write(data []byte) (int, error) {
 	idx := 0
-    if len(framer.scratch) != 0 {
-        // this is terrible for perf
-        data = append(framer.scratch, data...)
-        framer.scratch = make([]byte, 0)
-    }
+	if len(framer.scratch) != 0 {
+		// this is terrible for perf
+		data = append(framer.scratch, data...)
+		framer.scratch = make([]byte, 0)
+	}
 
 	for idx < len(data) {
-        completed, nextEsc, style, err := nextAnsiChunk(data[idx:])
+		completed, nextEsc, style, err := nextAnsiChunk(data[idx:])
 
-        if !completed && framer.currentRow + 1 != framer.rows {
+		if !completed && framer.currentRow+1 != framer.rows {
 			framer.scratch = data[idx:]
-            break
-        }
+			break
+		}
 
-        idx += nextEsc
+		idx += nextEsc
 
-        // errors happen when parsing non color commands
-        // or there is just nothing that had any data when parsing
+		// errors happen when parsing non color commands
+		// or there is just nothing that had any data when parsing
 		if err != nil || style == nil {
 			continue
 		}
 
-        color := RGBTo8BitColor(style.FgCol.Rgb)
-        label := style.Label
+		color := RGBTo8BitColor(style.FgCol.Rgb)
+		label := style.Label
 
-        if strings.Contains(label, "\r\n") {
-            strings.Replace(label, "\r\n", "\n", 1)
-        }
+		if strings.Contains(label, "\r\n") {
+			strings.Replace(label, "\r\n", "\n", 1)
+		}
 
-        for _, char := range label {
-            framer.produceFrame()
+		for _, char := range label {
+			framer.produceFrame()
 
-            c := byte(char)
-            if c == '\n' {
-                framer.fillRemainingRow()
-                framer.currentCol = 0
-                framer.currentRow++
-                continue
-            }
+			c := byte(char)
+			if c == '\n' {
+				framer.fillRemainingRow()
+				framer.currentCol = 0
+				framer.currentRow++
+				continue
+			}
 
-            if framer.currentCol >= framer.cols {
-                continue
-            }
+			if framer.currentCol >= framer.cols {
+				continue
+			}
 
-            framer.place(byte(color), c)
-        }
-        framer.produceFrame()
+			framer.place(byte(color), c)
+		}
+		framer.produceFrame()
 	}
 
 	return len(data), nil
@@ -148,18 +148,14 @@ func (a *Ansi8BitFramer) produceFrame() {
 		out := a.buffer
 		a.buffer = make([]byte, a.rows*a.cols*2, a.rows*a.cols*2)
 
-		a.ch <- out
 		a.currentIdx = 0
-        a.currentCol = 0
-        a.currentRow = 0
+		a.currentCol = 0
+		a.currentRow = 0
+
+		a.ch <- out
 	}
 }
 
 func (a *Ansi8BitFramer) Frames() chan []byte {
 	return a.ch
 }
-
-/*
-func (a* AnsiFramer) Write(p []byte) (n int, err error) {
-}
-*/
