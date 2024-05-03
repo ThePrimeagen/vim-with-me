@@ -6,18 +6,25 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	ansiparser "github.com/theprimeagen/vim-with-me/pkg/ansi_parser"
+	ansiparser "github.com/theprimeagen/vim-with-me/pkg/v2/ansi_parser"
 )
 
 func TestDoom8BitParserOneFrame(t *testing.T) {
-    doomAscii := ansiparser.NewDoomAnsiFramer()
     data, err := os.ReadFile("./doomtest")
     require.NoError(t, err)
 
+    doomHeader := ansiparser.NewDoomAsciiHeaderParser()
+    n, err := doomHeader.Write(data)
+    require.NoError(t, err)
+
+    data = data[n:]
+    rows, cols := doomHeader.GetDims()
+
+    doomAscii := ansiparser.NewDoomAnsiFramer(rows, cols)
     doomAscii.Write(data)
 
-    require.Equal(t, 50, doomAscii.FoundRows)
-    require.Equal(t, 160, doomAscii.FoundCols)
+    require.Equal(t, 50, rows)
+    require.Equal(t, 160, cols)
 
     frames := doomAscii.Frames()
 
@@ -25,26 +32,35 @@ func TestDoom8BitParserOneFrame(t *testing.T) {
 }
 
 func TestDoom8BitParserManyFrame(t *testing.T) {
-    doomAscii := ansiparser.NewDoomAnsiFramer()
     data, err := os.ReadFile("./doomtest_large")
     require.NoError(t, err)
 
-    doomAscii.Write(data[:5000])
+    doomHeader := ansiparser.NewDoomAsciiHeaderParser()
+    n, err := doomHeader.Write(data)
+    require.NoError(t, err)
 
-    require.Equal(t, 66, doomAscii.FoundRows)
-    require.Equal(t, 212, doomAscii.FoundCols)
+    data = data[n:]
+    rows, cols := doomHeader.GetDims()
+    require.Equal(t, rows, 66)
+    require.Equal(t, cols, 212)
+
+    doomAscii := ansiparser.NewDoomAnsiFramer(rows, cols)
 
     go func() {
-        doomAscii.Write(data[5000:])
+        doomAscii.Write(data)
     }()
-    frames := doomAscii.Frames()
 
+    frames := doomAscii.Frames()
     count := 0
+    length := rows * cols
+
     outer:
     for {
         timer := time.NewTimer(time.Millisecond * 50)
         select {
-        case <-frames:
+        case frame := <-frames:
+            require.Equal(t, len(frame.Chars), length)
+            require.Equal(t, len(frame.Color), length)
             count++
         case <-timer.C:
             break outer

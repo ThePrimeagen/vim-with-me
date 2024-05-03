@@ -1,41 +1,39 @@
 package ascii_buffer
 
-import "github.com/theprimeagen/vim-with-me/pkg/assert"
+import (
+	"fmt"
+
+	"github.com/theprimeagen/vim-with-me/pkg/assert"
+)
 
 type AsciiFrame struct {
-	idx      int
 	buffer   []byte
-	previous []byte
-	rle      *AsciiRLE
 }
 
-func NewAsciiFrame(row, col, renders int) *AsciiFrame {
+func NewAsciiFrame(row, col int) *AsciiFrame {
 	length := row * col
 	return &AsciiFrame{
 		buffer:   make([]byte, length, length),
-		previous: make([]byte, length, length),
-		rle:      NewAsciiRLE(),
 	}
 }
 
-func (a *AsciiFrame) Write(data []byte) (int, error) {
-	assert.Assert(a.idx+len(data) <= len(a.buffer), "attempting to encode too much")
-
-	copy(a.buffer[a.idx:], data)
-
-	return len(data), nil
+func (a *AsciiFrame) Length() int {
+    return len(a.buffer)
 }
 
-func (a *AsciiFrame) Frame() []byte {
-	return a.previous
+func (a *AsciiFrame) PushFrame(data []byte) *AsciiFrame {
+    assert.Assert(len(data) == len(a.buffer), fmt.Sprintf("the frame MUST be the same size as the AsciiBuffer: Expected: %d Received: %d", len(data), len(a.buffer)))
+	copy(a.buffer, data)
+
+    return a
 }
 
-func (a *AsciiFrame) Render() []byte {
-	assert.Assert(a.idx == len(a.buffer), "you can only call render once you have created a full frame")
+func (framer *AsciiFrame) Diff(a *AsciiFrame, b *AsciiFrame) *AsciiFrame {
+    // TODO: Obvi perf win, just don't know how in go
 
-	a.idx = 0
+    for i, aByte := range a.buffer {
+        framer.buffer[i] = aByte ^ b.buffer[i]
+    }
 
-	copy(a.previous, a.buffer)
-
-	return a.previous
+    return framer
 }
