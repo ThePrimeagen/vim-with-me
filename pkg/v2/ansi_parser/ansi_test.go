@@ -42,7 +42,7 @@ func TestDoom8BitParserManyFrame(t *testing.T) {
     count := 0
     outer:
     for {
-        timer := time.NewTimer(time.Second * 1)
+        timer := time.NewTimer(time.Millisecond * 50)
         select {
         case <-frames:
             count++

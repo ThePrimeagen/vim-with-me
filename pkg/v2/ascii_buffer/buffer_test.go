@@ -45,5 +45,5 @@ func TestBufferRLEToBig(t *testing.T) {
     size, err := buf.RLE(data)
     require.Error(t, err)
     require.Equal(t, 0, size)
-    require.Equal(t, []byte{}, buf.Bytes())
+    require.Equal(t, []byte(nil), buf.Bytes())
 }

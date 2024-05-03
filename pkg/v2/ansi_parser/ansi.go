@@ -3,7 +3,6 @@ package ansiparser
 import (
 	//"github.com/leaanthony/go-ansi-parser"
 	"bytes"
-	"strings"
 
 	"github.com/leaanthony/go-ansi-parser"
 	"github.com/theprimeagen/vim-with-me/pkg/assert"
@@ -116,14 +115,14 @@ func (framer *Ansi8BitFramer) Write(data []byte) (int, error) {
 		color := RGBTo8BitColor(style.FgCol.Rgb)
 		label := style.Label
 
-		if strings.Contains(label, "\r\n") {
-			strings.Replace(label, "\r\n", "\n", 1)
-		}
+        for _, char := range label {
+            c := byte(char)
+            if c == '\r' {
+                continue
+            }
 
-		for _, char := range label {
 			framer.produceFrame()
 
-			c := byte(char)
 			if c == '\n' {
 				framer.fillRemainingRow()
 				framer.currentCol = 0
