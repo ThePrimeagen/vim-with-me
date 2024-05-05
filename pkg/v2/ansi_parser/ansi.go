@@ -74,9 +74,9 @@ func (a *Ansi8BitFramer) WithDim(rows, cols int) *Ansi8BitFramer {
 }
 
 func RGBTo8BitColor(hex ansi.Rgb) uint {
-	red := uint(hex.R*8) / 256
-	green := uint(hex.G*8) / 256
-	blue := uint(hex.B*4) / 256
+	red := uint(hex.R)*8 / 256
+	green := uint(hex.G)*8 / 256
+	blue := uint(hex.B)*4 / 256
 
 	return (red << 5) | (green << 2) | blue
 }
@@ -169,7 +169,6 @@ func (a *Ansi8BitFramer) produceFrame() {
 		a.currentIdx = 0
 		a.currentCol = 0
 		a.currentRow = 0
-
 	}
 }
 
