@@ -21,7 +21,7 @@ func TestBufferRLE(t *testing.T) {
     }
     frame.PushFrame(data)
 
-    rle := ascii_buffer.NewAsciiRLE(frame.Length())
+    rle :=ascii_buffer.NewAsciiRLE()
     expected := []byte{
         6, '{',
         1, 'a',
@@ -31,15 +31,15 @@ func TestBufferRLE(t *testing.T) {
         6, '{',
     }
 
-    err := rle.RLE(frame)
-    require.NoError(t, err)
+    rle.Write(frame.Buffer)
+    rle.Finish()
 
     require.Equal(t, 12, rle.Length())
     require.Equal(t, expected, rle.Bytes())
 }
 
 func TestBufRLEWithLastDiff(t *testing.T) {
-    frame := ascii_buffer.NewAsciiFrame(8, 2)
+    frame :=ascii_buffer.NewAsciiFrame(8, 2)
     data := []byte{
         '{', '{',
         '{', '{',
@@ -52,7 +52,7 @@ func TestBufRLEWithLastDiff(t *testing.T) {
     }
     frame.PushFrame(data)
 
-    rle := ascii_buffer.NewAsciiRLE(frame.Length())
+    rle := ascii_buffer.NewAsciiRLE()
     expected := []byte{
         6, '{',
         1, 'a',
@@ -63,24 +63,28 @@ func TestBufRLEWithLastDiff(t *testing.T) {
         1, '}',
     }
 
-    err := rle.RLE(frame)
-    require.NoError(t, err)
-
+    rle.Write(frame.Buffer)
+    rle.Finish()
     require.Equal(t, 14, rle.Length())
     require.Equal(t, expected, rle.Bytes())
 }
 
-
-func TestBufRLEWithError(t *testing.T) {
-    frame := ascii_buffer.NewAsciiFrame(2, 2)
-    data := []byte{
-        'a', 'b',
-        'c', 'd',
+func TestMaximumSize(t *testing.T) {
+    data := []byte{}
+    for i := 0; i < 256; i++ {
+        data = append(data, '{')
     }
-    frame.PushFrame(data)
 
-    rle := ascii_buffer.NewAsciiRLE(frame.Length())
+    rle := ascii_buffer.NewAsciiRLE()
+    expected := []byte{
+        255, '{',
+        1, '{',
+    }
 
-    err := rle.RLE(frame)
-    require.Error(t, err)
+    rle.Write(data)
+    rle.Finish()
+
+    require.Equal(t, 4, rle.Length())
+    require.Equal(t, expected, rle.Bytes())
 }
+

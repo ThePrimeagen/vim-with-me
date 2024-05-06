@@ -1,23 +1,24 @@
 package ascii_buffer
 
 import (
-	"errors"
 	"fmt"
 
-	"github.com/theprimeagen/vim-with-me/pkg/assert"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 )
 
 type AsciiRLE struct {
-	buffer  []byte
-	idx     int
-	errored bool
+	buffer []byte
+	idx    int
+	curr   byte
+	count  int
 }
 
-func NewAsciiRLE(maxSize int) *AsciiRLE {
+func NewAsciiRLE() *AsciiRLE {
 	return &AsciiRLE{
-		buffer: make([]byte, maxSize, maxSize),
+		buffer: make([]byte, 0, 256),
 		idx:    0,
-        errored: false,
+		curr:   0,
+		count:  0,
 	}
 }
 
@@ -25,65 +26,55 @@ func (a *AsciiRLE) Length() int {
 	return a.idx
 }
 
-func (a *AsciiRLE) place(idx, count int, value byte) error {
-    if idx+1 >= len(a.buffer) {
-        a.errored = true
-        return errors.New("RLE produced a buffer larger than original.  Failed")
+func (a *AsciiRLE) place() {
+    if a.count == 0 {
+        return
     }
 
-    a.buffer[idx] = byte(count)
-    a.buffer[idx+1] = value
+    if a.idx + 1 >= len(a.buffer) {
+        a.buffer = append(a.buffer, make([]byte, 128, 128)...)
+    }
 
-    return nil
+	a.buffer[a.idx] = byte(a.count)
+	a.buffer[a.idx+1] = a.curr
+	a.idx += 2
 }
 
 func (a *AsciiRLE) Debug() {
-    fmt.Printf("rle: ")
-    for i := 0; i < a.idx; i += 2 {
-        fmt.Printf("%s(%d) ", string(a.buffer[i + 1]), a.buffer[i])
-    }
-    fmt.Println()
+	fmt.Printf("rle: ")
+	for i := 0; i < a.idx; i += 2 {
+		fmt.Printf("%s(%d) ", string(a.buffer[i+1]), a.buffer[i])
+	}
+	fmt.Println()
 }
 
-func (a *AsciiRLE) RLE(frame *AsciiFrame) error {
-    asciiBuffer := frame.buffer
-    length := len(asciiBuffer)
-	assert.Assert(length&1 == 0, "you must hand an even length buffer")
+func (a *AsciiRLE) Reset() {
+	a.idx = 0
+}
 
-	count := 0
-	idx := 0
-    a.errored = false
-
-	for i := 0; i < len(asciiBuffer)-1; i++ {
-		count++
-
-		if count < 255 && asciiBuffer[i] == asciiBuffer[i + 1] {
-            continue
-		}
-
-        if err := a.place(idx, count, asciiBuffer[i]); err != nil {
-            return err
-        }
-
-		count = 0
-		idx += 2
+func (a *AsciiRLE) Write(data []byte) {
+	assert.Assert(len(data) > 0, "AsciiRLE#Write received 0 len data array")
+	if a.count == 0 {
+		a.curr = data[0]
+        a.count = 1
 	}
 
-    if asciiBuffer[length - 2] == asciiBuffer[length - 1] {
-        count++
-    } else {
-        count = 1
-    }
-    a.place(idx, count, asciiBuffer[length - 1])
-    a.idx = idx + 2
+	for i := 1; i < len(data); i++ {
+		if a.count < 255 && a.curr == data[i] {
+            a.count++
+			continue
+		}
 
-	return nil
+		a.place()
+        a.curr = data[i]
+        a.count = 1
+	}
+}
+
+func (a *AsciiRLE) Finish() {
+    a.place()
 }
 
 func (a *AsciiRLE) Bytes() []byte {
-    if a.errored {
-        return nil
-    }
-
 	return a.buffer[:a.idx]
 }
