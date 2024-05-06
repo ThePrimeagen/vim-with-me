@@ -22,9 +22,9 @@ type Program struct {
     args []string
 }
 
-func NewProgram(name string) *Program {
+func NewProgram(path string) *Program {
     return &Program{
-        path: name,
+        path: path,
         rows: 80,
         cols: 24,
         writer: nil,
