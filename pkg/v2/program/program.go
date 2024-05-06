@@ -2,7 +2,6 @@ package program
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -79,8 +78,7 @@ func (a* Program) Run(ctx context.Context) error {
     ch <- syscall.SIGWINCH // Initial resize.
     defer func() { signal.Stop(ch); close(ch) }() // Cleanup signals when done.
 
-    n, err := io.Copy(a.writer, ptmx)
-    fmt.Printf("writer ptmx finished copy: %d %v\n", n, err)
+    _, err = io.Copy(a.writer, ptmx)
     return err
 }
 
