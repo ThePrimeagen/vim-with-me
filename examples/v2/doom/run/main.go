@@ -7,6 +7,7 @@ import (
 
 	"github.com/theprimeagen/vim-with-me/examples/v2/doom"
 	"github.com/theprimeagen/vim-with-me/pkg/assert"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/ascii_buffer"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/program"
 )
 
@@ -31,11 +32,9 @@ func main() {
 
     frames := d.Frames()
     frame := <-frames
-
-    count := 0
-    for range d.Rows {
-        fmt.Println(string(frame.Chars[count:count + d.Cols]))
-        count += d.Cols
-    }
+    freq := ascii_buffer.NewFreqency()
+    freq.Freq(frame.Chars)
+    fmt.Printf("char freq: %d\n", freq.Length())
 }
+
 
