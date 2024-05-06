@@ -3,7 +3,6 @@ package program
 import (
 	"context"
 	"io"
-	"log"
 	"log/slog"
 	"os"
 	"os/exec"
@@ -15,12 +14,12 @@ import (
 )
 
 type Program struct {
+    *os.File
     path string
     rows int
     cols int
     writer io.Writer
     args []string
-    program *os.File
 }
 
 func NewProgram(name string) *Program {
@@ -29,7 +28,7 @@ func NewProgram(name string) *Program {
         rows: 80,
         cols: 24,
         writer: nil,
-        program: nil,
+        File: nil,
     }
 }
 
@@ -51,7 +50,7 @@ func (a* Program) WithSize(rows, cols int) *Program {
 
 func (a* Program) Run(ctx context.Context) error {
     assert.Assert(a.writer != nil, "you must provide a reader before you call run")
-    assert.Assert(a.program == nil, "you have already started the program")
+    assert.Assert(a.File == nil, "you have already started the program")
 
 	cmd := exec.Command(a.path, a.args...)
 
@@ -60,7 +59,7 @@ func (a* Program) Run(ctx context.Context) error {
 		return err
 	}
 
-    a.program = ptmx
+    a.File = ptmx
     ch := make(chan os.Signal, 1)
     signal.Notify(ch, syscall.SIGWINCH)
     go func() {
@@ -84,7 +83,7 @@ func (a* Program) Run(ctx context.Context) error {
 }
 
 func (a *Program) Close() error {
-    err := a.program.Close()
-    a.program = nil
+    err := a.File.Close()
+    a.File = nil
 	return err
 }
