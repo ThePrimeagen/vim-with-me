@@ -54,12 +54,15 @@ func (a *AsciiRLE) Reset() {
 
 func (a *AsciiRLE) Write(data []byte) {
 	assert.Assert(len(data) > 0, "AsciiRLE#Write received 0 len data array")
+    i := 0
+
 	if a.count == 0 {
 		a.curr = data[0]
         a.count = 1
+        i = 1
 	}
 
-	for i := 1; i < len(data); i++ {
+	for ; i < len(data); i++ {
 		if a.count < 255 && a.curr == data[i] {
             a.count++
 			continue

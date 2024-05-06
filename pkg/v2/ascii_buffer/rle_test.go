@@ -8,20 +8,7 @@ import (
 )
 
 func TestBufferRLE(t *testing.T) {
-    frame := ascii_buffer.NewAsciiFrame(8, 2)
-    data := []byte{
-        '{', '{',
-        '{', '{',
-        '{', '{',
-        'a', 'b',
-        'c', 'd',
-        '{', '{',
-        '{', '{',
-        '{', '{',
-    }
-    frame.PushFrame(data)
-
-    rle :=ascii_buffer.NewAsciiRLE()
+    rle := ascii_buffer.NewAsciiRLE()
     expected := []byte{
         6, '{',
         1, 'a',
@@ -31,7 +18,27 @@ func TestBufferRLE(t *testing.T) {
         6, '{',
     }
 
-    rle.Write(frame.Buffer)
+    rle.Write([]byte{
+        '{', '{',
+        '{', '{',
+        '{', '{',
+    })
+
+    rle.Write([]byte{
+        'a', 'b',
+        'c', 'd',
+    })
+
+    rle.Write([]byte{
+        '{', '{',
+        '{', '{',
+        '{',
+    })
+
+    rle.Write([]byte{
+        '{',
+    })
+
     rle.Finish()
 
     require.Equal(t, 12, rle.Length())
