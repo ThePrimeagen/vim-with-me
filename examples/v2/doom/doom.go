@@ -55,18 +55,6 @@ func (d *DoomAsciiHeaderParser) Write(data []byte) (int, error) {
 		return len(data), nil
 	}
 
-	assert.AssertData("DoomAsciiHeaderParser", struct {
-		escapeIdx  int
-		debug      string
-		escapeDist int
-		dataLen    int
-	}{
-		escapeIdx:  escapeIdx,
-		debug:      string(data[:escapeIdx]),
-		escapeDist: len(data[:escapeIdx]),
-		dataLen:    len(data),
-	})
-
 	d.scratch = append(d.scratch, data[:escapeIdx]...)
 	return escapeIdx - 1, nil
 
@@ -100,6 +88,10 @@ func (d *Doom) Ready() <-chan struct{} {
 	return d.ready
 }
 
+func (d *Doom) Frames() chan ansiparser.Frame {
+    return d.framer.Frames()
+}
+
 func (d *Doom) Write(data []byte) (int, error) {
 	if d.framer == nil {
 		headerBytes, err := d.header.Write(data)
@@ -116,22 +108,10 @@ func (d *Doom) Write(data []byte) (int, error) {
 		d.framer = ansiparser.New8BitFramer().WithDim(rows, cols)
 
 		data = data[headerBytes+1:]
-		assert.AssertData("Doom#Write", struct {
-			rows      int
-			cols      int
-			headerIdx int
-			data      string
-			scratch      string
-		}{
-			rows:      rows,
-			cols:      cols,
-			headerIdx: headerBytes,
-			data:      string(data[:5]),
-		})
 
 		d.ready <- struct{}{}
 		close(d.ready)
 	}
 
-	return d.framer.Write(data)
+    return d.framer.Write(data)
 }

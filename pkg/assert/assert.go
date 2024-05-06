@@ -6,8 +6,12 @@ import (
 )
 
 var assertData map[string]any = map[string]any{}
-func AssertData(key string, value any) {
+func AddAssertData(key string, value any) {
     assertData[key] = value
+}
+
+func RemoveAssertData(key string) {
+    delete(assertData, key)
 }
 
 func runAssert(msg string) {

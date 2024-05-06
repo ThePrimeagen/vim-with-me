@@ -28,17 +28,9 @@ type Ansi8BitFramer struct {
 
 func nextAnsiChunk(data []byte, idx int) (bool, int, *ansi.StyledText, error) {
 	data = data[idx:]
+    assert.Assert(data[0] == '', "the ansi chunks should always start on an escape")
+
 	nextEsc := bytes.Index(data[1:], []byte{''}) + 1
-	assert.AssertData("nextAnsiChunk", struct {
-		data    string
-		idx     int
-		nextEsc int
-	}{
-		data:    string(data[:3]),
-		nextEsc: nextEsc,
-		idx:     idx,
-	})
-	assert.Assert(data[0] == '', "the ansi chunks should always start on an escape")
 
 	var styles []*ansi.StyledText = nil
 	var err error = nil
@@ -114,50 +106,26 @@ func (framer *Ansi8BitFramer) fillRemainingRow() {
 
 func (framer *Ansi8BitFramer) Write(data []byte) (int, error) {
 	idx := 0
-	if len(framer.scratch) != 0 {
-		assert.AssertData("Ansi8BitFramer#scratch", struct {
-			scratch    string
-			scratchLen int
-		}{
-			scratch:    string(framer.scratch),
-			scratchLen: len(framer.scratch),
-		})
+    scratchLen := len(framer.scratch)
 
+	if scratchLen != 0 {
 		// this is terrible for perf
 		data = append(framer.scratch, data...)
 		framer.scratch = make([]byte, 0)
-	} else {
-		assert.AssertData("Ansi8BitFramer#no_scratch", nil)
 	}
 
 	count := 0
 	for idx < len(data) {
 		count++
 
-		assert.AssertData("Ansi8BitFramer#Write", struct {
-			count   int
-			idx     int
-			data    string
-			scratch int
-		}{
-			count: count,
-			idx:   idx,
-			data:  string(data[:5]),
-		})
 
 		completed, nextEsc, style, err := nextAnsiChunk(data, idx)
 
 		if !completed && framer.currentRow+1 != framer.rows {
-			assert.AssertData("Ansi8BitFramer#Write#ansiScratch", struct {
-				count   int
-				idx     int
-				scratch string
-			}{
-				count: count,
-				idx:   idx,
-				scratch:  string(data[idx:]),
-			})
-			framer.scratch = data[idx:]
+
+            framer.scratch = make([]byte, len(data[idx:]))
+            copy(framer.scratch, data[idx:])
+
 			break
 		}
 
@@ -196,7 +164,7 @@ func (framer *Ansi8BitFramer) Write(data []byte) (int, error) {
 		framer.produceFrame()
 	}
 
-	return len(data), nil
+	return len(data) - scratchLen, nil
 }
 
 func (a *Ansi8BitFramer) produceFrame() {

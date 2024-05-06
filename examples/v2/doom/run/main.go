@@ -32,7 +32,6 @@ func main() {
     frames := d.Frames()
     frame := <-frames
 
-
     count := 0
     for range d.Rows {
         fmt.Println(string(frame.Chars[count:count + d.Cols]))
