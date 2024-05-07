@@ -6,7 +6,7 @@ import (
 	"io"
 
 	"github.com/leaanthony/go-ansi-parser"
-	"github.com/theprimeagen/vim-with-me/pkg/assert"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 )
 
 type Frame struct {
@@ -18,7 +18,7 @@ type Ansi8BitFramer struct {
 	rows int
 	cols int
 
-    debug       io.Writer
+	debug       io.Writer
 	ch          chan Frame
 	currentIdx  int
 	currentCol  int
@@ -29,8 +29,8 @@ type Ansi8BitFramer struct {
 }
 
 func nextAnsiChunk(in_data []byte, idx int) (bool, int, *ansi.StyledText, error) {
-    data := in_data[idx:]
-    assert.Assert(data[0] == '', "the ansi chunks should always start on an escape")
+	data := in_data[idx:]
+	assert.Assert(data[0] == '', "the ansi chunks should always start on an escape")
 
 	nextEsc := bytes.Index(data[1:], []byte{''}) + 1
 
@@ -72,6 +72,7 @@ func (a *Ansi8BitFramer) WithDim(rows, cols int) *Ansi8BitFramer {
 	length := rows * cols
 	a.rows = rows
 	a.cols = cols
+
 	a.colorOffset = length
 	a.buffer = make([]byte, length*2, length*2)
 
@@ -108,12 +109,12 @@ func (framer *Ansi8BitFramer) fillRemainingRow() {
 }
 
 func (framer *Ansi8BitFramer) Write(data []byte) (int, error) {
-    if framer.debug != nil {
-        framer.debug.Write(data)
-    }
+	if framer.debug != nil {
+		framer.debug.Write(data)
+	}
 
 	idx := 0
-    scratchLen := len(framer.scratch)
+	scratchLen := len(framer.scratch)
 
 	if scratchLen != 0 {
 
@@ -126,21 +127,21 @@ func (framer *Ansi8BitFramer) Write(data []byte) (int, error) {
 	for idx < len(data) {
 		count++
 
-        nextEsc := bytes.Index(data[idx:], []byte{''}) + 1
+		nextEsc := bytes.Index(data[idx:], []byte{''}) + 1
 		completed, nextEsc, style, err := nextAnsiChunk(data, idx)
 
 		if !completed {
-            // sometimes rows just end early.  lets just ignore the empty space
-            // and add it to the scratch buffer, but produce this frame
-            if framer.currentRow+1 == framer.rows {
+			// sometimes rows just end early.  lets just ignore the empty space
+			// and add it to the scratch buffer, but produce this frame
+			if framer.currentRow+1 == framer.rows {
 				framer.fillRemainingRow()
-                framer.produceFrame()
-            }
+				framer.produceFrame()
+			}
 
-            framer.scratch = make([]byte, len(data[idx:]))
-            copy(framer.scratch, data[idx:])
-            break
-        }
+			framer.scratch = make([]byte, len(data[idx:]))
+			copy(framer.scratch, data[idx:])
+			break
+		}
 
 		idx += nextEsc
 
@@ -153,7 +154,7 @@ func (framer *Ansi8BitFramer) Write(data []byte) (int, error) {
 		color := RGBTo8BitColor(style.FgCol.Rgb)
 		label := style.Label
 
-		for _, char := range label {
+		for i, char := range label {
 			c := byte(char)
 			if c == '\r' {
 				continue
@@ -196,8 +197,8 @@ func (a *Ansi8BitFramer) produceFrame() {
 	}
 }
 
-func (a *Ansi8BitFramer) DebugToFile(writer io.Writer)  {
-    a.debug = writer
+func (a *Ansi8BitFramer) DebugToFile(writer io.Writer) {
+	a.debug = writer
 }
 
 func (a *Ansi8BitFramer) Frames() chan Frame {

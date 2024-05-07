@@ -43,15 +43,12 @@ func main() {
 
     d.Framer.DebugToFile(outFile)
 
-    for i := range 9 {
+    for i := range 100 {
         fmt.Printf("count: %d\n", i)
         frame := <-frames
         chars.Freq(frame.Chars)
         colors.Freq(frame.Color)
     }
-
-    fmt.Printf("CHARS %s\n", chars.Debug())
-    fmt.Printf("COLORS %s\n", colors.Debug())
 }
 
 
