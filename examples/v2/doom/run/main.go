@@ -43,7 +43,7 @@ func main() {
 
     d.Framer.DebugToFile(outFile)
 
-    for i := range 5000 {
+    for i := range 9 {
         fmt.Printf("count: %d\n", i)
         frame := <-frames
         chars.Freq(frame.Chars)
