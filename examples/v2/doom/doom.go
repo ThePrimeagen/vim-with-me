@@ -61,7 +61,7 @@ func (d *DoomAsciiHeaderParser) Write(data []byte) (int, error) {
 }
 
 type Doom struct {
-	framer *ansiparser.Ansi8BitFramer
+	Framer *ansiparser.Ansi8BitFramer
 
 	header DoomAsciiHeaderParser
 	ready  chan struct{}
@@ -73,7 +73,7 @@ type Doom struct {
 func NewDoom() *Doom {
 	doom := &Doom{
 		header:         newDoomAsciiHeaderParser(),
-        framer: nil,
+        Framer: nil,
 
 		ready: make(chan struct{}, 0),
 
@@ -89,11 +89,11 @@ func (d *Doom) Ready() <-chan struct{} {
 }
 
 func (d *Doom) Frames() chan ansiparser.Frame {
-    return d.framer.Frames()
+    return d.Framer.Frames()
 }
 
 func (d *Doom) Write(data []byte) (int, error) {
-	if d.framer == nil {
+	if d.Framer == nil {
 		headerBytes, err := d.header.Write(data)
 		assert.Assert(err == nil, "doom ascii header should never fail")
 
@@ -105,7 +105,7 @@ func (d *Doom) Write(data []byte) (int, error) {
 
 		d.Rows = rows
 		d.Cols = cols
-		d.framer = ansiparser.New8BitFramer().WithDim(rows, cols)
+		d.Framer = ansiparser.New8BitFramer().WithDim(rows, cols)
 
 		data = data[headerBytes+1:]
 
@@ -113,5 +113,5 @@ func (d *Doom) Write(data []byte) (int, error) {
 		close(d.ready)
 	}
 
-    return d.framer.Write(data)
+    return d.Framer.Write(data)
 }

@@ -25,7 +25,7 @@ func main() {
         return
     }
 
-    state := memesweeper.NewMemeSweeperState(15, 5).WithDims(6, 15)
+    state := memesweeper.NewMemeSweeperState(15, 5).WithDims(5, 13)
     ms := memesweeper.NewMemeSweeper(state)
 
     commander := commands.NewCommander()

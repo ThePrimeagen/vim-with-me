@@ -1,5 +1,10 @@
 package ascii_buffer
 
+import (
+	"fmt"
+	"slices"
+)
+
 type Frequency struct {
 	Buffer [256]int
     count int
@@ -45,4 +50,28 @@ func (f *Frequency) Freq(data []byte) {
 		f.Buffer[b]++
         f.possiblePoints[b].count++
 	}
+}
+
+func (f *Frequency) Debug() string {
+    points := make([]*FreqPoint, len(f.Points), len(f.Points))
+    copy(points, f.Points)
+    slices.SortFunc(points, func(a, b *FreqPoint) int {
+        return a.count - b.count
+    })
+
+    out := fmt.Sprintf("Frequency(%d): ", len(points))
+    top := 0
+    bottom := 0
+    for i, p := range points {
+        if i + 4 >= len(points) {
+            top += p.count
+        } else {
+            bottom += p.count
+        }
+        out += fmt.Sprintf("%s(%d) ", string(p.idx), p.count)
+    }
+
+    out += fmt.Sprintf("-- top %d bottom %d diff %d", top, bottom, top - bottom)
+
+    return out
 }

@@ -4,6 +4,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log"
+	"os"
 
 	"github.com/theprimeagen/vim-with-me/examples/v2/doom"
 	"github.com/theprimeagen/vim-with-me/pkg/assert"
@@ -31,10 +33,25 @@ func main() {
     <-d.Ready()
 
     frames := d.Frames()
-    frame := <-frames
-    freq := ascii_buffer.NewFreqency()
-    freq.Freq(frame.Chars)
-    fmt.Printf("char freq: %d\n", freq.Length())
+    chars := ascii_buffer.NewFreqency()
+    colors := ascii_buffer.NewFreqency()
+
+    outFile, err := os.CreateTemp("/tmp", "doom")
+    if err != nil {
+        log.Fatal("couldn't create tmp")
+    }
+
+    d.Framer.DebugToFile(outFile)
+
+    for i := range 5000 {
+        fmt.Printf("count: %d\n", i)
+        frame := <-frames
+        chars.Freq(frame.Chars)
+        colors.Freq(frame.Color)
+    }
+
+    fmt.Printf("CHARS %s\n", chars.Debug())
+    fmt.Printf("COLORS %s\n", colors.Debug())
 }
 
 
