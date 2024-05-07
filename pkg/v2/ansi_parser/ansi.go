@@ -154,7 +154,7 @@ func (framer *Ansi8BitFramer) Write(data []byte) (int, error) {
 		color := RGBTo8BitColor(style.FgCol.Rgb)
 		label := style.Label
 
-		for i, char := range label {
+		for _, char := range label {
 			c := byte(char)
 			if c == '\r' {
 				continue
