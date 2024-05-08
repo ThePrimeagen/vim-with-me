@@ -1,7 +1,6 @@
 package ascii_buffer
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -16,7 +15,6 @@ func TestHuffman(t *testing.T) {
     })
 
     data, err := CalculateHuffman(freq)
-    fmt.Printf("huffman data: %v\n", data)
     require.NoError(t, err)
     require.Equal(t, data, []byte{
         0, 3, 6,

@@ -10,6 +10,7 @@ import (
 	"github.com/theprimeagen/vim-with-me/examples/v2/doom"
 	"github.com/theprimeagen/vim-with-me/pkg/assert"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/ascii_buffer"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/ascii_buffer/encoding"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/program"
 )
 
@@ -33,22 +34,24 @@ func main() {
     <-d.Ready()
 
     frames := d.Frames()
-    chars := ascii_buffer.NewFreqency()
     colors := ascii_buffer.NewFreqency()
+    _ = ascii_buffer.NewFreqency()
+    colorAssoc := encoding.NewColorToChar()
 
     outFile, err := os.CreateTemp("/tmp", "doom")
     if err != nil {
         log.Fatal("couldn't create tmp")
     }
 
-    d.Framer.DebugToFile(outFile)
-
-    for i := range 100 {
-        fmt.Printf("count: %d\n", i)
+    for i := range 50000 {
+        fmt.Printf("weird: %d\n", i)
         frame := <-frames
-        chars.Freq(frame.Chars)
         colors.Freq(frame.Color)
+        colorAssoc.Map(frame)
     }
+
+    outFile.Write([]byte(colorAssoc.String()))
+    outFile.Close()
 }
 
 

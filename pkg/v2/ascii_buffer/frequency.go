@@ -52,7 +52,7 @@ func (f *Frequency) Freq(data []byte) {
 	}
 }
 
-func (f *Frequency) Debug() string {
+func (f *Frequency) DebugFunc(toString func(byte) string) string {
     points := make([]*FreqPoint, len(f.Points), len(f.Points))
     copy(points, f.Points)
     slices.SortFunc(points, func(a, b *FreqPoint) int {
@@ -68,10 +68,14 @@ func (f *Frequency) Debug() string {
         } else {
             bottom += p.count
         }
-        out += fmt.Sprintf("%s(%d) ", string(p.idx), p.count)
+        out += fmt.Sprintf("%s(%d) ", toString(p.idx), p.count)
     }
 
     out += fmt.Sprintf("-- top %d bottom %d diff %d", top, bottom, top - bottom)
 
     return out
+}
+
+func (f *Frequency) Debug() string {
+    return f.DebugFunc(func(b byte) string { return string(b) })
 }

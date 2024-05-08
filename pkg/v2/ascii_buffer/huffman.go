@@ -118,6 +118,8 @@ func CalculateHuffman(freq Frequency) ([]byte, error) {
     data := make([]byte, count * HUFFMAN_ENCODE_LENGTH, count * HUFFMAN_ENCODE_LENGTH)
     encodeTree(head, data, 0)
 
+
+    fmt.Println(head.debug(0))
     return data, nil
 }
 
