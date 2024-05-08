@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/leaanthony/go-ansi-parser"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/encoding"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 )
 
@@ -79,14 +80,6 @@ func (a *Ansi8BitFramer) WithDim(rows, cols int) *Ansi8BitFramer {
 	return a
 }
 
-func RGBTo8BitColor(hex ansi.Rgb) uint {
-	red := uint(hex.R) * 8 / 256
-	green := uint(hex.G) * 8 / 256
-	blue := uint(hex.B) * 4 / 256
-
-	return (red << 5) | (green << 2) | blue
-}
-
 func remainingIsRegisteredNurse(data []byte) bool {
 	if len(data) != 3 {
 		return false
@@ -151,7 +144,7 @@ func (framer *Ansi8BitFramer) Write(data []byte) (int, error) {
 			continue
 		}
 
-		color := RGBTo8BitColor(style.FgCol.Rgb)
+		color := encoding.RGBTo8BitColor(style.FgCol.Rgb)
 		label := style.Label
 
 		for _, char := range label {

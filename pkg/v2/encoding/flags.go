@@ -1,4 +1,4 @@
-package ascii_buffer
+package encoding
 
 const NONE = 0
 const RLE_ONLY = 1

@@ -1,9 +1,10 @@
-package encoding
+package testing
 
 import (
 	"encoding/json"
 
 	ansiparser "github.com/theprimeagen/vim-with-me/pkg/v2/ansi_parser"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/encoding"
 )
 
 type charable struct {
@@ -13,7 +14,7 @@ type charable struct {
 	char       string
 }
 
-func (c *charable) brightnessRange() BrightnessRange {
+func (c *charable) brightnessRange() encoding.BrightnessRange {
 	min := 4.0
 	max := 0.0
 	sum := 0.0
@@ -29,7 +30,7 @@ func (c *charable) brightnessRange() BrightnessRange {
 		sum += bright
 	}
 
-	return BrightnessRange{
+	return encoding.BrightnessRange{
 		Min: min,
 		Max: max,
 		Avg: sum / float64(len(c.brightness)),
@@ -50,7 +51,7 @@ func (c *colorToChar) Map(frame ansiparser.Frame) {
 	for i, ch := range frame.Chars {
 
 		char := string(ch)
-		bright := RGBBrightness(frame.Color[i])
+		bright := encoding.RGBBrightness(frame.Color[i])
 
 		var charPtr *charable = nil
 
@@ -79,7 +80,7 @@ func (c *colorToChar) Map(frame ansiparser.Frame) {
 
 func (c *colorToChar) String() string {
 
-	brightnesses := make(map[string]BrightnessRange, 0)
+	brightnesses := make(map[string]encoding.BrightnessRange, 0)
 	for _, char := range c.charOrdering {
         brightnesses[char.char] = char.brightnessRange()
 	}
