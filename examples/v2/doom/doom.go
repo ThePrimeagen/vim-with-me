@@ -7,6 +7,7 @@ import (
 
 	"github.com/theprimeagen/vim-with-me/pkg/assert"
 	ansiparser "github.com/theprimeagen/vim-with-me/pkg/v2/ansi_parser"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/ansi_parser/display"
 )
 
 var comma = []byte{','}
@@ -88,11 +89,12 @@ func (d *Doom) Ready() <-chan struct{} {
 	return d.ready
 }
 
-func (d *Doom) Frames() chan ansiparser.Frame {
+func (d *Doom) Frames() chan display.Frame {
     return d.Framer.Frames()
 }
 
 func (d *Doom) Write(data []byte) (int, error) {
+    consumed := 0
 	if d.Framer == nil {
 		headerBytes, err := d.header.Write(data)
 		assert.Assert(err == nil, "doom ascii header should never fail")
@@ -100,6 +102,8 @@ func (d *Doom) Write(data []byte) (int, error) {
 		if headerBytes == len(data) {
 			return headerBytes, nil
 		}
+
+        consumed += headerBytes + 1
 
 		rows, cols := d.header.GetDims()
 
@@ -113,5 +117,6 @@ func (d *Doom) Write(data []byte) (int, error) {
 		close(d.ready)
 	}
 
-    return d.Framer.Write(data)
+    n, err := d.Framer.Write(data)
+    return n + consumed, err
 }

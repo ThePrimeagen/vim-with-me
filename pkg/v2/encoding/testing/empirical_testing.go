@@ -3,7 +3,7 @@ package testing
 import (
 	"encoding/json"
 
-	ansiparser "github.com/theprimeagen/vim-with-me/pkg/v2/ansi_parser"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/ansi_parser/display"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/encoding"
 )
 
@@ -47,7 +47,7 @@ func NewColorToChar() *colorToChar {
 	}
 }
 
-func (c *colorToChar) Map(frame ansiparser.Frame) {
+func (c *colorToChar) Map(frame display.Frame) {
 	for i, ch := range frame.Chars {
 
 		char := string(ch)

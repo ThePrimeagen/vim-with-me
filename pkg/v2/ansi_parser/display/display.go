@@ -4,12 +4,17 @@ import (
 	"fmt"
 	"strings"
 
-	ansiparser "github.com/theprimeagen/vim-with-me/pkg/v2/ansi_parser"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/encoding"
 	colors "gitlab.com/ethanbakerdev/colors"
+	"github.com/leaanthony/go-ansi-parser"
 )
 
-func Display(frame *ansiparser.Frame, rows, cols int) string {
+type Frame struct {
+	Color []byte
+	Chars []byte
+}
+
+func Display(frame *Frame, rows, cols int) string {
     // TODO: I know this could be better... but i don't know if this will ever
     // be a perf area.  This is meant for testing and the mirror clients only
 
@@ -25,7 +30,7 @@ func Display(frame *ansiparser.Frame, rows, cols int) string {
             char := frame.Chars[idx]
 
             if color != prev && len(str) > 0 {
-                row += colors.AnsiRGB(encoding.RGBByteToAnsiRGB(color)) + str
+                row += colors.AnsiRGB(encoding.RGBByteToAnsiRGB(prev)) + str
                 //row += str
                 prev = color
                 str = ""
@@ -39,7 +44,6 @@ func Display(frame *ansiparser.Frame, rows, cols int) string {
             str = ""
         }
 
-        fmt.Printf("cols: %d vs %d\n", len(row), cols)
         out = append(out, row)
     }
 
@@ -47,3 +51,15 @@ func Display(frame *ansiparser.Frame, rows, cols int) string {
     return strings.Join(out, "\r\n")
 }
 
+func Clear() string {
+    return "\033[H\033[2J"
+}
+
+
+func DebugStyle(style *ansi.StyledText) {
+    color := encoding.RGBTo8BitColor(style.FgCol.Rgb)
+    colorStr := colors.AnsiRGB(encoding.RGBByteToAnsiRGB(byte(color)))
+
+    fmt.Printf("%+v %+v vs %+v \n", style, style.FgCol, colorStr + style.Label)
+
+}
