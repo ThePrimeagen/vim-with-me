@@ -8,7 +8,7 @@ import (
 )
 
 const redMask = 0b111_00_000
-const greenMask = 0b000_11_000
+const greenMask = 0b000_110_00
 const blueMask = 0b000_00_111
 
 func RGBTo8BitColor(hex ansi.Rgb) uint {
