@@ -34,18 +34,43 @@ type Ansi8BitFramer struct {
 // TODO: we need to parse out each of the ansi chunks and discard any errors
 // TODO: perhaps i need to change the ansi parsing library?
 func parseAnsiRow(data string) []*ansi.StyledText {
-
+    out := make([]*ansi.StyledText, 0)
 	for len(data) > 0 {
-		styles, err := ansi.Parse(data)
+        nextEsc := strings.Index(data[1:], "") + 1
+
+        if nextEsc == 0 {
+            nextEsc = len(data)
+        }
+
+        styles, err := ansi.Parse(data[:nextEsc])
 		if err == nil {
-			return styles
+            out = append(out, styles...)
 		} else {
-			idx := strings.Index(data[1:], "")
-			data = data[idx+1:]
-		}
+            idx := nextEsc - 1
+            char := data[idx]
+
+            for {
+                next := data[idx - 1]
+                if next != char || (idx - 1) < 0 {
+                    break
+                }
+
+                idx--
+            }
+
+            length := ((nextEsc - idx) / 2) * 2
+            if length > 0 {
+                str := data[nextEsc - length:nextEsc]
+                out = append(out, &ansi.StyledText{
+                    Label: str,
+                })
+            }
+        }
+
+        data = data[nextEsc:]
 	}
 
-	return nil
+	return out
 }
 
 // TODO: I could also use a ctx to close out everything
@@ -83,6 +108,7 @@ func remainingIsRegisteredNurse(data []byte) bool {
 }
 
 func (framer *Ansi8BitFramer) place(color, char byte) {
+    assert.Assert(framer.colorOffset+framer.currentIdx < len(framer.buffer), "place failed", "color", color, "byte", char, "currentIdx", framer.currentIdx, "data length", len(framer.buffer))
 	if framer.currentIdx == 0 {
 		framer.buffer[framer.currentIdx] = byte(framer.count % 10)
 	} else {
@@ -94,10 +120,6 @@ func (framer *Ansi8BitFramer) place(color, char byte) {
 }
 
 func (framer *Ansi8BitFramer) fillRemainingRow() {
-    if framer.currentCol < framer.cols {
-        fmt.Printf("OHH SHIT??\n")
-    }
-
 	for framer.currentCol < framer.cols {
 		framer.place(0, ' ')
 	}
@@ -129,9 +151,17 @@ func (framer *Ansi8BitFramer) Write(data []byte) (int, error) {
 		data = data[nextLine+2:]
 
 		styles := parseAnsiRow(string(line))
+
+        assert.AddAssertData("line", line)
+        assert.AddAssertData("styles", styles)
+        assert.AddAssertData("currentIdx", framer.currentIdx)
+        assert.AddAssertData("currentRow", framer.CurrentRow)
+        assert.AddAssertData("currentCol", framer.currentCol)
 		assert.Assert(styles != nil, "i should never have a nil row")
 
+        placed := 0
 		for _, style := range styles {
+            placed += len(style.Label)
             color := uint(255)
             if style.FgCol != nil {
                 color = encoding.RGBTo8BitColor(style.FgCol.Rgb)
@@ -142,6 +172,8 @@ func (framer *Ansi8BitFramer) Write(data []byte) (int, error) {
 				framer.place(byte(color), c)
 			}
 		}
+
+        assert.Assert(placed <= framer.cols, "exceeded the number cols per row", "cols", placed)
 
 		framer.fillRemainingRow()
 		framer.CurrentRow++
