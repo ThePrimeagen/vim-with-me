@@ -10,6 +10,7 @@ import (
 )
 
 type Frame struct {
+    Empty int
 	Color []byte
 	Chars []byte
 }

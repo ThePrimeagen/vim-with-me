@@ -44,8 +44,7 @@ func main() {
     }
     d.Framer.DebugToFile(outFile)
 
-    for i := range 1 {
-        fmt.Printf("weird: %d\n", i)
+    for range 100 {
         frame := <-frames
 
         fmt.Println(display.Display(&frame, d.Rows, d.Cols))
