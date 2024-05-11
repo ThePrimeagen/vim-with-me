@@ -272,9 +272,6 @@ func (framer *Ansi8BitFramer) Write(data []byte) (int, error) {
 			}
 		}
 
-		empty := framer.State.Empty
-		framer.fillRemainingRow()
-		assert.Assert(framer.State.Empty-empty < 4, "too many empty")
 		framer.State.CurrentRow++
 		framer.State.CurrentCol = 0
 		if framer.frameStart == nil && framer.State.CurrentRow == framer.State.Rows {
@@ -287,6 +284,8 @@ func (framer *Ansi8BitFramer) Write(data []byte) (int, error) {
 
 func (a *Ansi8BitFramer) produceFrame() {
 	assert.Assert(a.State.CurrentRow == a.State.Rows, "must produce a correct amount of rows", "rows", a.State.CurrentRow)
+	assert.Assert(a.State.CurrentIdx == a.State.Length, "current idx != state.length")
+
 	out := a.buffer
 
 	a.ch <- display.Frame{
