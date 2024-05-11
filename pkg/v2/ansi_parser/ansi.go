@@ -36,29 +36,36 @@ type Ansi8BitFramerState struct {
 	Count     int
 	ReadCount int
 
+	AttachedScratch bool
+
 	CurrentStyle      *ansi.StyledText
 	CurrentStyleCount int
 	CurrentStyleIdx   int
 	CurrentStyledLine []*ansi.StyledText
 
-	CurrentRow       int
-	CurrentCol       int
-	CurrentIdx       int
-	CurrentLine      []byte
-	CurrentInputLine string
+	CurrentRow           int
+	CurrentCol           int
+	CurrentIdx           int
+	CurrentLine          []byte
+	CurrentInputLine     string
+	CurrentInputByteLine []byte
 }
 
 func (s *Ansi8BitFramerState) String() string {
 	return fmt.Sprintf(`Ansi8BitFramerState(%d, %d): empty=%d count=%d readCount=%d
 currentRow=%d currentCol=%d currentIdx=%d
+attachedScratch=%v
 currentStyledLine=%s
 currentInputLine=%s
+currentInputByteLine=%+v
 currentLine=%s
 currentStyle(%d/%d)=%s`, s.Rows, s.Cols,
 		s.Empty, s.Count, s.ReadCount,
 		s.CurrentRow, s.CurrentCol, s.CurrentIdx,
+        s.AttachedScratch,
 		s.CurrentStyledLine,
 		s.CurrentInputLine,
+		s.CurrentInputByteLine,
 		string(s.CurrentLine),
 		s.CurrentStyleIdx, s.CurrentStyleCount, s.CurrentStyle)
 }
@@ -68,6 +75,7 @@ func (s *Ansi8BitFramerState) Reset() {
 	s.CurrentCol = 0
 	s.Empty = 0
 	s.CurrentRow = 0
+    s.AttachedScratch = false
 	s.Count++
 	s.CurrentInputLine = ""
 	s.CurrentLine = make([]byte, s.Cols, s.Cols)
@@ -200,15 +208,20 @@ func (framer *Ansi8BitFramer) Write(data []byte) (int, error) {
 
 	if scratchLen != 0 {
 
+        framer.State.AttachedScratch = true
+
 		// this is terrible for perf
 		data = append(framer.scratch, data...)
 		framer.scratch = make([]byte, 0)
-	}
+	} else {
+        framer.State.AttachedScratch = false
+    }
 
 	for len(data) > 0 {
 		nextLine := bytes.Index(data, newline)
 		if nextLine == -1 {
-			framer.scratch = data
+            framer.scratch = make([]byte, len(data), len(data))
+            copy(framer.scratch, data)
 			break
 		}
 
@@ -233,6 +246,7 @@ func (framer *Ansi8BitFramer) Write(data []byte) (int, error) {
 
 		framer.State.CurrentStyleCount = len(styles)
 		framer.State.CurrentInputLine = lineString
+		framer.State.CurrentInputByteLine = line
 		framer.State.CurrentStyledLine = styles
 
 		for i, style := range styles {
@@ -258,7 +272,9 @@ func (framer *Ansi8BitFramer) Write(data []byte) (int, error) {
 			}
 		}
 
+		empty := framer.State.Empty
 		framer.fillRemainingRow()
+		assert.Assert(framer.State.Empty-empty < 4, "too many empty")
 		framer.State.CurrentRow++
 		framer.State.CurrentCol = 0
 		if framer.frameStart == nil && framer.State.CurrentRow == framer.State.Rows {
