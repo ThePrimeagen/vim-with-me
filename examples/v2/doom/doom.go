@@ -109,7 +109,10 @@ func (d *Doom) Write(data []byte) (int, error) {
 
 		d.Rows = rows
 		d.Cols = cols
-		d.Framer = ansiparser.New8BitFramer().WithDim(rows, cols)
+		d.Framer = ansiparser.
+            New8BitFramer().
+            WithDim(rows, cols).
+            WithFrameStart([]byte("[;H"))
 
 		data = data[headerBytes+1:]
 

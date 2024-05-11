@@ -47,6 +47,7 @@ func main() {
     for range 100 {
         frame := <-frames
 
+        fmt.Print("\033[H\033[2J")
         fmt.Println(display.Display(&frame, d.Rows, d.Cols))
     }
 
