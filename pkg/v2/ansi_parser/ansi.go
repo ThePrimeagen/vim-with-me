@@ -3,6 +3,7 @@ package ansiparser
 import (
 	//"github.com/leaanthony/go-ansi-parser"
 	"bytes"
+	"fmt"
 	"io"
 	"strings"
 
@@ -13,23 +14,65 @@ import (
 )
 
 type Ansi8BitFramer struct {
-	rows int
-	cols int
-
-	count     int
-	readCount int
+	State *Ansi8BitFramerState
 
 	frameStart []byte
 
 	debug       io.Writer
 	ch          chan display.Frame
-	currentIdx  int
-	currentCol  int
-	empty       int
-	CurrentRow  int
 	buffer      []byte
 	colorOffset int
 	scratch     []byte
+
+	lastStyle *ansi.StyledText
+}
+
+type Ansi8BitFramerState struct {
+	Rows   int
+	Cols   int
+	Length int
+	Empty  int
+
+	Count     int
+	ReadCount int
+
+	CurrentStyle      *ansi.StyledText
+	CurrentStyleCount int
+	CurrentStyleIdx   int
+	CurrentStyledLine []*ansi.StyledText
+
+	CurrentRow       int
+	CurrentCol       int
+	CurrentIdx       int
+	CurrentLine      []byte
+	CurrentInputLine string
+}
+
+func (s *Ansi8BitFramerState) String() string {
+	return fmt.Sprintf(`Ansi8BitFramerState(%d, %d): empty=%d count=%d readCount=%d
+currentRow=%d currentCol=%d currentIdx=%d
+currentStyledLine=%s
+currentInputLine=%s
+currentLine=%s
+currentStyle(%d/%d)=%s`, s.Rows, s.Cols,
+		s.Empty, s.Count, s.ReadCount,
+		s.CurrentRow, s.CurrentCol, s.CurrentIdx,
+		s.CurrentStyledLine,
+		s.CurrentInputLine,
+		string(s.CurrentLine),
+		s.CurrentStyleIdx, s.CurrentStyleCount, s.CurrentStyle)
+}
+
+func (s *Ansi8BitFramerState) Reset() {
+	s.CurrentIdx = 0
+	s.CurrentCol = 0
+	s.Empty = 0
+	s.CurrentRow = 0
+	s.Count++
+	s.CurrentInputLine = ""
+	s.CurrentLine = make([]byte, s.Cols, s.Cols)
+	s.CurrentStyleCount = 0
+	s.CurrentStyleIdx = 0
 }
 
 // TODO: 2 errors, row 21 seems to start without an escape
@@ -76,15 +119,29 @@ func parseAnsiRow(data string) []*ansi.StyledText {
 
 // TODO: I could also use a ctx to close out everything
 func New8BitFramer() *Ansi8BitFramer {
+	state := Ansi8BitFramerState{
+		Rows:   0,
+		Cols:   0,
+		Length: 0,
+		Empty:  0,
+
+		Count:     0,
+		ReadCount: 0,
+
+		CurrentRow: 0,
+		CurrentCol: 0,
+		CurrentIdx: 0,
+
+		CurrentLine: make([]byte, 0),
+	}
+
+	assert.AddAssertData("Ansi8BitFramer", &state)
 
 	// 1 byte color, 1 byte ascii
 	return &Ansi8BitFramer{
+		State: &state,
+
 		ch:         make(chan display.Frame, 10),
-		currentIdx: 0,
-		currentCol: 0,
-		count:      0,
-		empty:      0,
-		CurrentRow: 0, // makes life easier
 		buffer:     make([]byte, 0, 0),
 		scratch:    make([]byte, 0),
 		frameStart: nil,
@@ -99,8 +156,11 @@ func (a *Ansi8BitFramer) WithFrameStart(start []byte) *Ansi8BitFramer {
 
 func (a *Ansi8BitFramer) WithDim(rows, cols int) *Ansi8BitFramer {
 	length := rows * cols
-	a.rows = rows
-	a.cols = cols
+
+	a.State.Rows = rows
+	a.State.Cols = cols
+	a.State.Length = rows * cols
+	a.State.Reset()
 
 	a.colorOffset = length
 	a.buffer = make([]byte, length*2, length*2)
@@ -109,23 +169,21 @@ func (a *Ansi8BitFramer) WithDim(rows, cols int) *Ansi8BitFramer {
 }
 
 func (framer *Ansi8BitFramer) place(color, char byte) {
-	if framer.currentCol == framer.cols {
-		return
-	}
-	assert.Assert(framer.colorOffset+framer.currentIdx < len(framer.buffer), "place failed", "color", color, "byte", char, "currentIdx", framer.currentIdx, "data length", len(framer.buffer))
-	if framer.currentIdx == 0 {
-		framer.buffer[framer.currentIdx] = byte(framer.count % 10)
-	} else {
-		framer.buffer[framer.currentIdx] = char
-	}
-	framer.buffer[framer.colorOffset+framer.currentIdx] = color
-	framer.currentIdx++
-	framer.currentCol++
+	assert.Assert(framer.State.CurrentCol != framer.State.Cols, "current cols equals the maximum state cols")
+	assert.Assert(framer.colorOffset+framer.State.CurrentIdx < len(framer.buffer), "place failed", "color", color, "byte", char, "State.CurrentIdx", framer.State.CurrentIdx, "data length", len(framer.buffer))
+
+	framer.State.CurrentLine[framer.State.CurrentCol] = char
+	framer.buffer[framer.State.CurrentIdx] = char
+	framer.buffer[framer.colorOffset+framer.State.CurrentIdx] = color
+
+	framer.State.CurrentIdx++
+	framer.State.CurrentCol++
+
 }
 
 func (framer *Ansi8BitFramer) fillRemainingRow() {
-	framer.empty += framer.cols - framer.currentCol
-	for framer.currentCol < framer.cols {
+	framer.State.Empty += framer.State.Cols - framer.State.CurrentCol
+	for framer.State.CurrentCol < framer.State.Cols {
 		framer.place(0, ' ')
 	}
 }
@@ -159,64 +217,70 @@ func (framer *Ansi8BitFramer) Write(data []byte) (int, error) {
 
 		// If we have a "frameStart" sequence we are looking for (ansi codes)
 		// then we have to look for it on every new line
-        // TODO: I may have to look into this for perf
-		if framer.frameStart != nil && bytes.Contains(line, framer.frameStart) {
-            framer.produceFrame()
+		// TODO: I may have to look into this for perf
+		if framer.frameStart != nil &&
+			bytes.Contains(line, framer.frameStart) &&
+			framer.State.CurrentRow > 0 {
+
+			framer.produceFrame()
 		}
 
-		if framer.CurrentRow == framer.rows {
-			continue
-		}
+		lineString := string(line)
 
-		styles := parseAnsiRow(string(line))
-
-		assert.AddAssertData("line", line)
-		assert.AddAssertData("styles", styles)
-		assert.AddAssertData("currentIdx", framer.currentIdx)
-		assert.AddAssertData("currentRow", framer.CurrentRow)
-		assert.AddAssertData("currentCol", framer.currentCol)
+		styles := parseAnsiRow(lineString)
 		assert.Assert(styles != nil, "i should never have a nil row")
-		assert.Assert(framer.currentCol == 0, "we should always start every line with current col as 0")
+		assert.Assert(framer.State.CurrentCol == 0, "we should always start every line with current col as 0")
 
-		for _, style := range styles {
+		framer.State.CurrentStyleCount = len(styles)
+		framer.State.CurrentInputLine = lineString
+		framer.State.CurrentStyledLine = styles
+
+		for i, style := range styles {
+			framer.State.CurrentStyleIdx = i
+			framer.State.CurrentStyle = style
+
 			color := uint(255)
-			if style.FgCol != nil {
-				color = encoding.RGBTo8BitColor(style.FgCol.Rgb)
+			fg := style.FgCol
+			if fg == nil {
+				fg = framer.lastStyle.FgCol
 			}
 
+			color = encoding.RGBTo8BitColor(fg.Rgb)
+
 			for _, char := range style.Label {
+				assert.Assert(framer.State.CurrentCol <= framer.State.Cols, "exceeded the number cols per row", "cols", framer.State.CurrentCol)
 				c := byte(char)
 				framer.place(byte(color), c)
 			}
+
+			if style.FgCol != nil {
+				framer.lastStyle = style
+			}
 		}
-		assert.Assert(framer.currentCol <= framer.cols, "exceeded the number cols per row", "cols", framer.currentCol)
 
 		framer.fillRemainingRow()
-		framer.CurrentRow++
-		framer.currentCol = 0
-        if framer.frameStart == nil && framer.CurrentRow == framer.rows {
-            framer.produceFrame()
-        }
+		framer.State.CurrentRow++
+		framer.State.CurrentCol = 0
+		if framer.frameStart == nil && framer.State.CurrentRow == framer.State.Rows {
+			framer.produceFrame()
+		}
 	}
 
 	return read, nil
 }
 
 func (a *Ansi8BitFramer) produceFrame() {
-	a.count++
+	assert.Assert(a.State.CurrentRow == a.State.Rows, "must produce a correct amount of rows", "rows", a.State.CurrentRow)
 	out := a.buffer
 
 	a.ch <- display.Frame{
-		Empty: a.empty,
+		Empty: a.State.Empty,
 		Chars: out[:a.colorOffset],
 		Color: out[a.colorOffset:],
 	}
 
-	a.buffer = make([]byte, a.rows*a.cols*2, a.rows*a.cols*2)
-	a.currentIdx = 0
-	a.currentCol = 0
-	a.empty = 0
-	a.CurrentRow = 0
+	a.buffer = make([]byte, a.State.Length*2, a.State.Length*2)
+	a.State.Reset()
 }
 
 func (a *Ansi8BitFramer) DebugToFile(writer io.Writer) {

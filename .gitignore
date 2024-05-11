@@ -2,3 +2,5 @@
 
 /out
 main
+/assert.debug
+/debug.doom
