@@ -43,7 +43,7 @@ func main() {
 	for range 1000 {
         select{
         case frame := <-frames:
-            fmt.Print("\033[H\033[2J")
+            fmt.Print("[0m[;H[1m")
             fmt.Println(display.Display(&frame, d.Rows, d.Cols))
         case <-finish:
             break outer;

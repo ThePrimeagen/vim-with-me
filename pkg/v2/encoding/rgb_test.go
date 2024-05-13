@@ -15,7 +15,7 @@ func TestAnsiStyleRGBConversion(t *testing.T) {
 
     require.NoError(t, err)
 
-    _8bit := encoding.RGBTo8BitColor(style[0].FgCol.Rgb)
+    _8bit := encoding.RGBTo8BitColor(&style[0].FgCol.Rgb)
     from8Bit := encoding.RGBByteToAnsiRGB(byte(_8bit))
     styleRGB := style[0].FgCol.Rgb
 

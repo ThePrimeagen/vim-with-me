@@ -58,7 +58,7 @@ func Clear() string {
 
 
 func DebugStyle(style *ansi.StyledText) {
-    color := encoding.RGBTo8BitColor(style.FgCol.Rgb)
+    color := encoding.RGBTo8BitColor(&style.FgCol.Rgb)
     colorStr := colors.AnsiRGB(encoding.RGBByteToAnsiRGB(byte(color)))
 
     fmt.Printf("%+v %+v vs %+v \n", style, style.FgCol, colorStr + style.Label)

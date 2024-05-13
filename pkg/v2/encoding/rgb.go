@@ -1,49 +1,65 @@
 package encoding
 
-import (
-	"fmt"
+import "github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 
-	"github.com/leaanthony/go-ansi-parser"
-	color "gitlab.com/ethanbakerdev/colors"
-)
-
-const redMask = 0b111_00_000
-const greenMask = 0b000_110_00
-const blueMask = 0b000_00_111
-
-func RGBTo8BitColor(hex ansi.Rgb) uint {
-	red := uint(hex.R) * 8 / 256
-	green := uint(hex.G) * 4 / 256
-	blue := uint(hex.B) * 8 / 256
-
-	return (red << 5) | (green << 3) | blue
+type rgbReader interface {
+	read(buf []byte, offset int) (uint, int)
 }
 
-func RGBBrightness(rgb byte) float64 {
-	red := float64((rgb & redMask) >> 5)
-	green := float64((rgb & greenMask) >> 3)
-	blue := float64(rgb & blueMask)
-
-	return red/7.0 + green/3.0 + blue/7.0
+type rgbWriter interface {
+	write(buf []byte, value uint) int
 }
 
-func RGBToString(rgb byte) string {
-	red := (rgb & redMask) >> 5
-	green := (rgb & greenMask) >> 3
-	blue := rgb & blueMask
-
-	return fmt.Sprintf("%02x%02x%02x", red, green, blue)
+type IteratorResult struct {
+	done  bool
+	value uint
 }
 
-func RGBByteToAnsiRGB(rgb byte) color.RGB {
-	red := float64((rgb & redMask) >> 5)
-	green := float64((rgb & greenMask) >> 3)
-	blue := float64(rgb & blueMask)
+type RGBIterator struct {
+	buffer []byte
+	idx    int
+	reader rgbReader
+	ret    IteratorResult
+}
 
-	return color.RGB{
-        R: int(red / 7.0 * 255),
-        G: int(green / 3.0 * 255),
-        B: int(blue / 7.0 * 255),
+var empty = make([]byte, 0)
+
+func New8BitRGBIterator() *RGBIterator {
+	return &RGBIterator{
+		buffer: empty,
+		idx:    0,
+        ret: IteratorResult{done: true, value: 0},
+		reader: newRGB8BitReader(),
+	}
+}
+
+func New16BitRGBIterator() *RGBIterator {
+	return &RGBIterator{
+		buffer: empty,
+		idx:    0,
+        ret: IteratorResult{done: true, value: 0},
+		reader: newRGB16BitReader(),
+	}
+}
+
+func (i *RGBIterator) Set(buffer []byte) *RGBIterator {
+	i.buffer = buffer
+	i.idx = 0
+    i.ret.done = true
+
+	return i
+}
+
+func (i *RGBIterator) Next() IteratorResult {
+	assert.Assert(i.ret.done, "iterator is done, you cannot call done")
+	value, offset := i.reader.read(i.buffer, i.idx)
+	i.idx = offset
+
+    if offset == len(i.buffer) {
+        i.ret.done = true
     }
-}
 
+    i.ret.value = value
+
+    return i.ret
+}
