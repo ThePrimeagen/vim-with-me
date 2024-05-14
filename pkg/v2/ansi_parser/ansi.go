@@ -18,11 +18,11 @@ type AnsiFramer struct {
 
 	frameStart []byte
 
-	debug       io.Writer
-	ch          chan display.Frame
-	buffer      []byte
-	scratch     []byte
-	writer      *encoding.RGBWriter
+	debug   io.Writer
+	ch      chan display.Frame
+	buffer  []byte
+	scratch []byte
+	writer  *encoding.RGBWriter
 
 	lastStyle *ansi.StyledText
 }
@@ -165,23 +165,23 @@ func (a *AnsiFramer) WithDim(rows, cols int) *AnsiFramer {
 	a.State.Cols = cols
 	a.State.Length = rows * cols
 
-    a.reset()
+	a.reset()
 
 	return a
 }
 
 func (a *AnsiFramer) WithColorWriter(writer *encoding.RGBWriter) {
-    a.writer = writer
-    a.reset()
+	a.writer = writer
+	a.reset()
 }
 
 func (a *AnsiFramer) reset() {
 	a.State.Reset()
 
-    colorLength := a.writer.ByteLength() * a.State.Length
-    length := a.State.Length + colorLength
+	colorLength := a.writer.ByteLength() * a.State.Length
+	length := a.State.Length + colorLength
 	a.buffer = make([]byte, length, length)
-    a.writer.Set(a.buffer[a.State.Length:])
+	a.writer.Set(a.buffer[a.State.Length:])
 }
 
 func (framer *AnsiFramer) place(color *ansi.Rgb, char byte) {
@@ -190,7 +190,7 @@ func (framer *AnsiFramer) place(color *ansi.Rgb, char byte) {
 
 	framer.State.CurrentLine[framer.State.CurrentCol] = char
 	framer.buffer[framer.State.CurrentIdx] = char
-    framer.writer.Write(color)
+	framer.writer.Write(color)
 
 	framer.State.CurrentIdx++
 	framer.State.CurrentCol++
@@ -285,12 +285,12 @@ func (a *AnsiFramer) produceFrame() {
 	assert.Assert(a.State.CurrentIdx == a.State.Length, "current idx != state.length")
 
 	a.ch <- display.Frame{
-		Idx: 0,
+		Idx:   0,
 		Chars: a.buffer[:a.State.Length],
 		Color: a.buffer[a.State.Length:],
 	}
 
-    a.reset()
+	a.reset()
 }
 
 func (a *AnsiFramer) DebugToFile(writer io.Writer) {

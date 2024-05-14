@@ -1,11 +1,17 @@
-package ascii_buffer
+package huffman
 
 import (
 	"container/heap"
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/theprimeagen/vim-with-me/pkg/v2/ascii_buffer"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
+	byteutils "github.com/theprimeagen/vim-with-me/pkg/v2/byte_utils"
 )
+
+const HUFFMAN_ENCODE_LENGTH = 5
 
 type huffmanNode struct {
     value int
@@ -50,10 +56,10 @@ func join(a, b *huffmanNode) *huffmanNode {
     }
 }
 
-func fromFreq(freq *FreqPoint) *huffmanNode {
+func fromFreq(freq *ascii_buffer.FreqPoint) *huffmanNode {
     return &huffmanNode{
-        value: freq.val,
-        count: freq.count,
+        value: freq.Val,
+        count: freq.Count,
         left: nil,
         right: nil,
     }
@@ -89,7 +95,7 @@ func (pq *PriorityQueue) Pop() any {
 // never had this problem in my life
 var HuffmanTooLarge = errors.New("huffman tree is too large")
 
-func CalculateHuffman(freq Frequency) []byte {
+func CalculateHuffman(freq ascii_buffer.Frequency) []byte {
     nodes := make(PriorityQueue, freq.Length(), freq.Length())
     for i, p := range freq.Points {
         nodes[i] = fromFreq(p)
@@ -109,13 +115,12 @@ func CalculateHuffman(freq Frequency) []byte {
     head := heap.Pop(&nodes).(*huffmanNode)
 
     data := make([]byte, count * HUFFMAN_ENCODE_LENGTH, count * HUFFMAN_ENCODE_LENGTH)
-    //encodeTree(head, data, 0)
+    encodeTree(head, data, 0)
 
     fmt.Println(head.debug(0))
     return data
 }
 
-/*
 func encodeTree(node *huffmanNode, data []byte, idx int) int {
     if node == nil {
         return idx
@@ -125,12 +130,12 @@ func encodeTree(node *huffmanNode, data []byte, idx int) int {
 
     leftIdx := idx + HUFFMAN_ENCODE_LENGTH
 
-    data[idx] = node.value
-    data[idx + 1] = byte(leftIdx)
+    byteutils.Write16(data, idx, node.value)
+    byteutils.Write16(data, idx + 2, leftIdx)
 
     rightIdx := encodeTree(node.left, data, leftIdx)
 
-    data[idx + 2] = byte(rightIdx)
+    byteutils.Write16(data, idx + 4, rightIdx)
     doneIdx := encodeTree(node.right, data, rightIdx)
 
     if leftIdx == rightIdx && leftIdx == doneIdx {
@@ -138,6 +143,6 @@ func encodeTree(node *huffmanNode, data []byte, idx int) int {
         data[idx + 2] = 0
     }
 
-    return rightIdx
+    return doneIdx
 }
-*/
+

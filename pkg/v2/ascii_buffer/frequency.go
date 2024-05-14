@@ -4,23 +4,23 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/theprimeagen/vim-with-me/pkg/v2/iterator"
+	byteutils "github.com/theprimeagen/vim-with-me/pkg/v2/byte_utils"
 )
 
 type Frequency struct {
-	points map[int]*FreqPoint
+	pointMap map[int]*FreqPoint
 	count  int
 	Points []*FreqPoint
 }
 
 type FreqPoint struct {
-	val   int
-	count int
+	Val   int
+	Count int
 }
 
 func NewFreqency() Frequency {
 	return Frequency{
-		points: map[int]*FreqPoint{},
+		pointMap: map[int]*FreqPoint{},
 		Points: make([]*FreqPoint, 0),
 		count:  0,
 	}
@@ -32,23 +32,24 @@ func (f *Frequency) Length() int {
 
 func (f *Frequency) Reset() {
 	f.count = 0
-    f.points = map[int]*FreqPoint{}
+    f.pointMap = map[int]*FreqPoint{}
     f.Points = make([]*FreqPoint, 0)
 }
 
-func (f *Frequency) Freq(data iterator.ByteIterator) {
+func (f *Frequency) Freq(data byteutils.ByteIterator) {
 	for {
         val := data.Next()
-        point, ok := f.points[val.Value]
+        point, ok := f.pointMap[val.Value]
 
 		if !ok {
 			f.count++
 
-			point = &FreqPoint{count: 0}
+			point = &FreqPoint{Count: 0}
 			f.Points = append(f.Points, point)
+            f.pointMap[val.Value] = point
 		}
 
-		point.count++
+		point.Count++
 
         // i wish i had a do while... the lords loop
         if val.Done {
@@ -61,7 +62,7 @@ func (f *Frequency) DebugFunc(toString func(int) string) string {
 	points := make([]*FreqPoint, len(f.Points), len(f.Points))
 	copy(points, f.Points)
 	slices.SortFunc(points, func(a, b *FreqPoint) int {
-		return a.count - b.count
+		return a.Count - b.Count
 	})
 
 	out := fmt.Sprintf("Frequency(%d): ", len(points))
@@ -69,11 +70,11 @@ func (f *Frequency) DebugFunc(toString func(int) string) string {
 	bottom := 0
 	for i, p := range points {
 		if i+4 >= len(points) {
-			top += p.count
+			top += p.Count
 		} else {
-			bottom += p.count
+			bottom += p.Count
 		}
-		out += fmt.Sprintf("%s(%d) ", toString(p.val), p.count)
+		out += fmt.Sprintf("%s(%d) ", toString(p.Val), p.Count)
 	}
 
 	out += fmt.Sprintf("-- top %d bottom %d diff %d", top, bottom, top-bottom)
