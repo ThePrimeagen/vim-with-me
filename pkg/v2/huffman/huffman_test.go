@@ -17,14 +17,15 @@ func TestHuffman(t *testing.T) {
 		'C', 'D',
 	}))
 
+    encodeLen := byte(huffman.HUFFMAN_ENCODE_LENGTH)
 	data := huffman.CalculateHuffman(freq)
-	require.Equal(t, data, []byte{
-		0, 0, 0, 3, 0, 6,
+	require.Equal(t, []byte{
+		0, 0, 0, encodeLen, 0, encodeLen * 2,
 		0, 'A', 0, 0, 0, 0, // 0
-		0, 0, 0, 9, 0, 12,
+		0, 0, 0, encodeLen * 3, 0, encodeLen * 4,
 		0, 'B', 0, 0, 0, 0, // 10
-		0, 0, 0, 15, 0, 18,
+		0, 0, 0, encodeLen * 5, 0, encodeLen * 6,
 		0, 'D', 0, 0, 0, 0, // 110
 		0, 'C', 0, 0, 0, 0, // 111
-	})
+	}, data)
 }

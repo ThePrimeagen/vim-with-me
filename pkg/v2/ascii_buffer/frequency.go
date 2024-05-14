@@ -44,7 +44,10 @@ func (f *Frequency) Freq(data byteutils.ByteIterator) {
 		if !ok {
 			f.count++
 
-			point = &FreqPoint{Count: 0}
+			point = &FreqPoint{
+                Count: 0,
+                Val: val.Value,
+            }
 			f.Points = append(f.Points, point)
             f.pointMap[val.Value] = point
 		}

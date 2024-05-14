@@ -11,7 +11,7 @@ import (
 	byteutils "github.com/theprimeagen/vim-with-me/pkg/v2/byte_utils"
 )
 
-const HUFFMAN_ENCODE_LENGTH = 5
+const HUFFMAN_ENCODE_LENGTH = 6
 
 type huffmanNode struct {
     value int
@@ -127,7 +127,6 @@ func encodeTree(node *huffmanNode, data []byte, idx int) int {
     }
 
     assert.Assert(idx + 2 < len(data), "idx will exceed the bounds of the huffman array during encoding")
-
     leftIdx := idx + HUFFMAN_ENCODE_LENGTH
 
     byteutils.Write16(data, idx, node.value)
@@ -139,8 +138,8 @@ func encodeTree(node *huffmanNode, data []byte, idx int) int {
     doneIdx := encodeTree(node.right, data, rightIdx)
 
     if leftIdx == rightIdx && leftIdx == doneIdx {
-        data[idx + 1] = 0
-        data[idx + 2] = 0
+        byteutils.Write16(data, idx + 2, 0)
+        byteutils.Write16(data, idx + 4, 0)
     }
 
     return doneIdx
