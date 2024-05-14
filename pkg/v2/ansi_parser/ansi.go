@@ -13,25 +13,24 @@ import (
 	"github.com/theprimeagen/vim-with-me/pkg/v2/encoding"
 )
 
-type Ansi8BitFramer struct {
-	State *Ansi8BitFramerState
+type AnsiFramer struct {
+	State *AnsiFramerState
 
 	frameStart []byte
 
 	debug       io.Writer
 	ch          chan display.Frame
 	buffer      []byte
-	colorOffset int
 	scratch     []byte
+	writer      *encoding.RGBWriter
 
 	lastStyle *ansi.StyledText
 }
 
-type Ansi8BitFramerState struct {
+type AnsiFramerState struct {
 	Rows   int
 	Cols   int
 	Length int
-	Empty  int
 
 	Count     int
 	ReadCount int
@@ -51,8 +50,8 @@ type Ansi8BitFramerState struct {
 	CurrentInputByteLine []byte
 }
 
-func (s *Ansi8BitFramerState) String() string {
-	return fmt.Sprintf(`Ansi8BitFramerState(%d, %d): empty=%d count=%d readCount=%d
+func (s *AnsiFramerState) String() string {
+	return fmt.Sprintf(`AnsiFramerState(%d, %d): count=%d readCount=%d
 currentRow=%d currentCol=%d currentIdx=%d
 attachedScratch=%v
 currentStyledLine=%s
@@ -60,9 +59,9 @@ currentInputLine=%s
 currentInputByteLine=%+v
 currentLine=%s
 currentStyle(%d/%d)=%s`, s.Rows, s.Cols,
-		s.Empty, s.Count, s.ReadCount,
+		s.Count, s.ReadCount,
 		s.CurrentRow, s.CurrentCol, s.CurrentIdx,
-        s.AttachedScratch,
+		s.AttachedScratch,
 		s.CurrentStyledLine,
 		s.CurrentInputLine,
 		s.CurrentInputByteLine,
@@ -70,12 +69,11 @@ currentStyle(%d/%d)=%s`, s.Rows, s.Cols,
 		s.CurrentStyleIdx, s.CurrentStyleCount, s.CurrentStyle)
 }
 
-func (s *Ansi8BitFramerState) Reset() {
+func (s *AnsiFramerState) Reset() {
 	s.CurrentIdx = 0
 	s.CurrentCol = 0
-	s.Empty = 0
 	s.CurrentRow = 0
-    s.AttachedScratch = false
+	s.AttachedScratch = false
 	s.Count++
 	s.CurrentInputLine = ""
 	s.CurrentLine = make([]byte, s.Cols, s.Cols)
@@ -126,12 +124,11 @@ func parseAnsiRow(data string) []*ansi.StyledText {
 }
 
 // TODO: I could also use a ctx to close out everything
-func New8BitFramer() *Ansi8BitFramer {
-	state := Ansi8BitFramerState{
+func NewFramer() *AnsiFramer {
+	state := AnsiFramerState{
 		Rows:   0,
 		Cols:   0,
 		Length: 0,
-		Empty:  0,
 
 		Count:     0,
 		ReadCount: 0,
@@ -143,62 +140,66 @@ func New8BitFramer() *Ansi8BitFramer {
 		CurrentLine: make([]byte, 0),
 	}
 
-	assert.AddAssertData("Ansi8BitFramer", &state)
+	assert.AddAssertData("AnsiFramer", &state)
 
 	// 1 byte color, 1 byte ascii
-	return &Ansi8BitFramer{
+	return &AnsiFramer{
 		State: &state,
 
 		ch:         make(chan display.Frame, 10),
 		buffer:     make([]byte, 0, 0),
 		scratch:    make([]byte, 0),
 		frameStart: nil,
+		writer:     encoding.New8BitRGBWriter(),
 	}
 }
 
-func (a *Ansi8BitFramer) WithFrameStart(start []byte) *Ansi8BitFramer {
+func (a *AnsiFramer) WithFrameStart(start []byte) *AnsiFramer {
 	a.frameStart = start
 
 	return a
 }
 
-func (a *Ansi8BitFramer) WithDim(rows, cols int) *Ansi8BitFramer {
-	length := rows * cols
-
+func (a *AnsiFramer) WithDim(rows, cols int) *AnsiFramer {
 	a.State.Rows = rows
 	a.State.Cols = cols
 	a.State.Length = rows * cols
-	a.State.Reset()
 
-	a.colorOffset = length
-	a.buffer = make([]byte, length*2, length*2)
+    a.reset()
 
 	return a
 }
 
-func (framer *Ansi8BitFramer) place(color, char byte) {
+func (a *AnsiFramer) WithColorWriter(writer *encoding.RGBWriter) {
+    a.writer = writer
+    a.reset()
+}
+
+func (a *AnsiFramer) reset() {
+	a.State.Reset()
+
+    colorLength := a.writer.ByteLength() * a.State.Length
+    length := a.State.Length + colorLength
+	a.buffer = make([]byte, length, length)
+    a.writer.Set(a.buffer[a.State.Length:])
+}
+
+func (framer *AnsiFramer) place(color *ansi.Rgb, char byte) {
 	assert.Assert(framer.State.CurrentCol != framer.State.Cols, "current cols equals the maximum state cols")
-	assert.Assert(framer.colorOffset+framer.State.CurrentIdx < len(framer.buffer), "place failed", "color", color, "byte", char, "State.CurrentIdx", framer.State.CurrentIdx, "data length", len(framer.buffer))
+	assert.Assert(framer.State.CurrentIdx < framer.State.Length, "place failed", "color", color, "byte", char, "State.CurrentIdx", framer.State.CurrentIdx, "data length", framer.State.Length)
 
 	framer.State.CurrentLine[framer.State.CurrentCol] = char
 	framer.buffer[framer.State.CurrentIdx] = char
-	framer.buffer[framer.colorOffset+framer.State.CurrentIdx] = color
+    framer.writer.Write(color)
 
 	framer.State.CurrentIdx++
 	framer.State.CurrentCol++
 
 }
 
-func (framer *Ansi8BitFramer) fillRemainingRow() {
-	framer.State.Empty += framer.State.Cols - framer.State.CurrentCol
-	for framer.State.CurrentCol < framer.State.Cols {
-		framer.place(0, ' ')
-	}
-}
-
 var newline = []byte{'\r', '\n'}
 
-func (framer *Ansi8BitFramer) Write(data []byte) (int, error) {
+func (framer *AnsiFramer) Write(data []byte) (int, error) {
 	read := len(data)
 	if framer.debug != nil {
 		framer.debug.Write(data)
@@ -208,20 +209,20 @@ func (framer *Ansi8BitFramer) Write(data []byte) (int, error) {
 
 	if scratchLen != 0 {
 
-        framer.State.AttachedScratch = true
+		framer.State.AttachedScratch = true
 
 		// this is terrible for perf
 		data = append(framer.scratch, data...)
 		framer.scratch = make([]byte, 0)
 	} else {
-        framer.State.AttachedScratch = false
-    }
+		framer.State.AttachedScratch = false
+	}
 
 	for len(data) > 0 {
 		nextLine := bytes.Index(data, newline)
 		if nextLine == -1 {
-            framer.scratch = make([]byte, len(data), len(data))
-            copy(framer.scratch, data)
+			framer.scratch = make([]byte, len(data), len(data))
+			copy(framer.scratch, data)
 			break
 		}
 
@@ -253,18 +254,15 @@ func (framer *Ansi8BitFramer) Write(data []byte) (int, error) {
 			framer.State.CurrentStyleIdx = i
 			framer.State.CurrentStyle = style
 
-			color := uint(255)
 			fg := style.FgCol
 			if fg == nil {
 				fg = framer.lastStyle.FgCol
 			}
 
-			color = encoding.RGBTo8BitColor(fg.Rgb)
-
 			for _, char := range style.Label {
 				assert.Assert(framer.State.CurrentCol <= framer.State.Cols, "exceeded the number cols per row", "cols", framer.State.CurrentCol)
 				c := byte(char)
-				framer.place(byte(color), c)
+				framer.place(&fg.Rgb, c)
 			}
 
 			if style.FgCol != nil {
@@ -282,26 +280,23 @@ func (framer *Ansi8BitFramer) Write(data []byte) (int, error) {
 	return read, nil
 }
 
-func (a *Ansi8BitFramer) produceFrame() {
+func (a *AnsiFramer) produceFrame() {
 	assert.Assert(a.State.CurrentRow == a.State.Rows, "must produce a correct amount of rows", "rows", a.State.CurrentRow)
 	assert.Assert(a.State.CurrentIdx == a.State.Length, "current idx != state.length")
 
-	out := a.buffer
-
 	a.ch <- display.Frame{
-		Empty: a.State.Empty,
-		Chars: out[:a.colorOffset],
-		Color: out[a.colorOffset:],
+		Idx: 0,
+		Chars: a.buffer[:a.State.Length],
+		Color: a.buffer[a.State.Length:],
 	}
 
-	a.buffer = make([]byte, a.State.Length*2, a.State.Length*2)
-	a.State.Reset()
+    a.reset()
 }
 
-func (a *Ansi8BitFramer) DebugToFile(writer io.Writer) {
+func (a *AnsiFramer) DebugToFile(writer io.Writer) {
 	a.debug = writer
 }
 
-func (a *Ansi8BitFramer) Frames() chan display.Frame {
+func (a *AnsiFramer) Frames() chan display.Frame {
 	return a.ch
 }

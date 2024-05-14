@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/theprimeagen/vim-with-me/examples/v2/doom"
-	"github.com/theprimeagen/vim-with-me/pkg/v2/ansi_parser/display"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/ascii_buffer"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 )
@@ -43,8 +42,10 @@ func main() {
 	for range 1000 {
         select{
         case frame := <-frames:
-            fmt.Print("[0m[;H[1m")
-            fmt.Println(display.Display(&frame, d.Rows, d.Cols))
+            for _, v := range frame.Color {
+                fmt.Print(string(v))
+            }
+            break outer;
         case <-finish:
             break outer;
         }

@@ -1,13 +1,18 @@
 package encoding
 
-import "github.com/theprimeagen/vim-with-me/pkg/v2/assert"
+import (
+
+	"github.com/leaanthony/go-ansi-parser"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
+)
 
 type rgbReader interface {
 	read(buf []byte, offset int) (uint, int)
 }
 
 type rgbWriter interface {
-	write(buf []byte, value uint) int
+    write(buffer []byte, offset int, color *ansi.Rgb) int
+    byteLength() int
 }
 
 type IteratorResult struct {
@@ -29,7 +34,7 @@ func New8BitRGBIterator() *RGBIterator {
 		buffer: empty,
 		idx:    0,
         ret: IteratorResult{done: true, value: 0},
-		reader: newRGB8BitReader(),
+		reader: newRGB8Bit(),
 	}
 }
 
@@ -62,4 +67,38 @@ func (i *RGBIterator) Next() IteratorResult {
     i.ret.value = value
 
     return i.ret
+}
+
+type RGBWriter struct {
+	buffer []byte
+	idx    int
+	writer rgbWriter
+}
+
+func New8BitRGBWriter() *RGBWriter {
+	return &RGBWriter{
+		buffer: empty,
+		idx:    0,
+		writer: newRGB8Bit(),
+	}
+}
+
+func (w *RGBWriter) Set(buffer []byte) {
+    w.buffer = buffer
+    w.idx = 0
+}
+
+func (w *RGBWriter) ByteLength() int {
+    return w.writer.byteLength()
+}
+
+func (w *RGBWriter) Write(color *ansi.Rgb) int {
+    assert.Assert(w.idx + w.writer.byteLength() - 1 < len(w.buffer), "unable to write byte into rgb writer, buffer full")
+    w.idx = w.writer.write(w.buffer, w.idx, color)
+
+    return w.idx
+}
+
+func (w *RGBWriter) Full() bool {
+    return w.idx == len(w.buffer)
 }

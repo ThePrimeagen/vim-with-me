@@ -62,7 +62,7 @@ func (d *DoomAsciiHeaderParser) Write(data []byte) (int, error) {
 }
 
 type Doom struct {
-	Framer *ansiparser.Ansi8BitFramer
+	Framer *ansiparser.AnsiFramer
 
 	header DoomAsciiHeaderParser
 	ready  chan struct{}
@@ -110,7 +110,7 @@ func (d *Doom) Write(data []byte) (int, error) {
 		d.Rows = rows
 		d.Cols = cols
 		d.Framer = ansiparser.
-            New8BitFramer().
+            NewFramer().
             WithDim(rows, cols).
             WithFrameStart([]byte("[;H"))
 

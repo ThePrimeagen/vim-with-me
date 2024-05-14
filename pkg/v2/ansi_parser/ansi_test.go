@@ -13,7 +13,7 @@ func TestAnsi(t *testing.T) {
     data, err := os.ReadFile("./doom_frame_start")
     require.NoError(t, err)
 
-    parser := ansiparser.New8BitFramer().WithDim(2, 160)
+    parser := ansiparser.NewFramer().WithDim(2, 160)
     parser.Write(data)
 
     timer := time.NewTimer(time.Millisecond * 10)

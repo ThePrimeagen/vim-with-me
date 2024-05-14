@@ -7,7 +7,7 @@ import (
 )
 
 func TestRGB8Bit(t *testing.T) {
-    rgb := newRGB8BitReader()
+    rgb := newRGB8Bit()
     buffer := []byte{
         0x0, 0x45,
         0x45, 0x0,

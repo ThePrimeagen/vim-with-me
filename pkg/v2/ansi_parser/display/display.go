@@ -10,7 +10,7 @@ import (
 )
 
 type Frame struct {
-    Empty int
+    Idx int
 	Color []byte
 	Chars []byte
 }
