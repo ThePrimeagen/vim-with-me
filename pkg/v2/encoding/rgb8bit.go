@@ -53,8 +53,8 @@ func newRGB8Bit() *rgb8Bit {
     return &rgb8Bit{}
 }
 
-func (r *rgb8Bit) read(buffer []byte, offset int) (uint, int) {
-    return uint(buffer[offset]), offset + 1
+func (r *rgb8Bit) read(buffer []byte, offset int) (int, int) {
+    return int(buffer[offset]), offset + 1
 }
 
 func (r *rgb8Bit) write(buffer []byte, offset int, color *ansi.Rgb) int {

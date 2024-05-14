@@ -21,6 +21,10 @@ func main() {
 	assertF := ""
 	flag.StringVar(&assertF, "assert", "", "add an assert file")
 
+	rounds := 1000
+	flag.IntVar(&rounds, "rounds", 1000, "the rounds of doom to play")
+
+
     flag.Parse()
     args := flag.Args()
     name := args[0]
@@ -60,7 +64,7 @@ func main() {
     _ = ascii_buffer.NewFreqency()
     _ = ascii_buffer.NewFreqency()
 
-    for range 1000 {
+    for range rounds {
         frame := <-frames
 
         fmt.Print("\033[H\033[2J")

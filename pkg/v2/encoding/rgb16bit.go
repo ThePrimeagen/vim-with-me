@@ -58,10 +58,10 @@ func newRGB16BitReader() *rgb16BitReader {
 
 // Note i am not using binary as it requires me to make slices
 // I already know i make TONS of unneeded garbage, this one is simple to avoid
-func (r *rgb16BitReader) read(buffer []byte, offset int) (uint, int) {
+func (r *rgb16BitReader) read(buffer []byte, offset int) (int, int) {
     hi := buffer[offset]
     lo := buffer[offset + 1]
-    return uint(hi) << 8 | uint(lo), offset + 2
+    return int(hi) << 8 | int(lo), offset + 2
 }
 
 func (r *rgb16BitReader) write(buffer []byte, offset int, color *ansi.Rgb) int {

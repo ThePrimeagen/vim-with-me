@@ -5,12 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-
-	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 )
 
 type huffmanNode struct {
-    value byte
+    value int
     count int
     left *huffmanNode
     right *huffmanNode
@@ -34,7 +32,7 @@ func (h *huffmanNode) debug(indent int) string {
         h.right.debug(indent + 1)
 }
 
-func fromValue(value byte) *huffmanNode {
+func fromValue(value int) *huffmanNode {
     return &huffmanNode{
         value: value,
         count: 1,
@@ -54,7 +52,7 @@ func join(a, b *huffmanNode) *huffmanNode {
 
 func fromFreq(freq *FreqPoint) *huffmanNode {
     return &huffmanNode{
-        value: freq.idx,
+        value: freq.val,
         count: freq.count,
         left: nil,
         right: nil,
@@ -90,9 +88,8 @@ func (pq *PriorityQueue) Pop() any {
 
 // never had this problem in my life
 var HuffmanTooLarge = errors.New("huffman tree is too large")
-const HUFFMAN_ENCODE_LENGTH = 3
 
-func CalculateHuffman(freq Frequency) ([]byte, error) {
+func CalculateHuffman(freq Frequency) []byte {
     nodes := make(PriorityQueue, freq.Length(), freq.Length())
     for i, p := range freq.Points {
         nodes[i] = fromFreq(p)
@@ -109,25 +106,20 @@ func CalculateHuffman(freq Frequency) ([]byte, error) {
         count += 2
     }
 
-    if count * HUFFMAN_ENCODE_LENGTH >= 256 {
-        return nil, errors.Join(HuffmanTooLarge, fmt.Errorf("node count exceeded 255.  received %d", count))
-    }
-
     head := heap.Pop(&nodes).(*huffmanNode)
 
     data := make([]byte, count * HUFFMAN_ENCODE_LENGTH, count * HUFFMAN_ENCODE_LENGTH)
-    encodeTree(head, data, 0)
-
+    //encodeTree(head, data, 0)
 
     fmt.Println(head.debug(0))
-    return data, nil
+    return data
 }
 
+/*
 func encodeTree(node *huffmanNode, data []byte, idx int) int {
     if node == nil {
         return idx
     }
-
 
     assert.Assert(idx + 2 < len(data), "idx will exceed the bounds of the huffman array during encoding")
 
@@ -148,3 +140,4 @@ func encodeTree(node *huffmanNode, data []byte, idx int) int {
 
     return rightIdx
 }
+*/
