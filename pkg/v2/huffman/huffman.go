@@ -187,7 +187,7 @@ func encodeTree(node *huffmanNode, table *HuffmanEncodingTable, data []byte, idx
 		return idx
 	}
 
-	assert.Assert(idx+2 < len(data), "idx will exceed the bounds of the huffman array during encoding")
+	assert.Assert(idx+5 < len(data), "idx will exceed the bounds of the huffman array during encoding")
 	leftIdx := idx + HUFFMAN_ENCODE_LENGTH
 
 	byteutils.Write16(data, idx, node.value)
