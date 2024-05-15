@@ -24,7 +24,6 @@ func main() {
 	rounds := 1000
 	flag.IntVar(&rounds, "rounds", 1000, "the rounds of doom to play")
 
-
     flag.Parse()
     args := flag.Args()
     name := args[0]

@@ -27,5 +27,20 @@ func TestHuffman(t *testing.T) {
 		0, 0, 0, encodeLen * 5, 0, encodeLen * 6,
 		0, 'D', 0, 0, 0, 0, // 110
 		0, 'C', 0, 0, 0, 0, // 111
-	}, data)
+	}, data.Encoding)
+}
+
+func TestHuffmanTable(t *testing.T) {
+	freq := ascii_buffer.NewFreqency()
+	freq.Freq(byteutils.New8BitIterator([]byte{
+		'A', 'A', 'A',
+		'B', 'B',
+		'C', 'D',
+	}))
+
+	data := huffman.CalculateHuffman(freq)
+    require.Equal(t, []byte{0}, data.BitMap['A'])
+    require.Equal(t, []byte{1, 0}, data.BitMap['B'])
+    require.Equal(t, []byte{1, 1, 0}, data.BitMap['D'])
+    require.Equal(t, []byte{1, 1, 1}, data.BitMap['C'])
 }

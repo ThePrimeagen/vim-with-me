@@ -3,7 +3,7 @@ package encoding
 import (
 	"github.com/leaanthony/go-ansi-parser"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
-	"github.com/theprimeagen/vim-with-me/pkg/v2/iterator"
+	byteutils "github.com/theprimeagen/vim-with-me/pkg/v2/byte_utils"
 )
 
 type rgbReader interface {
@@ -19,7 +19,7 @@ type RGBIterator struct {
 	buffer []byte
 	idx    int
 	reader rgbReader
-	ret    iterator.ByteIteratorResult
+	ret    byteutils.ByteIteratorResult
 }
 
 var empty = make([]byte, 0)
@@ -28,7 +28,7 @@ func New8BitRGBIterator() *RGBIterator {
 	return &RGBIterator{
 		buffer: empty,
 		idx:    0,
-        ret: iterator.ByteIteratorResult{Done: true, Value: 0},
+        ret: byteutils.ByteIteratorResult{Done: true, Value: 0},
 		reader: newRGB8Bit(),
 	}
 }
@@ -37,7 +37,7 @@ func New16BitRGBIterator() *RGBIterator {
 	return &RGBIterator{
 		buffer: empty,
 		idx:    0,
-        ret: iterator.ByteIteratorResult{Done: true, Value: 0},
+        ret: byteutils.ByteIteratorResult{Done: true, Value: 0},
 		reader: newRGB16BitReader(),
 	}
 }
@@ -50,7 +50,7 @@ func (i *RGBIterator) Set(buffer []byte) *RGBIterator {
 	return i
 }
 
-func (i *RGBIterator) Next() iterator.ByteIteratorResult {
+func (i *RGBIterator) Next() byteutils.ByteIteratorResult {
 	assert.Assert(i.ret.Done, "iterator is done, you cannot call done")
 	value, offset := i.reader.read(i.buffer, i.idx)
 	i.idx = offset
