@@ -4,15 +4,24 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/leaanthony/go-ansi-parser"
+	byteutils "github.com/theprimeagen/vim-with-me/pkg/v2/byte_utils"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/encoding"
 	colors "gitlab.com/ethanbakerdev/colors"
-	"github.com/leaanthony/go-ansi-parser"
 )
 
 type Frame struct {
     Idx int
 	Color []byte
 	Chars []byte
+}
+
+func (f *Frame) Color16BitIterator() byteutils.ByteIterator {
+    return byteutils.New16BitIterator(f.Color)
+}
+
+func (f *Frame) Color8BitIterator() byteutils.ByteIterator {
+    return byteutils.New8BitIterator(f.Color)
 }
 
 func Display(frame *Frame, rows, cols int) string {

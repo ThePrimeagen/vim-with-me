@@ -197,6 +197,13 @@ func (framer *AnsiFramer) place(color *ansi.Rgb, char byte) {
 
 }
 
+var black = ansi.Rgb{R: 0, G: 0, B: 0}
+func (framer *AnsiFramer) fillRemainingRow() {
+	for framer.State.CurrentCol < framer.State.Cols {
+		framer.place(&black, ' ')
+	}
+}
+
 var newline = []byte{'\r', '\n'}
 
 func (framer *AnsiFramer) Write(data []byte) (int, error) {
@@ -270,11 +277,12 @@ func (framer *AnsiFramer) Write(data []byte) (int, error) {
 			}
 		}
 
+        framer.fillRemainingRow()
 		framer.State.CurrentRow++
-		framer.State.CurrentCol = 0
 		if framer.frameStart == nil && framer.State.CurrentRow == framer.State.Rows {
 			framer.produceFrame()
 		}
+		framer.State.CurrentCol = 0
 	}
 
 	return read, nil

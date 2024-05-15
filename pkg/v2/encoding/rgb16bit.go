@@ -30,7 +30,7 @@ func RGB16BitBrightness(rgb byte) float64 {
 	return red/63.0 + green/31.0 + blue/31.0
 }
 
-func RGB16BitToString(rgb byte) string {
+func RGB16BitToString(rgb int) string {
 	red := (rgb & redMask) >> 10
 	green := (rgb & greenMask) >> 5
 	blue := rgb & blueMask
@@ -38,7 +38,7 @@ func RGB16BitToString(rgb byte) string {
 	return fmt.Sprintf("%02x%02x%02x", red, green, blue)
 }
 
-func RGB16BitToAnsiRGB(rgb byte) color.RGB {
+func RGB16BitToAnsiRGB(rgb int) color.RGB {
 	red := float64((rgb & redMask) >> 10)
 	green := float64((rgb & greenMask) >> 5)
 	blue := float64(rgb & blueMask)
