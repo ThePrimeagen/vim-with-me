@@ -1,4 +1,4 @@
-package encoding
+package rgb
 
 import (
 	"github.com/leaanthony/go-ansi-parser"

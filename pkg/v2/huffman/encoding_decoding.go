@@ -96,7 +96,6 @@ func (h *Huffman) Encode(iterator byteutils.ByteIterator, out []byte) (int, erro
 
 // Will i even use a decoder?  i should write this in typescript
 func (h *Huffman) Decode(data []byte, bitLength int, writer byteutils.ByteWriter) error {
-    fmt.Printf("data=%d with bitLength=%d with calculatedBytes=%d\n", len(data), bitLength, bitLength / 8 + 1)
 	assert.Assert(len(data) >= bitLength / 8 + 1, "you did not provide enough data")
 
 	idx := 0
@@ -108,19 +107,7 @@ func (h *Huffman) Decode(data []byte, bitLength int, writer byteutils.ByteWriter
 			bit := int((data[idx] >> bitIdx) & 0x1)
 			bitLength--
 
-            nextDecode := jump(h.DecodingTree, decodeIdx, bit)
-
-            fmt.Printf("decode(%d, %d): writer=%d bit=%d decodeIdx=%d next=%d isLeaf=%v value=%d\n",
-                bitLength,
-                bitIdx,
-                writer.Len(),
-                bit,
-                decodeIdx,
-                nextDecode,
-                isLeaf(h.DecodingTree, nextDecode),
-                value(h.DecodingTree, nextDecode))
-
-            decodeIdx = nextDecode
+            decodeIdx = jump(h.DecodingTree, decodeIdx, bit)
 
             if isLeaf(h.DecodingTree, decodeIdx) {
 

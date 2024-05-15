@@ -1,4 +1,4 @@
-package encoding_test
+package rgb_test
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/leaanthony/go-ansi-parser"
 	"github.com/stretchr/testify/require"
-	"github.com/theprimeagen/vim-with-me/pkg/v2/encoding"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/rgb"
 )
 
 func TestAnsiStyleRGBConversion(t *testing.T) {
@@ -15,8 +15,8 @@ func TestAnsiStyleRGBConversion(t *testing.T) {
 
     require.NoError(t, err)
 
-    _8bit := encoding.RGBTo8BitColor(&style[0].FgCol.Rgb)
-    from8Bit := encoding.RGBByteToAnsiRGB(byte(_8bit))
+    _8bit := rgb.RGBTo8BitColor(&style[0].FgCol.Rgb)
+    from8Bit := rgb.RGBByteToAnsiRGB(byte(_8bit))
     styleRGB := style[0].FgCol.Rgb
 
     require.Equal(t, uint8(from8Bit.R), styleRGB.R)

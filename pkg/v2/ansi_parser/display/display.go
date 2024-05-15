@@ -6,7 +6,7 @@ import (
 
 	"github.com/leaanthony/go-ansi-parser"
 	byteutils "github.com/theprimeagen/vim-with-me/pkg/v2/byte_utils"
-	"github.com/theprimeagen/vim-with-me/pkg/v2/encoding"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/rgb"
 	colors "gitlab.com/ethanbakerdev/colors"
 )
 
@@ -40,7 +40,7 @@ func Display(frame *Frame, rows, cols int) string {
             char := frame.Chars[idx]
 
             if color != prev && len(str) > 0 {
-                row += colors.AnsiRGB(encoding.RGBByteToAnsiRGB(prev)) + str
+                row += colors.AnsiRGB(rgb.RGBByteToAnsiRGB(prev)) + str
                 //row += str
                 prev = color
                 str = ""
@@ -67,8 +67,8 @@ func Clear() string {
 
 
 func DebugStyle(style *ansi.StyledText) {
-    color := encoding.RGBTo8BitColor(&style.FgCol.Rgb)
-    colorStr := colors.AnsiRGB(encoding.RGBByteToAnsiRGB(byte(color)))
+    color := rgb.RGBTo8BitColor(&style.FgCol.Rgb)
+    colorStr := colors.AnsiRGB(rgb.RGBByteToAnsiRGB(byte(color)))
 
     fmt.Printf("%+v %+v vs %+v \n", style, style.FgCol, colorStr + style.Label)
 

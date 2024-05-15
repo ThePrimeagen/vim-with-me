@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/theprimeagen/vim-with-me/pkg/v2/ansi_parser/display"
-	"github.com/theprimeagen/vim-with-me/pkg/v2/encoding"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/rgb"
 )
 
 type charable struct {
@@ -14,7 +14,7 @@ type charable struct {
 	char       string
 }
 
-func (c *charable) brightnessRange() encoding.BrightnessRange {
+func (c *charable) brightnessRange() rgb.BrightnessRange {
 	min := 4.0
 	max := 0.0
 	sum := 0.0
@@ -30,7 +30,7 @@ func (c *charable) brightnessRange() encoding.BrightnessRange {
 		sum += bright
 	}
 
-	return encoding.BrightnessRange{
+	return rgb.BrightnessRange{
 		Min: min,
 		Max: max,
 		Avg: sum / float64(len(c.brightness)),
@@ -51,7 +51,7 @@ func (c *colorToChar) Map(frame display.Frame) {
 	for i, ch := range frame.Chars {
 
 		char := string(ch)
-		bright := encoding.RGBBrightness(frame.Color[i])
+		bright := rgb.RGBBrightness(frame.Color[i])
 
 		var charPtr *charable = nil
 
@@ -80,7 +80,7 @@ func (c *colorToChar) Map(frame display.Frame) {
 
 func (c *colorToChar) String() string {
 
-	brightnesses := make(map[string]encoding.BrightnessRange, 0)
+	brightnesses := make(map[string]rgb.BrightnessRange, 0)
 	for _, char := range c.charOrdering {
         brightnesses[char.char] = char.brightnessRange()
 	}

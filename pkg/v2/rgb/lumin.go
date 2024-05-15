@@ -1,4 +1,4 @@
-package encoding
+package rgb
 
 type BrightnessRange struct {
 	Max  float64

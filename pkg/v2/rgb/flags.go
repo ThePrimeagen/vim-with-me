@@ -1,4 +1,4 @@
-package encoding
+package rgb
 
 const NONE = 0
 const RLE_ONLY = 1

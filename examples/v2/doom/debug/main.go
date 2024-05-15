@@ -11,6 +11,7 @@ import (
 	"github.com/theprimeagen/vim-with-me/pkg/v2/ansi_parser/display"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/ascii_buffer"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
+	byteutils "github.com/theprimeagen/vim-with-me/pkg/v2/byte_utils"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/huffman"
 )
 
@@ -51,6 +52,14 @@ func main() {
             bitLen, err := huff.Encode(frame.Color8BitIterator(), huffBuff)
             fmt.Println(display.Display(&frame, d.Rows, d.Cols))
             fmt.Fprintf(os.Stderr, "huff: %d bitLen: %d -- err: %v\n", len(huff.DecodingTree), bitLen / 8 + 1, err)
+
+            out := make([]byte, len(frame.Color), len(frame.Color))
+            writer := byteutils.U8Writer{}
+            writer.Set(out)
+
+            huff.Decode(huffBuff, bitLen, &writer)
+            frame.Color = out
+            fmt.Println(display.Display(&frame, d.Rows, d.Cols))
 
             break outer;
         case <-finish:

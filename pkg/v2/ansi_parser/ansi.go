@@ -10,7 +10,7 @@ import (
 	"github.com/leaanthony/go-ansi-parser"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/ansi_parser/display"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
-	"github.com/theprimeagen/vim-with-me/pkg/v2/encoding"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/rgb"
 )
 
 type AnsiFramer struct {
@@ -22,7 +22,7 @@ type AnsiFramer struct {
 	ch      chan display.Frame
 	buffer  []byte
 	scratch []byte
-	writer  *encoding.RGBWriter
+	writer  *rgb.RGBWriter
 
 	lastStyle *ansi.StyledText
 }
@@ -150,7 +150,7 @@ func NewFramer() *AnsiFramer {
 		buffer:     make([]byte, 0, 0),
 		scratch:    make([]byte, 0),
 		frameStart: nil,
-		writer:     encoding.New8BitRGBWriter(),
+		writer:     rgb.New8BitRGBWriter(),
 	}
 }
 
@@ -170,7 +170,7 @@ func (a *AnsiFramer) WithDim(rows, cols int) *AnsiFramer {
 	return a
 }
 
-func (a *AnsiFramer) WithColorWriter(writer *encoding.RGBWriter) {
+func (a *AnsiFramer) WithColorWriter(writer *rgb.RGBWriter) {
 	a.writer = writer
 	a.reset()
 }
