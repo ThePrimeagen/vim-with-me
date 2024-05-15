@@ -151,11 +151,6 @@ func (h *HuffmanEncodingTable) String() string {
     return out
 }
 
-type Huffman struct {
-	Encoding []byte
-	BitMap   map[int][]byte
-}
-
 func CalculateHuffman(freq ascii_buffer.Frequency) *Huffman {
 	nodes := make(PriorityQueue, freq.Length(), freq.Length())
 	for i, p := range freq.Points {
@@ -182,8 +177,8 @@ func CalculateHuffman(freq ascii_buffer.Frequency) *Huffman {
 	encodeTree(head, table, encoding, 0)
 
 	return &Huffman{
-		Encoding: encoding,
-		BitMap:   table.BitMap,
+		DecodingTree: encoding,
+		EncodingTable:   table.BitMap,
 	}
 }
 
