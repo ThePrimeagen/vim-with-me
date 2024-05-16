@@ -1,6 +1,6 @@
 package ascii_buffer
 
-func Translate(x, y, cols int) int {
-    return y * cols + x
+func Translate(row, col, cols int) int {
+    return row * cols + col
 }
 

@@ -15,69 +15,77 @@ type VirtualBox struct {
 	Cols      int
 	Rows      int
 
-	X int
-	Y int
+	Row int
+	Col int
 
 	Stride int
 
-    iterX int
-    iterY int
-    res byteutils.ByteIteratorResult
+	iterRow int
+	iterCol int
+	res     byteutils.ByteIteratorResult
 }
 
 func (v *VirtualBox) String() string {
-    return fmt.Sprintf("VirtualBox(%d, %d) rows=%d cols=%d totalRows=%d totalCols=%d stride=%d (iter: x=%d y=%d res=%s)",
-        v.X, v.Y,
-        v.Rows, v.Cols,
-        v.TotalRows, v.TotalCols,
-        v.Stride,
-        v.iterX, v.iterY, &v.res,
-    )
+	return fmt.Sprintf("VirtualBox(%d, %d) rows=%d cols=%d totalRows=%d totalCols=%d stride=%d (iter: x=%d y=%d res=%s)",
+		v.Row, v.Col,
+		v.Rows, v.Cols,
+		v.TotalRows, v.TotalCols,
+		v.Stride,
+		v.iterRow, v.iterCol, &v.res,
+	)
 }
 
 func fromVirtualBox(v *VirtualBox) *VirtualBox {
 	return &VirtualBox{
 		buffer:    v.buffer,
-		X:         0,
-		Y:         0,
+		Row:       0,
+		Col:       0,
 		TotalRows: v.TotalRows,
 		TotalCols: v.TotalCols,
-		Stride:  v.Stride,
-        iterX: 0,
-        iterY: 0,
-        res: byteutils.ByteIteratorResult{Done: false, Value: 0},
+		Stride:    v.Stride,
+		iterRow:   0,
+		iterCol:   0,
+		res:       byteutils.ByteIteratorResult{Done: false, Value: 0},
 	}
 }
 
 func newVirtualBox(buf []byte, totalRows, totalCols int) *VirtualBox {
+	assert.Assert(len(buf) == totalRows*totalCols, "the buf and rows * cols are not the same size")
 	return &VirtualBox{
-		buffer:    buf,
-		X:         0,
-		Y:         0,
+		buffer: buf,
+		Row:    0,
+		Col:    0,
+
 		TotalRows: totalRows,
+		Rows:      totalRows,
+
 		TotalCols: totalCols,
-        Rows: totalRows,
-        Cols: totalCols,
-        iterX: 0,
-        iterY: 0,
-        res: byteutils.ByteIteratorResult{Done: false, Value: 0},
+		Cols:      totalCols,
+
+		iterRow: 0,
+		iterCol: 0,
+		res:     byteutils.ByteIteratorResult{Done: false, Value: 0},
 	}
 }
 
 func (v *VirtualBox) withSize(rows, cols int) *VirtualBox {
-	v.Rows = cols
-	v.Cols = rows
+	v.Rows = rows
+	v.Cols = cols
 	return v
 }
 
-func (v *VirtualBox) at(x, y int) *VirtualBox {
-	v.X = x
-	v.Y = y
+func (v *VirtualBox) Len() int {
+    return v.Rows * v.Cols
+}
+
+func (v *VirtualBox) at(row, col int) *VirtualBox {
+	v.Row = row
+	v.Col = col
 	return v
 }
 
 func (v *VirtualBox) withStride(size int) *VirtualBox {
-    assert.Assert(size == 1 || size == 2, "virtual box only supports 8 or 16 bit value types")
+	assert.Assert(size == 1 || size == 2, "virtual box only supports 8 or 16 bit value types")
 
 	v.Stride = size
 	return v
@@ -88,86 +96,105 @@ func (v *VirtualBox) quad() (*VirtualBox, *VirtualBox, *VirtualBox, *VirtualBox)
 	assert.Assert(v.Rows >= 2, "cannot make a virtual box with 1 or less rows", "from", v)
 	assert.Assert(v.Cols >= 2, "cannot make a virtual box with 1 or less rows", "from", v)
 
-	centerX := v.X + v.Cols/2
-	centerY := v.Y + v.Rows/2
-	centerX -= centerX % v.Stride
-
 	rows := v.Rows / 2
 	cols := v.Cols / 2
 	cols -= cols % v.Stride
 
+	centerCol := v.Col + cols
+	centerRow := v.Row + rows
+
+	maxRow := centerRow + (v.Rows - rows) - 1
+	maxCol := centerCol + (v.Cols - cols) - 1
+
+	maxIdx := Translate(maxRow, maxCol, v.TotalCols)
+	assert.Assert(maxIdx < len(v.buffer),
+		"translation of location is off the map",
+		"idx", maxIdx,
+		"CRow", centerRow,
+		"CCol", centerCol,
+
+		"Rows", v.Rows,
+		"Cols", v.Cols,
+
+		"midRow", rows,
+		"midCol", cols,
+		"strides", v.Stride,
+		"totalCols", v.TotalCols,
+		"maxRow", maxRow,
+		"maxCol", maxCol,
+	)
+
 	tl := fromVirtualBox(v).
-		at(v.X, v.Y).
+		at(v.Row, v.Col).
 		withSize(rows, cols)
 
 	tr := fromVirtualBox(v).
-		at(centerX, v.Y).
+		at(v.Row, centerCol).
 		withSize(rows, v.Cols-cols)
 
 	bl := fromVirtualBox(v).
-		at(v.X, centerY).
+		at(centerRow, v.Col).
 		withSize(v.Rows-rows, cols)
 
 	br := fromVirtualBox(v).
-		at(centerX, centerY).
+		at(centerRow, centerCol).
 		withSize(v.Rows-rows, v.Cols-cols)
 
 	return tl, tr, bl, br
 }
 
 func (v *VirtualBox) Next() byteutils.ByteIteratorResult {
-    assert.Assert(!v.res.Done, "you cannot call next when iterator is done", "res", v.res)
+	assert.Assert(!v.res.Done, "you cannot call next when iterator is done", "res", v.res)
 
-    x := v.X + v.iterX
-    y := v.Y + v.iterY
-    idx := Translate(x, y, v.TotalCols)
+	row := v.Row + v.iterRow
+	col := v.Col + v.iterCol
+	idx := Translate(row, col, v.TotalCols)
 
-    assert.Assert(idx >= 0 && idx < len(v.buffer), "idx cannot exceed the bounds, this means translate is broken", "idx", idx)
-    value := int(v.buffer[idx])
-    if v.Stride == 2 {
-        value = byteutils.Read16(v.buffer, idx)
-    }
+	assert.Assert(idx >= 0 && idx < len(v.buffer), "idx cannot exceed the bounds, this means translate is broken", "idx", idx, "x", row, "y", col)
+	value := int(v.buffer[idx])
+	if v.Stride == 2 {
+		value = byteutils.Read16(v.buffer, idx)
+	}
 
-    v.iterX += v.Stride
-    assert.Assert(v.iterX <= v.Cols, "somehow iterX is greator than cols which means we have a mishaped virtual box", "box", v)
+	v.iterCol += v.Stride
+	assert.Assert(v.iterRow <= v.Cols, "somehow iterX is greator than cols which means we have a mishaped virtual box", "box", v)
 
-    if v.iterX == v.Cols {
-        v.iterX = 0
-        v.iterY++
-    }
+	if v.iterCol == v.Cols {
+		v.iterCol = 0
+		v.iterRow++
+	}
 
-    v.res.Done = v.iterY == v.Rows
-    v.res.Value = value
+	v.res.Done = v.iterRow == v.Rows
+	v.res.Value = value
 
-    return v.res
+	return v.res
 }
 
 func (v *VirtualBox) Reset() {
-    v.iterX = 0
-    v.iterY = 0
-    v.res.Done = false
+	v.iterRow = 0
+	v.iterCol = 0
+	v.res.Done = false
 }
 
 func partition(data []byte, current *VirtualBox, boxes *[]*VirtualBox, depth int) {
-    if depth == 0 {
-        *boxes = append(*boxes, current)
-        return
-    }
+	if depth == 0 {
+		*boxes = append(*boxes, current)
+		return
+	}
 
-    tl, tr, bl, br := current.quad()
-    partition(data, tl, boxes, depth - 1)
-    partition(data, tr, boxes, depth - 1)
-    partition(data, bl, boxes, depth - 1)
-    partition(data, br, boxes, depth - 1)
-
+	tl, tr, bl, br := current.quad()
+	partition(data, tl, boxes, depth-1)
+	partition(data, tr, boxes, depth-1)
+	partition(data, bl, boxes, depth-1)
+	partition(data, br, boxes, depth-1)
 
 }
 
 // TODO: I hate this interface...
 func Partition(data []byte, rows, cols, depth, stride int) []*VirtualBox {
 	boxes := &([]*VirtualBox{})
-    v := newVirtualBox(data, rows, cols).
-        withStride(stride)
+	v := newVirtualBox(data, rows, cols).
+		withStride(stride)
 
 	partition(data, v, boxes, depth)
 

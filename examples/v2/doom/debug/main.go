@@ -51,14 +51,29 @@ func main() {
             bitLen, err := huff.Encode(frame.Color8BitIterator(), huffBuff)
             fmt.Println(display.Display(&frame, d.Rows, d.Cols))
             fmt.Fprintf(os.Stderr, "huff: %d bitLen: %d -- err: %v\n", len(huff.DecodingTree), bitLen / 8 + 1, err)
+            fmt.Fprintf(os.Stderr, "TOTAL: %d\n", len(huff.DecodingTree) + bitLen / 8 + 1)
 
-            //out := make([]byte, len(frame.Color), len(frame.Color))
-            //writer := byteutils.U8Writer{}
-            //writer.Set(out)
+            boxes := ascii_buffer.Partition(frame.Color, d.Rows, d.Cols, 4, 1)
 
-            //huff.Decode(huffBuff, bitLen, &writer)
-            //frame.Color = out
-            //fmt.Println(display.Display(&frame, d.Rows, d.Cols))
+            totalHuff := 0
+            totalBits := 0
+            for i, b := range boxes {
+                freq := ascii_buffer.NewFreqency()
+                freq.Freq(b)
+
+                huff := huffman.CalculateHuffman(freq)
+                huffBuff := make([]byte, len(frame.Color), len(frame.Color))
+
+                b.Reset()
+
+                bitLen, err := huff.Encode(b, huffBuff)
+                fmt.Fprintf(os.Stderr, "BOX(%d, %d): %d huff: %d bitLen: %d -- err: %v\n", i, freq.Length(), b.Len(), len(huff.DecodingTree), bitLen / 8 + 1, err)
+
+                totalBits += bitLen
+                totalHuff += len(huff.DecodingTree)
+            }
+
+            fmt.Fprintf(os.Stderr, "Total(quad): %d\n", totalHuff + totalBits / 8 + 1)
 
             break outer;
         case <-finish:

@@ -8,6 +8,20 @@ import (
 	byteutils "github.com/theprimeagen/vim-with-me/pkg/v2/byte_utils"
 )
 
+// this should only trigger assertions if wrong
+func TestVirtualBoxConstruction(t *testing.T) {
+    rows := 50
+    cols := 160
+    size := cols * rows
+    data := make([]byte, size, size)
+    for i := range size {
+        data[i] = byte(i % 256)
+    }
+
+    _ = ascii_buffer.Partition(data, rows, cols, 2, 1)
+    _ = ascii_buffer.Partition(data, rows, cols, 2, 2)
+}
+
 func TestVirtualBox(t *testing.T) {
     data := []byte{
         1, 2, 3, 4,
@@ -27,7 +41,7 @@ func TestVirtualBox(t *testing.T) {
     require.Equal(t, 16, len(boxes))
 
     for i, b := range boxes {
-        idx := ascii_buffer.Translate(b.X, b.Y, b.TotalCols)
+        idx := ascii_buffer.Translate(b.Row, b.Col, b.TotalCols)
         require.Equal(t, i + 1, int(expectedDataOrder[idx]))
     }
 }
@@ -51,7 +65,7 @@ func TestVirtualBoxIterators(t *testing.T) {
     require.Equal(t, 4, len(boxes))
 
     for i, b := range boxes {
-        idx := ascii_buffer.Translate(b.X, b.Y, b.TotalCols)
+        idx := ascii_buffer.Translate(b.Row, b.Col, b.TotalCols)
         expected := expectedDataOrder[i]
 
         // TODO: look into this
@@ -90,7 +104,7 @@ func TestVirtualBoxStride(t *testing.T) {
     require.Equal(t, 4, len(boxes))
 
     for i, b := range boxes {
-        idx := ascii_buffer.Translate(b.X, b.Y, b.TotalCols)
+        idx := ascii_buffer.Translate(b.Row, b.Col, b.TotalCols)
         expected := expectedDataOrder[i]
 
         // TODO: look into this
