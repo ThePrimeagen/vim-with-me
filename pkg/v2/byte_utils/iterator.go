@@ -1,10 +1,18 @@
 package byteutils
 
-import "github.com/theprimeagen/vim-with-me/pkg/v2/assert"
+import (
+	"fmt"
+
+	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
+)
 
 type ByteIteratorResult struct {
 	Done  bool
 	Value int
+}
+
+func (b *ByteIteratorResult) String() string {
+    return fmt.Sprintf("value=%d done=%v", b.Value, b.Done)
 }
 
 type ByteIterator interface {
@@ -26,15 +34,23 @@ func New16BitIterator(buf []byte) *SixteenBitIterator {
     }
 }
 
+func Read16(buf []byte, offset int) int {
+	assert.Assert(len(buf) > offset+1, "you cannot read outside of the buffer")
+
+	hi := int(buf[offset])
+	lo := int(buf[offset + 1])
+    return hi << 8 | lo
+}
+
+
 func (i *SixteenBitIterator) Next() ByteIteratorResult {
     assert.Assert(!i.res.Done, "SixteenBitIterator#Next was called on an exhausted iterator")
 
-    hi := i.buffer[i.idx]
-    lo := i.buffer[i.idx + 1]
+    value := Read16(i.buffer, i.idx)
     i.idx += 2
 
     i.res.Done = i.idx == len(i.buffer)
-    i.res.Value = (int(hi) << 8) + int(lo)
+    i.res.Value = value
 
     return i.res
 }

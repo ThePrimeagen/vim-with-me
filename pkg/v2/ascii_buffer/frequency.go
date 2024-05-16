@@ -86,5 +86,7 @@ func (f *Frequency) DebugFunc(toString func(int) string) string {
 }
 
 func (f *Frequency) Debug() string {
-	return f.DebugFunc(func(b int) string { return string(b) })
+	return f.DebugFunc(func(b int) string {
+        return fmt.Sprintf("%d", b)
+    })
 }

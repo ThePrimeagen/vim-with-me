@@ -30,14 +30,6 @@ func Write16(buf []byte, offset, value int) {
 	buf[offset+1] = byte(lo)
 }
 
-func Read16(buf []byte, offset int) int {
-	assert.Assert(len(buf) > offset+1, "you cannot read outside of the buffer")
-
-	hi := int(buf[offset])
-	lo := int(buf[offset + 1])
-    return hi << 8 | lo
-}
-
 type ByteWriter interface {
 	Write(value int) error
 	Len() int
