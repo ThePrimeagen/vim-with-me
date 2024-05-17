@@ -1,26 +1,17 @@
-# Version 2 Protocol Thoughts
-## One location Three Items
-Version 2 of the protocol can consider having location as the top level encode
-and then dangle off \*Foreground \*Background and Ascii value
+# The realtime ascii engine
+Right now its a work in progress so there is not going to be a lot of
+information about it or how to use until i get to a 1.0
 
-Then the window could just track the diffs and send down minimum amounts of
-information for the change, thus we only have to specify the 2 byte location
-once for ascii + color change.
+## Doom ascii test
+**What is left**
+[ ] - brightness -> ascii tree for doom
+[ ] - open command to tell the front-end how big
+[ ] - fly.io relay
+  [ ] - store open command
+  [ ] - store ascii tree
+  [ ] - default "nothing to see here" frame
+[ ] - ui to display out the buffer
+  [ ] - brightness -> ascii replay
+[ ] - framing of data
 
-## Color
-Encode color as 2 bytes
-
- 1  2-6        7-11       12-16
-+--+----------+----------+----------+
-|F | Red      | Green    | Blue     |
-+--+----------+----------+----------+
-
-33% reduction in color space requirements
-
-## Color Again
-We could do color compression but only have a specified color table ahead of
-time that encodes up to 128 colors as 1 byte values, with one bit reserved for
-F/B
-
-66% savings on the most frequent
 
