@@ -100,55 +100,55 @@ func (pq *PriorityQueue) Pop() any {
 var HuffmanTooLarge = errors.New("huffman tree is too large")
 
 type HuffmanEncodingTable struct {
-	Bits []byte
-	Len  int
-    BitMap map[int][]byte
+	Bits   []byte
+	Len    int
+	BitMap map[int][]byte
 }
 
 func newHuffmanTable() *HuffmanEncodingTable {
-    return &HuffmanEncodingTable{
-        Bits: make([]byte, 24, 24),
-        Len: 0,
-        BitMap: make(map[int][]byte),
-    }
+	return &HuffmanEncodingTable{
+		Bits:   make([]byte, 24, 24),
+		Len:    0,
+		BitMap: make(map[int][]byte),
+	}
 }
 
 func (h *HuffmanEncodingTable) Left() {
-    h.Bits[h.Len] = 0
-    h.Len++
+	h.Bits[h.Len] = 0
+	h.Len++
 }
 
 func (h *HuffmanEncodingTable) Right() {
-    h.Bits[h.Len] = 1
-    h.Len++
+	h.Bits[h.Len] = 1
+	h.Len++
 }
 
 func (h *HuffmanEncodingTable) Pop() {
-    h.Len--
+	h.Len--
 }
 
 func (h *HuffmanEncodingTable) Encode(value int) {
-    encodingValue := make([]byte, h.Len, h.Len)
-    copy(encodingValue, h.Bits)
-    h.BitMap[value] = encodingValue
+	encodingValue := make([]byte, h.Len, h.Len)
+	copy(encodingValue, h.Bits)
+	h.BitMap[value] = encodingValue
 }
 
 func (h *HuffmanEncodingTable) String() string {
-    out := fmt.Sprintf("encoding table(%d): ", h.Len)
-    for i := range h.Len {
-        out += fmt.Sprintf("%d", h.Bits[i])
-    }
-    out += "\n"
+	out := fmt.Sprintf("encoding table(%d): ", h.Len)
+	for i := range h.Len {
+		out += fmt.Sprintf("%d", h.Bits[i])
+	}
+	out += "\n"
 
-    for k, v := range h.BitMap {
-        out += fmt.Sprintf("  %d => ", k)
-        for _, bit := range v {
-            out += fmt.Sprintf("%d", bit)
-        }
-        out += "\n"
-    }
+	for k, v := range h.BitMap {
+		out += fmt.Sprintf("  %d => ", k)
+		for _, bit := range v {
+			out += fmt.Sprintf("%d", bit)
+		}
+		out += "\n"
+	}
 
-    return out
+	return out
 }
 
 func CalculateHuffman(freq ascii_buffer.Frequency) *Huffman {
@@ -172,13 +172,13 @@ func CalculateHuffman(freq ascii_buffer.Frequency) *Huffman {
 
 	size := count * HUFFMAN_ENCODE_LENGTH
 	encoding := make([]byte, size, size)
-    table := newHuffmanTable()
+	table := newHuffmanTable()
 
 	encodeTree(head, table, encoding, 0)
 
 	return &Huffman{
-		DecodingTree: encoding,
-		EncodingTable:   table.BitMap,
+		DecodingTree:  encoding,
+		EncodingTable: table.BitMap,
 	}
 }
 
@@ -193,20 +193,20 @@ func encodeTree(node *huffmanNode, table *HuffmanEncodingTable, data []byte, idx
 	byteutils.Write16(data, idx, node.value)
 	byteutils.Write16(data, idx+2, leftIdx)
 
-    table.Left()
+	table.Left()
 	rightIdx := encodeTree(node.left, table, data, leftIdx)
-    table.Pop()
+	table.Pop()
 
 	byteutils.Write16(data, idx+4, rightIdx)
 
-    table.Right()
+	table.Right()
 	doneIdx := encodeTree(node.right, table, data, rightIdx)
-    table.Pop()
+	table.Pop()
 
 	if node.isLeaf() {
 		byteutils.Write16(data, idx+2, 0)
 		byteutils.Write16(data, idx+4, 0)
-        table.Encode(node.value)
+		table.Encode(node.value)
 	}
 
 	return doneIdx

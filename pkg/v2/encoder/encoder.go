@@ -1,17 +1,30 @@
 package encoder
 
-import "github.com/theprimeagen/vim-with-me/pkg/v2/ascii_buffer"
+import (
+	"github.com/theprimeagen/vim-with-me/pkg/v2/ascii_buffer"
+)
 
 type EncodingFrame struct {
+	Stride int
+
 	Prev []byte
 	Curr []byte
+
+	Freq ascii_buffer.Frequency
 
 	CurrQT ascii_buffer.Quadtree
 	PrevQT ascii_buffer.Quadtree
 
-	Out      []byte
+	RLE ascii_buffer.AsciiRLE
+
+	Out []byte
+	Tmp []byte
+
+	TmpLen   int
 	Len      int
+
 	Encoding byte
+	Flags    byte
 }
 
 func (e *EncodingFrame) pushFrame(frame []byte) {
@@ -26,17 +39,28 @@ func (e *EncodingFrame) pushFrame(frame []byte) {
 
 func newEncodingFrame(size int, params ascii_buffer.QuadtreeParam) *EncodingFrame {
 	out := make([]byte, size, size)
+	tmp := make([]byte, size, size)
+
 	prevQt := ascii_buffer.Partition(out, params)
 	currQt := ascii_buffer.Partition(out, params)
 	return &EncodingFrame{
+		Stride: params.Stride,
+
 		Prev:   nil,
 		PrevQT: prevQt,
 
 		Curr:   nil,
 		CurrQT: currQt,
 
+		Freq: ascii_buffer.NewFreqency(),
+
+		RLE: *ascii_buffer.NewAsciiRLE(),
+
 		Out: out,
 		Len: 0,
+
+		Tmp:    tmp,
+		TmpLen: 0,
 	}
 }
 
@@ -63,9 +87,9 @@ func (e *Encoder) AddEncoder(encoder EncodingCall) {
 	e.frames = append(e.frames, newEncodingFrame(e.size, e.params))
 }
 
-func (e *Encoder) PushFrame(data []byte) (int, []byte) {
+func (e *Encoder) PushFrame(data []byte) *EncodingFrame {
 	min := len(data)
-	minBytes := data
+    var outFrame *EncodingFrame = nil
 
 	for i, encoder := range e.encodings {
 		frame := e.frames[i]
@@ -78,9 +102,9 @@ func (e *Encoder) PushFrame(data []byte) (int, []byte) {
 
 		if min > frame.Len {
 			min = frame.Len
-			minBytes = frame.Out
+			outFrame = frame
 		}
 	}
 
-	return min, minBytes
+	return outFrame
 }

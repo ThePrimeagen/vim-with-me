@@ -15,7 +15,7 @@ type AsciiRLE struct {
 
 func NewAsciiRLE() *AsciiRLE {
 	return &AsciiRLE{
-		buffer: make([]byte, 0, 256),
+		buffer: nil,
 		idx:    0,
 		curr:   0,
 		count:  0,
@@ -48,12 +48,15 @@ func (a *AsciiRLE) Debug() {
 	fmt.Println()
 }
 
-func (a *AsciiRLE) Reset() {
+func (a *AsciiRLE) Reset(buf []byte) {
 	a.idx = 0
+    a.buffer = buf
 }
 
 func (a *AsciiRLE) Write(data []byte) {
+	assert.Assert(a.buffer != nil, "AsciiRLE#Write needs a buffer to write into")
 	assert.Assert(len(data) > 0, "AsciiRLE#Write received 0 len data array")
+
     i := 0
 
 	if a.count == 0 {

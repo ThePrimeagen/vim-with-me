@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"github.com/theprimeagen/vim-with-me/examples/v2/doom"
-	"github.com/theprimeagen/vim-with-me/pkg/v2/ansi_parser/display"
+	ansiparser "github.com/theprimeagen/vim-with-me/pkg/v2/ansi_parser"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/ascii_buffer"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
-	"github.com/theprimeagen/vim-with-me/pkg/v2/huffman"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/encoder"
 )
 
 func main() {
@@ -36,49 +36,40 @@ func main() {
 
 	<-d.Ready()
 
-	frames := d.Frames()
-    colors := ascii_buffer.NewFreqency()
-	_ = ascii_buffer.NewFreqency()
+    enc := encoder.NewEncoder(d.Rows * (d.Cols / 2), ascii_buffer.QuadtreeParam{
+        Depth: 2,
+        Stride: 1,
+        Rows: d.Rows,
+        Cols: d.Cols / 2,
+    })
 
+    enc.AddEncoder(encoder.XorRLE)
+    enc.AddEncoder(encoder.Huffman)
+
+	frames := d.Frames()
+
+    fmt.Printf("starting\n")
     outer:
-	for range 1000 {
+    for i := range 1000 {
+        fmt.Printf("loop %d\n", i)
         select{
         case frame := <-frames:
-            colors.Freq(frame.Color8BitIterator())
-            huff := huffman.CalculateHuffman(colors)
-            huffBuff := make([]byte, len(frame.Color), len(frame.Color))
+            data := ansiparser.RemoveAsciiStyledPixels(frame.Color)
+            fmt.Printf("encoding frame %d\n", len(data))
+            encFrame := enc.PushFrame(data)
 
-            bitLen, err := huff.Encode(frame.Color8BitIterator(), huffBuff)
-            fmt.Println(display.Display(&frame, d.Rows, d.Cols))
-            fmt.Fprintf(os.Stderr, "huff: %d bitLen: %d -- err: %v\n", len(huff.DecodingTree), bitLen / 8 + 1, err)
-            fmt.Fprintf(os.Stderr, "TOTAL: %d\n", len(huff.DecodingTree) + bitLen / 8 + 1)
-
-            boxes := ascii_buffer.Partition(frame.Color, d.Rows, d.Cols, 4, 1)
-
-            totalHuff := 0
-            totalBits := 0
-            for i, b := range boxes {
-                freq := ascii_buffer.NewFreqency()
-                freq.Freq(b)
-
-                huff := huffman.CalculateHuffman(freq)
-                huffBuff := make([]byte, len(frame.Color), len(frame.Color))
-
-                b.Reset()
-
-                bitLen, err := huff.Encode(b, huffBuff)
-                fmt.Fprintf(os.Stderr, "BOX(%d, %d): %d huff: %d bitLen: %d -- err: %v\n", i, freq.Length(), b.Len(), len(huff.DecodingTree), bitLen / 8 + 1, err)
-
-                totalBits += bitLen
-                totalHuff += len(huff.DecodingTree)
+            if encFrame == nil {
+                fmt.Printf("encoded failed to produce smaller frame: %d\n", len(data))
+                break
             }
 
-            fmt.Fprintf(os.Stderr, "Total(quad): %d\n", totalHuff + totalBits / 8 + 1)
+            fmt.Printf("encoded(%d): %d\n", encFrame.Encoding, encFrame.Len)
 
-            break outer;
         case <-finish:
             break outer;
         }
+
+        fmt.Printf("done with select on %d\n", i)
 	}
 
 }

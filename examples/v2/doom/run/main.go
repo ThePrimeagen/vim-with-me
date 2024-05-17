@@ -7,9 +7,11 @@ import (
 	"os"
 
 	"github.com/theprimeagen/vim-with-me/examples/v2/doom"
-	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
-	"github.com/theprimeagen/vim-with-me/pkg/v2/ansi_parser/display"
+	ansiparser "github.com/theprimeagen/vim-with-me/pkg/v2/ansi_parser"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/ascii_buffer"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/encoder"
+
 	//"github.com/theprimeagen/vim-with-me/pkg/v2/encoding"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/program"
 )
@@ -59,17 +61,33 @@ func main() {
 
     <-d.Ready()
 
-    frames := d.Frames()
-    _ = ascii_buffer.NewFreqency()
-    _ = ascii_buffer.NewFreqency()
+    enc := encoder.NewEncoder(d.Rows * (d.Cols / 2), ascii_buffer.QuadtreeParam{
+        Depth: 2,
+        Stride: 1,
+        Rows: d.Rows,
+        Cols: d.Cols / 2,
+    })
 
-    for range rounds {
-        frame := <-frames
+    enc.AddEncoder(encoder.XorRLE)
+    enc.AddEncoder(encoder.Huffman)
 
-        fmt.Print("\033[H\033[2J")
-        fmt.Println(display.Display(&frame, d.Rows, d.Cols))
-    }
+	frames := d.Frames()
 
+    for i := range 1000 {
+        select{
+        case frame := <-frames:
+            original := len(frame.Color)
+            data := ansiparser.RemoveAsciiStyledPixels(frame.Color)
+            encFrame := enc.PushFrame(data)
+
+            if encFrame == nil {
+                fmt.Printf("encoded failed to produce smaller frame: %d\n", len(data))
+                break
+            }
+
+            fmt.Printf("(%d) frame: %d -- encoded(%d): %d\n", original, i, encFrame.Encoding, encFrame.Len)
+        }
+	}
 }
 
 
