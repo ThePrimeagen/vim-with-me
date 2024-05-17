@@ -2,13 +2,20 @@ package net
 
 const VERSION = byte(1)
 
-type ByteFrame interface {
+type BaseFrameType byte
+const (
+    OPEN BaseFrameType = iota
+    BRIGHTNESS_TO_ASCII
+    FRAME
+)
+
+type Encodeable interface {
 	Type() byte
 	Into(into []byte, offset int) error
 }
 
 type Frameable struct {
-	Item ByteFrame
+	Item Encodeable
 }
 
 func (f *Frameable) Into(into []byte, offset int) error {

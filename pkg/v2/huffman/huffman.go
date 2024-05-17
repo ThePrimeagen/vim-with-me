@@ -135,7 +135,7 @@ func (h *Huffman) Decode(data []byte, bitLength int, writer byteutils.ByteWriter
 }
 
 var HuffmanDoesntFitIntoOutArray = errors.New("unable to fit huffman into output array")
-func IntoBytes(huff *Huffman, bitLen int, data []byte, offset int) {
+func IntoBytes(huff *Huffman, bitLen int, data []byte, offset int) int {
     assert.Assert(bitLen < int(math.Pow(2.0, 16)), "unable to encode huffman frame larger than 65535 bits")
 
     fit := 4 + len(huff.DecodingTree) > len(data) - offset
@@ -144,4 +144,6 @@ func IntoBytes(huff *Huffman, bitLen int, data []byte, offset int) {
     binary.BigEndian.PutUint16(data[offset:], uint16(bitLen))
     binary.BigEndian.PutUint16(data[offset + 2:], uint16(len(huff.DecodingTree)))
     copy(data[offset + 4:], huff.DecodingTree)
+
+    return 4 + len(huff.DecodingTree)
 }

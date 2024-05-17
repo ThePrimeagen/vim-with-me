@@ -2,6 +2,9 @@ package encoder
 
 import (
 	"github.com/theprimeagen/vim-with-me/pkg/v2/ascii_buffer"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/huffman"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/net"
 )
 
 type EncodingFrame struct {
@@ -10,7 +13,9 @@ type EncodingFrame struct {
 	Prev []byte
 	Curr []byte
 
-	Freq ascii_buffer.Frequency
+	Freq       ascii_buffer.Frequency
+	Huff       *huffman.Huffman
+	HuffBitLen int
 
 	CurrQT ascii_buffer.Quadtree
 	PrevQT ascii_buffer.Quadtree
@@ -20,11 +25,23 @@ type EncodingFrame struct {
 	Out []byte
 	Tmp []byte
 
-	TmpLen   int
-	Len      int
+	TmpLen int
+	Len    int
 
-	Encoding byte
+	Encoding EncoderType
 	Flags    byte
+}
+
+func (e *EncodingFrame) Into(data []byte, offset int) error {
+    data[offset] = byte(e.Encoding)
+    fn, ok := encodeInto[e.Encoding]
+    assert.Assert(ok, "unknown encoding type", "encoding", e.Encoding)
+
+    return fn(e, data, offset)
+}
+
+func (e *EncodingFrame) Type() byte {
+	return byte(net.FRAME)
 }
 
 func (e *EncodingFrame) pushFrame(frame []byte) {
@@ -89,7 +106,7 @@ func (e *Encoder) AddEncoder(encoder EncodingCall) {
 
 func (e *Encoder) PushFrame(data []byte) *EncodingFrame {
 	min := len(data)
-    var outFrame *EncodingFrame = nil
+	var outFrame *EncodingFrame = nil
 
 	for i, encoder := range e.encodings {
 		frame := e.frames[i]

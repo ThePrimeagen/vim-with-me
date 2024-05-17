@@ -1,7 +1,9 @@
 package encoder
 
+type EncoderType byte
+
 const (
-    NONE = iota
+    NONE EncoderType = iota
     XOR_RLE
     XOR_BIT_DIFF // Not implement, but i am horned up for it
     HUFFMAN

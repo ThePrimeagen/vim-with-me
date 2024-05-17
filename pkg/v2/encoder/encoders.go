@@ -3,6 +3,7 @@ package encoder
 import (
 	"errors"
 
+	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/ascii_buffer"
 	byteutils "github.com/theprimeagen/vim-with-me/pkg/v2/byte_utils"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/huffman"
@@ -56,8 +57,27 @@ func Huffman(frame *EncodingFrame) error {
 
     frame.Len = huffLen + byteLen
     frame.Encoding = HUFFMAN
-
-    // TODO: Bit length is important...?
+    frame.HuffBitLen = bitLen
+    frame.Huff = huff
 
     return nil
+}
+
+type encoderEncodingFn func(e *EncodingFrame, data []byte, offset int) error
+type encoderEncodingMap map[EncoderType]encoderEncodingFn
+var encodeInto encoderEncodingMap = encoderEncodingMap{
+    HUFFMAN: func(e *EncodingFrame, data []byte, offset int) error {
+        assert.Assert(e.Huff != nil, "the encoding type is huffman but the huff object in nil")
+        bytes := huffman.IntoBytes(e.Huff, e.HuffBitLen, data, offset)
+
+        assert.Assert(bytes + e.Len < len(data), "unable to encode frame into provided buffer")
+        copy(data[bytes:], e.Curr[:e.Len])
+        return nil
+    },
+
+    XOR_RLE: func(e *EncodingFrame, data []byte, offset int) error {
+        assert.Assert(e.Len < len(data), "unable to encode frame into provided buffer")
+        copy(data[offset:], e.Curr[:e.Len])
+        return nil
+    },
 }
