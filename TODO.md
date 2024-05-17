@@ -1,4 +1,4 @@
-* fix all integration tests
-* GameRunner and GameReplicator
-* Launch doom
+TODO AFTER DOOM ASCII
+* Virtual Boxes should not need a buffer reference
+  - but they are iterators... can we fix this?
 

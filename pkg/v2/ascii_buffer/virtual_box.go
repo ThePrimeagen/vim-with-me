@@ -25,6 +25,20 @@ type VirtualBox struct {
 	res     byteutils.ByteIteratorResult
 }
 
+type Quadtree []*VirtualBox
+type QuadtreeParam struct {
+	Depth  int
+	Rows   int
+	Cols   int
+	Stride int
+}
+
+func (q *Quadtree) UpdateBuffer(buffer []byte) {
+	for _, v := range []*VirtualBox(*q) {
+		v.buffer = buffer
+	}
+}
+
 func (v *VirtualBox) String() string {
 	return fmt.Sprintf("VirtualBox(%d, %d) rows=%d cols=%d totalRows=%d totalCols=%d stride=%d (iter: x=%d y=%d res=%s)",
 		v.Row, v.Col,
@@ -75,7 +89,7 @@ func (v *VirtualBox) withSize(rows, cols int) *VirtualBox {
 }
 
 func (v *VirtualBox) Len() int {
-    return v.Rows * v.Cols
+	return v.Rows * v.Cols
 }
 
 func (v *VirtualBox) at(row, col int) *VirtualBox {
@@ -191,12 +205,12 @@ func partition(data []byte, current *VirtualBox, boxes *[]*VirtualBox, depth int
 }
 
 // TODO: I hate this interface...
-func Partition(data []byte, rows, cols, depth, stride int) []*VirtualBox {
+func Partition(data []byte, params QuadtreeParam) Quadtree {
 	boxes := &([]*VirtualBox{})
-	v := newVirtualBox(data, rows, cols).
-		withStride(stride)
+	v := newVirtualBox(data, params.Rows, params.Cols).
+		withStride(params.Stride)
 
-	partition(data, v, boxes, depth)
+	partition(data, v, boxes, params.Depth)
 
 	return *boxes
 }

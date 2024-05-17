@@ -18,8 +18,15 @@ func TestVirtualBoxConstruction(t *testing.T) {
         data[i] = byte(i % 256)
     }
 
-    _ = ascii_buffer.Partition(data, rows, cols, 2, 1)
-    _ = ascii_buffer.Partition(data, rows, cols, 2, 2)
+    params := ascii_buffer.QuadtreeParam{
+        Depth: 2,
+        Stride: 1,
+        Rows: rows,
+        Cols: cols,
+    }
+
+    _ = ascii_buffer.Partition(data, params)
+    _ = ascii_buffer.Partition(data, params)
 }
 
 func TestVirtualBox(t *testing.T) {
@@ -37,7 +44,13 @@ func TestVirtualBox(t *testing.T) {
         11, 12, 15, 16,
     }
 
-    boxes := ascii_buffer.Partition(data, 4, 4, 2, 1)
+    params := ascii_buffer.QuadtreeParam{
+        Depth: 2,
+        Stride: 1,
+        Rows: 4,
+        Cols: 4,
+    }
+    boxes := ascii_buffer.Partition(data, params)
     require.Equal(t, 16, len(boxes))
 
     for i, b := range boxes {
@@ -61,7 +74,13 @@ func TestVirtualBoxIterators(t *testing.T) {
         { 11, 12, 15, 16, },
     }
 
-    boxes := ascii_buffer.Partition(data, 4, 4, 1, 1)
+    params := ascii_buffer.QuadtreeParam{
+        Depth: 1,
+        Stride: 1,
+        Rows: 4,
+        Cols: 4,
+    }
+    boxes := ascii_buffer.Partition(data, params)
     require.Equal(t, 4, len(boxes))
 
     for i, b := range boxes {
@@ -100,7 +119,13 @@ func TestVirtualBoxStride(t *testing.T) {
         { 0x0b0c, 0x0f10, },
     }
 
-    boxes := ascii_buffer.Partition(data, 4, 4, 1, 2)
+    params := ascii_buffer.QuadtreeParam{
+        Depth: 1,
+        Stride: 2,
+        Rows: 4,
+        Cols: 4,
+    }
+    boxes := ascii_buffer.Partition(data, params)
     require.Equal(t, 4, len(boxes))
 
     for i, b := range boxes {
