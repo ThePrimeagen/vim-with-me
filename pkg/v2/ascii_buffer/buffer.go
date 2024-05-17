@@ -1,39 +1,33 @@
 package ascii_buffer
 
 import (
-	"fmt"
-
-	"github.com/theprimeagen/vim-with-me/pkg/assert"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 )
 
-type AsciiFrame struct {
-	Buffer   []byte
+func assertBounds(a, b, out []byte) {
+    assert.Assert(len(a) == len(b), "cannot diff slices of differing lengths")
+    assert.Assert(len(a) <= len(out), "cannot diff into an out array smaller than in arrays")
 }
 
-func NewAsciiFrame(row, col int) *AsciiFrame {
-	length := row * col
-	return &AsciiFrame{
-		Buffer:   make([]byte, length, length),
-	}
+func Xor(a, b, out []byte) {
+    assertBounds(a, b, out)
+
+    for i, aByte := range a {
+        out[i] = aByte ^ b[i]
+    }
 }
 
-func (a *AsciiFrame) Length() int {
-    return len(a.Buffer)
-}
+func RemoveAsciiStyledPixels(data []byte) []byte {
+    assert.Assert(len(data) & 1 == 0, "you cannot remove ascii styled pixels if the array is not even length")
 
-func (a *AsciiFrame) PushFrame(data []byte) *AsciiFrame {
-    assert.Assert(len(data) == len(a.Buffer), fmt.Sprintf("the frame MUST be the same size as the AsciiBuffer: Expected: %d Received: %d", len(data), len(a.Buffer)))
-	copy(a.Buffer, data)
+    idx := 1
+    doubleIdx := 2
 
-    return a
-}
-
-func (framer *AsciiFrame) Diff(a *AsciiFrame, b *AsciiFrame) *AsciiFrame {
-    // TODO: Obvi perf win, just don't know how in go
-
-    for i, aByte := range a.Buffer {
-        framer.Buffer[i] = aByte ^ b.Buffer[i]
+    for ;doubleIdx < len(data); doubleIdx += 2 {
+        data[idx] = data[doubleIdx]
+        idx++
     }
 
-    return framer
+    return data[:len(data) / 2]
 }
+
