@@ -131,3 +131,5 @@ func (h *Huffman) Decode(data []byte, bitLength int, writer byteutils.ByteWriter
 
 	return nil
 }
+
+func (h *Huffman)

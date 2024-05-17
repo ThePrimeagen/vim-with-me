@@ -1,213 +1,133 @@
 package huffman
 
 import (
-	"container/heap"
 	"errors"
 	"fmt"
-	"strings"
 
-	"github.com/theprimeagen/vim-with-me/pkg/v2/ascii_buffer"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 	byteutils "github.com/theprimeagen/vim-with-me/pkg/v2/byte_utils"
 )
 
-const HUFFMAN_ENCODE_LENGTH = 6
-
-type huffmanNode struct {
-	value int
-	count int
-	left  *huffmanNode
-	right *huffmanNode
+type Huffman struct {
+	DecodingTree  []byte
+	EncodingTable map[int][]byte
 }
 
-func (h *huffmanNode) isLeaf() bool {
-	return h.left == nil && h.right == nil
+func left(decoder []byte, idx int) int {
+    assert.Assert(len(decoder) > idx + 5, "decoder length + idx is shorter than huffmanNode decode length")
+    return byteutils.Read16(decoder, idx + 2);
 }
 
-func (h *huffmanNode) String() string {
-	if h == nil {
-		return "nil"
-	}
-	return fmt.Sprintf("node(%d): %d", h.count, h.value)
+func right(decoder []byte, idx int) int {
+    assert.Assert(len(decoder) > idx + 5, "decoder length + idx is shorter than huffmanNode decode length")
+    return byteutils.Read16(decoder, idx + 4);
 }
 
-func (h *huffmanNode) debug(indent int) string {
-	indentStr := strings.Repeat(" ", indent*2)
-	if h == nil {
-		return fmt.Sprintf("%s-> nil\n", indentStr)
-	}
-
-	return fmt.Sprintf("%s->%s\n", indentStr, h.String()) +
-		h.left.debug(indent+1) +
-		h.right.debug(indent+1)
+func jump(decoder []byte, idx int, bit int) int {
+    if bit == 1 {
+        return right(decoder, idx)
+    }
+    return left(decoder, idx)
 }
 
-func fromValue(value int) *huffmanNode {
-	return &huffmanNode{
-		value: value,
-		count: 1,
-		left:  nil,
-		right: nil,
-	}
+func value(decoder []byte, idx int) int {
+    return byteutils.Read16(decoder, idx);
 }
 
-func join(a, b *huffmanNode) *huffmanNode {
-	return &huffmanNode{
-		value: 0,
-		count: a.count + b.count,
-		left:  a,
-		right: b,
-	}
+func isLeaf(decoder []byte, idx int) bool {
+    assert.Assert(len(decoder) > idx + 5, "decoder length + idx is shorter than huffmanNode decode length")
+    return byteutils.Read16(decoder, idx + 2) == 0 &&
+        byteutils.Read16(decoder, idx + 4) == 0
 }
 
-func fromFreq(freq *ascii_buffer.FreqPoint) *huffmanNode {
-	return &huffmanNode{
-		value: freq.Val,
-		count: freq.Count,
-		left:  nil,
-		right: nil,
-	}
-}
+var HuffmanEncodingExceededSize = errors.New("huffman encoding has exceeded the data array size")
+var HuffmanDecodingExceededSize = errors.New("huffman decoding has exceeded the data array size")
+var HuffmanUnknownValue = errors.New("the iterator produced a value that is not contained in the encoding table")
+var HuffmanDecodingFailedToWrite = errors.New("failed to decode data")
 
-// A PriorityQueue implements heap.Interface and holds Items.
-type PriorityQueue []*huffmanNode
+func (h *Huffman) Encode(iterator byteutils.ByteIterator, out []byte) (int, error) {
+	currentVal := byte(0)
+	byteIdx := 7
+	length := 0
+	bitLength := 0
+	dirty := false
 
-func (pq PriorityQueue) Len() int { return len(pq) }
+	for {
+		res := iterator.Next()
 
-func (pq PriorityQueue) Less(i, j int) bool {
-	return pq[i].count < pq[j].count
-}
-
-func (pq PriorityQueue) Swap(i, j int) {
-	pq[i], pq[j] = pq[j], pq[i]
-}
-
-func (pq *PriorityQueue) Push(x any) {
-	item := x.(*huffmanNode)
-	*pq = append(*pq, item)
-}
-
-func (pq *PriorityQueue) Pop() any {
-	old := *pq
-	n := len(old)
-	item := old[n-1]
-	old[n-1] = nil // avoid memory leak
-	*pq = old[0 : n-1]
-	return item
-}
-
-// never had this problem in my life
-var HuffmanTooLarge = errors.New("huffman tree is too large")
-
-type HuffmanEncodingTable struct {
-	Bits   []byte
-	Len    int
-	BitMap map[int][]byte
-}
-
-func newHuffmanTable() *HuffmanEncodingTable {
-	return &HuffmanEncodingTable{
-		Bits:   make([]byte, 24, 24),
-		Len:    0,
-		BitMap: make(map[int][]byte),
-	}
-}
-
-func (h *HuffmanEncodingTable) Left() {
-	h.Bits[h.Len] = 0
-	h.Len++
-}
-
-func (h *HuffmanEncodingTable) Right() {
-	h.Bits[h.Len] = 1
-	h.Len++
-}
-
-func (h *HuffmanEncodingTable) Pop() {
-	h.Len--
-}
-
-func (h *HuffmanEncodingTable) Encode(value int) {
-	encodingValue := make([]byte, h.Len, h.Len)
-	copy(encodingValue, h.Bits)
-	h.BitMap[value] = encodingValue
-}
-
-func (h *HuffmanEncodingTable) String() string {
-	out := fmt.Sprintf("encoding table(%d): ", h.Len)
-	for i := range h.Len {
-		out += fmt.Sprintf("%d", h.Bits[i])
-	}
-	out += "\n"
-
-	for k, v := range h.BitMap {
-		out += fmt.Sprintf("  %d => ", k)
-		for _, bit := range v {
-			out += fmt.Sprintf("%d", bit)
+		encoding, ok := h.EncodingTable[res.Value]
+		if !ok {
+			return 0, HuffmanUnknownValue
 		}
-		out += "\n"
+
+		for _, bit := range encoding {
+			bitLength++
+			dirty = true
+
+			currentVal = currentVal | (bit << byte(byteIdx))
+			byteIdx--
+
+			if byteIdx < 0 {
+				byteIdx = 7
+				out[length] = currentVal
+
+				dirty = false
+				currentVal = byte(0)
+				length++
+
+				if length == len(out) {
+					return 0, HuffmanEncodingExceededSize
+				}
+			}
+		}
+
+		if res.Done {
+			break
+		}
 	}
 
-	return out
+	if dirty {
+		out[length] = currentVal
+		length++
+	}
+
+	return bitLength, nil
 }
 
-func CalculateHuffman(freq ascii_buffer.Frequency) *Huffman {
-	nodes := make(PriorityQueue, freq.Length(), freq.Length())
-	for i, p := range freq.Points {
-		nodes[i] = fromFreq(p)
-	}
-	heap.Init(&nodes)
+// Will i even use a decoder?  i should write this in typescript
+func (h *Huffman) Decode(data []byte, bitLength int, writer byteutils.ByteWriter) error {
+	assert.Assert(len(data) >= bitLength / 8 + 1, "you did not provide enough data")
 
-	count := 1
-	for len(nodes) > 1 {
-		a := heap.Pop(&nodes).(*huffmanNode)
-		b := heap.Pop(&nodes).(*huffmanNode)
-		c := join(a, b)
+	idx := 0
+	decodeIdx := 0
 
-		heap.Push(&nodes, c)
-		count += 2
-	}
+    outer:
+	for {
+		for bitIdx := 7; bitIdx >= 0; bitIdx-- {
+			bit := int((data[idx] >> bitIdx) & 0x1)
+			bitLength--
 
-	head := heap.Pop(&nodes).(*huffmanNode)
+            decodeIdx = jump(h.DecodingTree, decodeIdx, bit)
 
-	size := count * HUFFMAN_ENCODE_LENGTH
-	encoding := make([]byte, size, size)
-	table := newHuffmanTable()
+            if isLeaf(h.DecodingTree, decodeIdx) {
 
-	encodeTree(head, table, encoding, 0)
+                if err := writer.Write(value(h.DecodingTree, decodeIdx)); err != nil {
+                    return errors.Join(
+                        HuffmanDecodingFailedToWrite,
+                        err,
+                        fmt.Errorf("failed to write at decodeIdx=%d with writer#Len=%d", decodeIdx, writer.Len()))
+                }
 
-	return &Huffman{
-		DecodingTree:  encoding,
-		EncodingTable: table.BitMap,
-	}
-}
+                decodeIdx = 0
+            }
 
-func encodeTree(node *huffmanNode, table *HuffmanEncodingTable, data []byte, idx int) int {
-	if node == nil {
-		return idx
-	}
+            if bitLength == 0 {
+                break outer
+            }
+		}
 
-	assert.Assert(idx+5 < len(data), "idx will exceed the bounds of the huffman array during encoding")
-	leftIdx := idx + HUFFMAN_ENCODE_LENGTH
-
-	byteutils.Write16(data, idx, node.value)
-	byteutils.Write16(data, idx+2, leftIdx)
-
-	table.Left()
-	rightIdx := encodeTree(node.left, table, data, leftIdx)
-	table.Pop()
-
-	byteutils.Write16(data, idx+4, rightIdx)
-
-	table.Right()
-	doneIdx := encodeTree(node.right, table, data, rightIdx)
-	table.Pop()
-
-	if node.isLeaf() {
-		byteutils.Write16(data, idx+2, 0)
-		byteutils.Write16(data, idx+4, 0)
-		table.Encode(node.value)
+        idx++
 	}
 
-	return doneIdx
+	return nil
 }

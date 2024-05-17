@@ -12,6 +12,6 @@ information about it or how to use until i get to a 1.0
   [ ] - default "nothing to see here" frame
 [ ] - ui to display out the buffer
   [ ] - brightness -> ascii replay
-[ ] - framing of data
+[ ] - framing of data (current)
 
 
