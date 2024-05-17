@@ -9,18 +9,19 @@ type EncodingFrame struct {
 	CurrQT ascii_buffer.Quadtree
 	PrevQT ascii_buffer.Quadtree
 
-	Out []byte
-	Len int
+	Out      []byte
+	Len      int
+	Encoding byte
 }
 
 func (e *EncodingFrame) pushFrame(frame []byte) {
-    e.Prev = e.Curr
-    e.Curr = frame
+	e.Prev = e.Curr
+	e.Curr = frame
 
-    e.CurrQT.UpdateBuffer(e.Curr)
-    if e.Prev != nil {
-        e.PrevQT.UpdateBuffer(e.Prev)
-    }
+	e.CurrQT.UpdateBuffer(e.Curr)
+	if e.Prev != nil {
+		e.PrevQT.UpdateBuffer(e.Prev)
+	}
 }
 
 func newEncodingFrame(size int, params ascii_buffer.QuadtreeParam) *EncodingFrame {
@@ -28,14 +29,14 @@ func newEncodingFrame(size int, params ascii_buffer.QuadtreeParam) *EncodingFram
 	prevQt := ascii_buffer.Partition(out, params)
 	currQt := ascii_buffer.Partition(out, params)
 	return &EncodingFrame{
-		Prev: nil,
-        PrevQT: prevQt,
+		Prev:   nil,
+		PrevQT: prevQt,
 
-		Curr: nil,
-        CurrQT: currQt,
+		Curr:   nil,
+		CurrQT: currQt,
 
-		Out:  out,
-		Len:  0,
+		Out: out,
+		Len: 0,
 	}
 }
 
@@ -68,7 +69,7 @@ func (e *Encoder) PushFrame(data []byte) (int, []byte) {
 
 	for i, encoder := range e.encodings {
 		frame := e.frames[i]
-        frame.pushFrame(data)
+		frame.pushFrame(data)
 
 		err := encoder(frame)
 		if err != nil {
