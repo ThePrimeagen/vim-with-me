@@ -4,3 +4,4 @@
 main
 /assert.debug
 /debug.doom
+/.env
