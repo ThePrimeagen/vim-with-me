@@ -30,6 +30,11 @@ func NewRelay(ws uint16) *Relay {
 	return &Relay{
 		WSPort: ws,
 		uuid:   uuid,
+
+		mutex:     sync.RWMutex{},
+		listeners: make(map[int]*Conn),
+
+		id: 0,
 	}
 }
 
@@ -45,7 +50,7 @@ func (relay *Relay) Start() {
 func (relay *Relay) relay(data []byte) {
 	relay.mutex.RLock()
 	for _, conn := range relay.listeners {
-        conn.msg(data)
+		conn.msg(data)
 	}
 	relay.mutex.RUnlock()
 }
@@ -57,18 +62,19 @@ func (relay *Relay) remove(id int) {
 }
 
 func (relay *Relay) add(id int, ws *websocket.Conn) {
-    conn := &Conn{
-        id: id,
-        conn: ws,
-        msgs: make(chan []byte, 10),
-    }
+	conn := &Conn{
+		id:    id,
+		conn:  ws,
+		msgs:  make(chan []byte, 10),
+		relay: relay,
+	}
 
 	relay.mutex.Lock()
 	relay.listeners[id] = conn
 	relay.mutex.Unlock()
 
-    go conn.read()
-    go conn.write()
+	go conn.read()
+	go conn.write()
 }
 
 func (relay *Relay) render(w http.ResponseWriter, r *http.Request) {
@@ -78,7 +84,7 @@ func (relay *Relay) render(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := relay.id
-    relay.add(id, c)
+	relay.add(id, c)
 
 	relay.id++
 

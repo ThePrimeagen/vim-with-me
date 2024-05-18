@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
@@ -33,6 +34,8 @@ func main() {
         txt := lines.Text()
         err := client.Relay([]byte(txt))
         assert.NoError(err, "unable to relay data")
+
+        <-time.NewTimer(time.Second).C
     }
 }
 
