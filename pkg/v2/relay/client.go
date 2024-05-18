@@ -37,3 +37,8 @@ func (r *RelayDriver) Connect() error {
 func (r *RelayDriver) Relay(data []byte) error {
     return r.conn.WriteMessage(websocket.BinaryMessage, data)
 }
+
+func (r *RelayDriver) Close() {
+    assert.Assert(r.conn != nil, "attempting to close a nil connection")
+    r.conn.Close()
+}
