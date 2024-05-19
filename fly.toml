@@ -7,6 +7,7 @@ app = 'vim-with-me'
 primary_region = 'ord'
 
 [build]
+  dockerfile = "relay_server.Dockerfile"
 
 [http_service]
   internal_port = 8080
@@ -15,6 +16,7 @@ primary_region = 'ord'
   auto_start_machines = true
   min_machines_running = 0
   processes = ['app']
+
 
 [[vm]]
   memory = '1gb'

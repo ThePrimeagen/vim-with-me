@@ -10,7 +10,7 @@ import (
 )
 
 type Relay struct {
-	WSPort uint16
+	port uint16
 	uuid   string
 
 	mutex     sync.RWMutex
@@ -24,7 +24,7 @@ var upgrader = websocket.Upgrader{} // use default options
 func NewRelay(ws uint16, uuid string) *Relay {
 
 	return &Relay{
-		WSPort: ws,
+		port: ws,
 		uuid:   uuid,
 
 		mutex:     sync.RWMutex{},
@@ -39,7 +39,7 @@ func (relay *Relay) Start() {
 		relay.render(w, r)
 	})
 
-	addr := fmt.Sprintf("127.0.0.1:%d", relay.WSPort)
+	addr := fmt.Sprintf("127.0.0.1:%d", relay.port)
 	log.Fatal(http.ListenAndServe(addr, nil))
 }
 

@@ -30,6 +30,7 @@ func main() {
 	assert.Assert(len(uuid) > 0, "empty auth id, unable to to start relay")
 
     r := relay.NewRelay(uint16(port), uuid)
+
     r.Start()
 }
 
