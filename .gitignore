@@ -2,6 +2,7 @@
 
 /out
 main
+relay
 /assert.debug
 /debug.doom
 /.env

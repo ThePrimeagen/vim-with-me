@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"sync"
 
 	"github.com/gorilla/websocket"
-	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 )
 
 type Relay struct {

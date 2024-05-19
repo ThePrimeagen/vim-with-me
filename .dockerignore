@@ -5,5 +5,4 @@ out
 **/main
 assert.debug
 debug.doom
-.env
 fly.toml
