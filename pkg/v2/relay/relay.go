@@ -23,9 +23,7 @@ type Relay struct {
 
 var upgrader = websocket.Upgrader{} // use default options
 
-func NewRelay(ws uint16) *Relay {
-	uuid := os.Getenv("AUTH_ID")
-	assert.Assert(len(uuid) > 0, "empty auth id, unable to to start relay")
+func NewRelay(ws uint16, uuid string) *Relay {
 
 	return &Relay{
 		WSPort: ws,
