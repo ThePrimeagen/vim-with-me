@@ -11,7 +11,9 @@ import (
 
 type Relay struct {
 	port uint16
-	uuid   string
+	uuid string
+
+	ch chan []byte
 
 	mutex     sync.RWMutex
 	listeners map[int]*Conn
@@ -25,7 +27,9 @@ func NewRelay(ws uint16, uuid string) *Relay {
 
 	return &Relay{
 		port: ws,
-		uuid:   uuid,
+		uuid: uuid,
+
+		ch: make(chan []byte, 10),
 
 		mutex:     sync.RWMutex{},
 		listeners: make(map[int]*Conn),
@@ -43,7 +47,12 @@ func (relay *Relay) Start() {
 	log.Fatal(http.ListenAndServe(addr, nil))
 }
 
+func (relay *Relay) Messages() chan []byte {
+    return relay.ch
+}
+
 func (relay *Relay) relay(data []byte) {
+	relay.ch <- data
 	relay.mutex.RLock()
 	for _, conn := range relay.listeners {
 		conn.msg(data)
@@ -83,5 +92,4 @@ func (relay *Relay) render(w http.ResponseWriter, r *http.Request) {
 	relay.add(id, c)
 
 	relay.id++
-
 }
