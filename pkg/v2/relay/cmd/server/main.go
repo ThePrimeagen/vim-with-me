@@ -16,7 +16,7 @@ func main() {
     var port uint = 0
     flag.UintVar(&port, "port", 0, "the port to run on for the websocket")
 
-    if port == 42069 {
+    if port == 0 {
         portStr := os.Getenv("PORT")
         portEnv, err := strconv.Atoi(portStr)
         if err == nil {
