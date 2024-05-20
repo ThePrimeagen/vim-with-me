@@ -19,14 +19,15 @@ func NewHighlightPoint(pos Position, z int, color window.Color) *HighlightPoint 
 }
 
 func (h *HighlightPoint) SetActiveState(state bool) {
-    h.active = state
+	h.active = state
 }
 
 var defaultLocation = window.NewLocation(0, 0)
+
 func (h *HighlightPoint) Render() (window.Location, [][]window.Cell) {
-    if !h.active {
-        return defaultLocation, nil
-    }
+	if !h.active {
+		return defaultLocation, nil
+	}
 
 	return h.position.Position(), [][]window.Cell{
 		{window.BackgroundCellOnly(h.color)},

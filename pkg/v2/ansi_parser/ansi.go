@@ -198,6 +198,7 @@ func (framer *AnsiFramer) place(color *ansi.Rgb, char byte) {
 }
 
 var black = ansi.Rgb{R: 0, G: 0, B: 0}
+
 func (framer *AnsiFramer) fillRemainingRow() {
 	for framer.State.CurrentCol < framer.State.Cols {
 		framer.place(&black, ' ')
@@ -277,7 +278,7 @@ func (framer *AnsiFramer) Write(data []byte) (int, error) {
 			}
 		}
 
-        framer.fillRemainingRow()
+		framer.fillRemainingRow()
 		framer.State.CurrentRow++
 		if framer.frameStart == nil && framer.State.CurrentRow == framer.State.Rows {
 			framer.produceFrame()
@@ -310,16 +311,15 @@ func (a *AnsiFramer) Frames() chan display.Frame {
 }
 
 func RemoveAsciiStyledPixels(data []byte) []byte {
-    assert.Assert(len(data) & 1 == 0, "you cannot remove ascii styled pixels if the array is not even length")
+	assert.Assert(len(data)&1 == 0, "you cannot remove ascii styled pixels if the array is not even length")
 
-    idx := 1
-    doubleIdx := 2
+	idx := 1
+	doubleIdx := 2
 
-    for ;doubleIdx < len(data); doubleIdx += 2 {
-        data[idx] = data[doubleIdx]
-        idx++
-    }
+	for ; doubleIdx < len(data); doubleIdx += 2 {
+		data[idx] = data[doubleIdx]
+		idx++
+	}
 
-    return data[:len(data) / 2]
+	return data[:len(data)/2]
 }
-

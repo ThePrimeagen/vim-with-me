@@ -49,13 +49,13 @@ func main() {
 
 	x := &X{row: 6, col: 9}
 	renderer.Add(x)
-    cells := renderer.Render()
+	cells := renderer.Render()
 
 	server.WelcomeMessage(func() *tcp.TCPCommand { return commander.ToCommands() })
 	server.WelcomeMessage(func() *tcp.TCPCommand { return commands.OpenCommand(renderer) })
 	server.WelcomeMessage(func() *tcp.TCPCommand { return commands.PartialRender(cells) })
 
-    fmt.Printf("Does this work?\n")
+	fmt.Printf("Does this work?\n")
 
 	defer server.Close()
 	server.Start()

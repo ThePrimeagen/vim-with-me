@@ -29,47 +29,47 @@ func main() {
 		f, err := os.Open(debug)
 		assert.NoError(err, "unable to read debug file")
 
-        io.Copy(d, f)
-        <-time.After(time.Millisecond * 100)
+		io.Copy(d, f)
+		<-time.After(time.Millisecond * 100)
 		finish <- struct{}{}
 	}()
 
 	<-d.Ready()
 
-    enc := encoder.NewEncoder(d.Rows * (d.Cols / 2), ascii_buffer.QuadtreeParam{
-        Depth: 2,
-        Stride: 1,
-        Rows: d.Rows,
-        Cols: d.Cols / 2,
-    })
+	enc := encoder.NewEncoder(d.Rows*(d.Cols/2), ascii_buffer.QuadtreeParam{
+		Depth:  2,
+		Stride: 1,
+		Rows:   d.Rows,
+		Cols:   d.Cols / 2,
+	})
 
-    enc.AddEncoder(encoder.XorRLE)
-    enc.AddEncoder(encoder.Huffman)
+	enc.AddEncoder(encoder.XorRLE)
+	enc.AddEncoder(encoder.Huffman)
 
 	frames := d.Frames()
 
-    fmt.Printf("starting\n")
-    outer:
-    for i := range 1000 {
-        fmt.Printf("loop %d\n", i)
-        select{
-        case frame := <-frames:
-            data := ansiparser.RemoveAsciiStyledPixels(frame.Color)
-            fmt.Printf("encoding frame %d\n", len(data))
-            encFrame := enc.PushFrame(data)
+	fmt.Printf("starting\n")
+outer:
+	for i := range 1000 {
+		fmt.Printf("loop %d\n", i)
+		select {
+		case frame := <-frames:
+			data := ansiparser.RemoveAsciiStyledPixels(frame.Color)
+			fmt.Printf("encoding frame %d\n", len(data))
+			encFrame := enc.PushFrame(data)
 
-            if encFrame == nil {
-                fmt.Printf("encoded failed to produce smaller frame: %d\n", len(data))
-                break
-            }
+			if encFrame == nil {
+				fmt.Printf("encoded failed to produce smaller frame: %d\n", len(data))
+				break
+			}
 
-            fmt.Printf("encoded(%d): %d\n", encFrame.Encoding, encFrame.Len)
+			fmt.Printf("encoded(%d): %d\n", encFrame.Encoding, encFrame.Len)
 
-        case <-finish:
-            break outer;
-        }
+		case <-finish:
+			break outer
+		}
 
-        fmt.Printf("done with select on %d\n", i)
+		fmt.Printf("done with select on %d\n", i)
 	}
 
 }

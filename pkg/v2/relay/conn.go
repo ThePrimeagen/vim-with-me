@@ -3,8 +3,8 @@ package relay
 import "github.com/gorilla/websocket"
 
 type Conn struct {
-	conn    *websocket.Conn
-	id      int
+	conn *websocket.Conn
+	id   int
 
 	msgs  chan []byte
 	relay *Relay
@@ -35,27 +35,25 @@ func (c *Conn) read() {
 		c.relay.relay(message)
 	}
 
-    c.relay.remove(c.id)
+	c.relay.remove(c.id)
 }
 
 func (c *Conn) write() {
 	for {
-        msg := <-c.msgs
-        err := c.conn.WriteMessage(websocket.BinaryMessage, msg)
-        if err != nil {
-            break
-        }
+		msg := <-c.msgs
+		err := c.conn.WriteMessage(websocket.BinaryMessage, msg)
+		if err != nil {
+			break
+		}
 	}
 
-    c.relay.remove(c.id)
+	c.relay.remove(c.id)
 }
 
 func (c *Conn) msg(msg []byte) {
-    select {
-    case c.msgs <- msg:
-    default:
-        break;
-    }
+	select {
+	case c.msgs <- msg:
+	default:
+		break
+	}
 }
-
-

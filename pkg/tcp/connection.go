@@ -36,7 +36,7 @@ func NewConnection(conn net.Conn, id int) Connection {
 }
 
 func (c *Connection) Close() {
-    c.conn.Close()
+	c.conn.Close()
 }
 
 func (c *Connection) Next() (*TCPCommand, error) {

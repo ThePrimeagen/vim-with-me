@@ -1,12 +1,11 @@
 package main
 
 import (
-    "github.com/joho/godotenv"
 	"github.com/gorilla/websocket"
+	"github.com/joho/godotenv"
 )
 
 func main() {
-    _ = websocket.BinaryMessage
-    godotenv.Load()
+	_ = websocket.BinaryMessage
+	godotenv.Load()
 }
-

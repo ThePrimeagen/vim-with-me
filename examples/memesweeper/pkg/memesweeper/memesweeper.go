@@ -174,10 +174,10 @@ func (m *MemeSweeper) EndRound() {
 
 	if m.board.state == LOSE {
 		m.smiley.SetText(";(")
-        m.control.SetText("L Take")
+		m.control.SetText("L Take")
 	} else if m.board.state == WIN {
 		m.smiley.SetText("8)")
-        m.control.SetText("W Take")
+		m.control.SetText("W Take")
 	}
 }
 

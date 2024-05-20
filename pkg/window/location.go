@@ -7,20 +7,21 @@ import (
 )
 
 const LOCATION_ENCODING_LENGTH = 2
+
 type Location struct {
-    Row int `json:"row"`
-    Col int `json:"col"`
+	Row int `json:"row"`
+	Col int `json:"col"`
 }
 
 func NewLocation(r, c int) Location {
-    assert.Assert(r < 256, fmt.Sprintf("cannot exceed 256 for rows: %d", r))
-    assert.Assert(c < 256, fmt.Sprintf("cannot exceed 256 for cols: %d", c))
+	assert.Assert(r < 256, fmt.Sprintf("cannot exceed 256 for rows: %d", r))
+	assert.Assert(c < 256, fmt.Sprintf("cannot exceed 256 for cols: %d", c))
 
-    return Location{Row: int(r), Col: int(c)}
+	return Location{Row: int(r), Col: int(c)}
 }
 
 func (l *Location) ToRowCol() (int, int) {
-    return l.Row, l.Col
+	return l.Row, l.Col
 }
 
 func (l *Location) MarshalBinary() (data []byte, err error) {
@@ -31,11 +32,11 @@ func (l *Location) MarshalBinary() (data []byte, err error) {
 
 func (l *Location) UnmarshalBinary(bytes []byte) error {
 	if len(bytes) < 2 {
-        return fmt.Errorf("expects at least 2 bytes: %d", len(bytes))
+		return fmt.Errorf("expects at least 2 bytes: %d", len(bytes))
 	}
 
 	l.Row = int(bytes[0])
-    l.Col = int(bytes[1])
+	l.Col = int(bytes[1])
 
-    return nil
+	return nil
 }

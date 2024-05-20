@@ -16,30 +16,30 @@ type Huffman struct {
 }
 
 func left(decoder []byte, idx int) int {
-    assert.Assert(len(decoder) > idx + 5, "decoder length + idx is shorter than huffmanNode decode length")
-    return byteutils.Read16(decoder, idx + 2);
+	assert.Assert(len(decoder) > idx+5, "decoder length + idx is shorter than huffmanNode decode length")
+	return byteutils.Read16(decoder, idx+2)
 }
 
 func right(decoder []byte, idx int) int {
-    assert.Assert(len(decoder) > idx + 5, "decoder length + idx is shorter than huffmanNode decode length")
-    return byteutils.Read16(decoder, idx + 4);
+	assert.Assert(len(decoder) > idx+5, "decoder length + idx is shorter than huffmanNode decode length")
+	return byteutils.Read16(decoder, idx+4)
 }
 
 func jump(decoder []byte, idx int, bit int) int {
-    if bit == 1 {
-        return right(decoder, idx)
-    }
-    return left(decoder, idx)
+	if bit == 1 {
+		return right(decoder, idx)
+	}
+	return left(decoder, idx)
 }
 
 func value(decoder []byte, idx int) int {
-    return byteutils.Read16(decoder, idx);
+	return byteutils.Read16(decoder, idx)
 }
 
 func isLeaf(decoder []byte, idx int) bool {
-    assert.Assert(len(decoder) > idx + 5, "decoder length + idx is shorter than huffmanNode decode length")
-    return byteutils.Read16(decoder, idx + 2) == 0 &&
-        byteutils.Read16(decoder, idx + 4) == 0
+	assert.Assert(len(decoder) > idx+5, "decoder length + idx is shorter than huffmanNode decode length")
+	return byteutils.Read16(decoder, idx+2) == 0 &&
+		byteutils.Read16(decoder, idx+4) == 0
 }
 
 var HuffmanEncodingExceededSize = errors.New("huffman encoding has exceeded the data array size")
@@ -98,52 +98,53 @@ func (h *Huffman) Encode(iterator byteutils.ByteIterator, out []byte) (int, erro
 
 // Will i even use a decoder?  i should write this in typescript
 func (h *Huffman) Decode(data []byte, bitLength int, writer byteutils.ByteWriter) error {
-	assert.Assert(len(data) >= bitLength / 8 + 1, "you did not provide enough data")
+	assert.Assert(len(data) >= bitLength/8+1, "you did not provide enough data")
 
 	idx := 0
 	decodeIdx := 0
 
-    outer:
+outer:
 	for {
 		for bitIdx := 7; bitIdx >= 0; bitIdx-- {
 			bit := int((data[idx] >> bitIdx) & 0x1)
 			bitLength--
 
-            decodeIdx = jump(h.DecodingTree, decodeIdx, bit)
+			decodeIdx = jump(h.DecodingTree, decodeIdx, bit)
 
-            if isLeaf(h.DecodingTree, decodeIdx) {
+			if isLeaf(h.DecodingTree, decodeIdx) {
 
-                if err := writer.Write(value(h.DecodingTree, decodeIdx)); err != nil {
-                    return errors.Join(
-                        HuffmanDecodingFailedToWrite,
-                        err,
-                        fmt.Errorf("failed to write at decodeIdx=%d with writer#Len=%d", decodeIdx, writer.Len()))
-                }
+				if err := writer.Write(value(h.DecodingTree, decodeIdx)); err != nil {
+					return errors.Join(
+						HuffmanDecodingFailedToWrite,
+						err,
+						fmt.Errorf("failed to write at decodeIdx=%d with writer#Len=%d", decodeIdx, writer.Len()))
+				}
 
-                decodeIdx = 0
-            }
+				decodeIdx = 0
+			}
 
-            if bitLength == 0 {
-                break outer
-            }
+			if bitLength == 0 {
+				break outer
+			}
 		}
 
-        idx++
+		idx++
 	}
 
 	return nil
 }
 
 var HuffmanDoesntFitIntoOutArray = errors.New("unable to fit huffman into output array")
+
 func IntoBytes(huff *Huffman, bitLen int, data []byte, offset int) int {
-    assert.Assert(bitLen < int(math.Pow(2.0, 16)), "unable to encode huffman frame larger than 65535 bits")
+	assert.Assert(bitLen < int(math.Pow(2.0, 16)), "unable to encode huffman frame larger than 65535 bits")
 
-    fit := 4 + len(huff.DecodingTree) > len(data) - offset
-    assert.Assert(fit, "huffman tree is unable to fit into provided data array")
+	fit := 4+len(huff.DecodingTree) > len(data)-offset
+	assert.Assert(fit, "huffman tree is unable to fit into provided data array")
 
-    binary.BigEndian.PutUint16(data[offset:], uint16(bitLen))
-    binary.BigEndian.PutUint16(data[offset + 2:], uint16(len(huff.DecodingTree)))
-    copy(data[offset + 4:], huff.DecodingTree)
+	binary.BigEndian.PutUint16(data[offset:], uint16(bitLen))
+	binary.BigEndian.PutUint16(data[offset+2:], uint16(len(huff.DecodingTree)))
+	copy(data[offset+4:], huff.DecodingTree)
 
-    return 4 + len(huff.DecodingTree)
+	return 4 + len(huff.DecodingTree)
 }

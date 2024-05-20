@@ -9,24 +9,24 @@ import (
 )
 
 func main() {
-    testies.SetupLogger()
+	testies.SetupLogger()
 	server, err := testies.CreateServerFromArgs()
 
-    if err != nil {
-        log.Fatal("errror could not start", err)
-    }
+	if err != nil {
+		log.Fatal("errror could not start", err)
+	}
 
-    defer server.Close()
+	defer server.Close()
 
-    commander := commands.NewCommander()
-    server.WelcomeMessage(func() *tcp.TCPCommand { return commander.ToCommands() })
+	commander := commands.NewCommander()
+	server.WelcomeMessage(func() *tcp.TCPCommand { return commander.ToCommands() })
 
 	log.Printf("starting server\n")
 
-    go server.Start()
+	go server.Start()
 
-    for {
-        cmd := <- server.FromSockets
-        server.Send(cmd.Command)
-    }
+	for {
+		cmd := <-server.FromSockets
+		server.Send(cmd.Command)
+	}
 }

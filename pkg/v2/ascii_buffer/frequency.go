@@ -9,8 +9,8 @@ import (
 
 type Frequency struct {
 	pointMap map[int]*FreqPoint
-	count  int
-	Points []*FreqPoint
+	count    int
+	Points   []*FreqPoint
 }
 
 type FreqPoint struct {
@@ -21,8 +21,8 @@ type FreqPoint struct {
 func NewFreqency() Frequency {
 	return Frequency{
 		pointMap: map[int]*FreqPoint{},
-		Points: make([]*FreqPoint, 0),
-		count:  0,
+		Points:   make([]*FreqPoint, 0),
+		count:    0,
 	}
 }
 
@@ -32,32 +32,32 @@ func (f *Frequency) Length() int {
 
 func (f *Frequency) Reset() {
 	f.count = 0
-    f.pointMap = map[int]*FreqPoint{}
-    f.Points = make([]*FreqPoint, 0)
+	f.pointMap = map[int]*FreqPoint{}
+	f.Points = make([]*FreqPoint, 0)
 }
 
 func (f *Frequency) Freq(data byteutils.ByteIterator) {
 	for {
-        val := data.Next()
-        point, ok := f.pointMap[val.Value]
+		val := data.Next()
+		point, ok := f.pointMap[val.Value]
 
 		if !ok {
 			f.count++
 
 			point = &FreqPoint{
-                Count: 0,
-                Val: val.Value,
-            }
+				Count: 0,
+				Val:   val.Value,
+			}
 			f.Points = append(f.Points, point)
-            f.pointMap[val.Value] = point
+			f.pointMap[val.Value] = point
 		}
 
 		point.Count++
 
-        // i wish i had a do while... the lords loop
-        if val.Done {
-            break
-        }
+		// i wish i had a do while... the lords loop
+		if val.Done {
+			break
+		}
 	}
 }
 
@@ -87,6 +87,6 @@ func (f *Frequency) DebugFunc(toString func(int) string) string {
 
 func (f *Frequency) Debug() string {
 	return f.DebugFunc(func(b int) string {
-        return fmt.Sprintf("%d", b)
-    })
+		return fmt.Sprintf("%d", b)
+	})
 }

@@ -10,29 +10,29 @@ var BASE int = 90
 var ZERO int = int('$') // 36
 
 func ToTCPInt(length int) string {
-    n := length
-    out := []string{}
+	n := length
+	out := []string{}
 
-    for ;n > 0; n = int(math.Floor(float64(n / BASE))) {
-        v := n % BASE
-        out = append([]string{
-            strconv.Itoa(v + ZERO),
-        }, out...)
-    }
+	for ; n > 0; n = int(math.Floor(float64(n / BASE))) {
+		v := n % BASE
+		out = append([]string{
+			strconv.Itoa(v + ZERO),
+		}, out...)
+	}
 
-    return strings.Join(out, "")
+	return strings.Join(out, "")
 }
 
 func FromTCPInt(in_num string) int {
-    num := 0
-    length := len(in_num)
-    for pos, val := range in_num {
-        base := int(math.Pow(float64(BASE), float64(length - pos - 1)))
-        value := int(val) - ZERO
-        num += value * base
-    }
+	num := 0
+	length := len(in_num)
+	for pos, val := range in_num {
+		base := int(math.Pow(float64(BASE), float64(length-pos-1)))
+		value := int(val) - ZERO
+		num += value * base
+	}
 
-    return num
+	return num
 }
 
 // --- @class ColorCompression

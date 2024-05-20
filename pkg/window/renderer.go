@@ -16,9 +16,9 @@ const CELL_VALUE_NO_PLACE = 0
 const CELL_VALUE_BACKGROUND_COLOR_ONLY = 1
 
 type Cell struct {
-    Foreground Color `json:"foreground"`
-    Background Color `json:"background"`
-    Value      byte `json:"value"`
+	Foreground Color `json:"foreground"`
+	Background Color `json:"background"`
+	Value      byte  `json:"value"`
 }
 
 func ForegroundCell(value byte, foreground Color) Cell {
@@ -95,8 +95,8 @@ func DebugCells(cells [][]Cell) {
 }
 
 type CellWithLocation struct {
-    Cell `json:"cell"`
-    Location `json:"location"`
+	Cell     `json:"cell"`
+	Location `json:"location"`
 }
 
 func NewCellWithLocation(cell Cell, row, col int) *CellWithLocation {
@@ -158,7 +158,7 @@ func (c *Cell) MarshalBinary() ([]byte, error) {
 }
 
 func (c *Cell) UnmarshalBinary(data []byte) error {
-    assert.Assert(len(data) >= CELL_ENCODING_LENGTH, fmt.Sprintf("Cell#UnmarshalBinary not enough data to UnmarshalBinary: got %d -- expected %d", len(data), COLOR_ENCODING_LENGTH))
+	assert.Assert(len(data) >= CELL_ENCODING_LENGTH, fmt.Sprintf("Cell#UnmarshalBinary not enough data to UnmarshalBinary: got %d -- expected %d", len(data), COLOR_ENCODING_LENGTH))
 
 	c.Value = data[0]
 	var foreground Color
@@ -183,7 +183,7 @@ func (c *Cell) EqualWithLocation(other *CellWithLocation) bool {
 }
 
 func (c *Cell) IsEmpty() bool {
-    return c.Value == CELL_VALUE_NO_PLACE
+	return c.Value == CELL_VALUE_NO_PLACE
 }
 func (c *Cell) Equal(other *Cell) bool {
 	return c.Value == other.Value &&
@@ -214,7 +214,7 @@ type Renderer struct {
 func NewRender(rows, cols int) *Renderer {
 	length := cols * rows
 	buffer := make([]Cell, 0, length)
-    clean := make([]Cell, 0, length)
+	clean := make([]Cell, 0, length)
 
 	for i := 0; i < int(length); i++ {
 		buffer = append(buffer, Cell{
@@ -368,16 +368,16 @@ func (r *Renderer) Render() []*CellWithLocation {
 			// TODO(v1): LogValuer interface (LogAttr maybe?)
 			slog.Debug("partial render cell with location", "row", row, "col", col, "cell", cell.String())
 
-            if cell.IsEmpty() {
-                continue
-            }
+			if cell.IsEmpty() {
+				continue
+			}
 
 			out = append(out, &CellWithLocation{
 				Cell:     cell,
 				Location: NewLocation(row, col),
 			})
 
-            r.previous[i].Merge(&cell)
+			r.previous[i].Merge(&cell)
 		}
 	}
 

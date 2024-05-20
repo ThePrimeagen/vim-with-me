@@ -48,7 +48,7 @@ func (relay *Relay) Start() {
 }
 
 func (relay *Relay) Messages() chan []byte {
-    return relay.ch
+	return relay.ch
 }
 
 func (relay *Relay) relay(data []byte) {

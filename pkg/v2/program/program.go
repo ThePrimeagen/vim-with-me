@@ -38,11 +38,11 @@ func (a *Program) WithArgs(args []string) *Program {
 }
 
 func (a *Program) WithWriter(writer io.Writer) *Program {
-    if a.writer != nil {
-        a.writer = io.MultiWriter(a.writer, writer)
-    } else {
-        a.writer = writer
-    }
+	if a.writer != nil {
+		a.writer = io.MultiWriter(a.writer, writer)
+	} else {
+		a.writer = writer
+	}
 	return a
 }
 

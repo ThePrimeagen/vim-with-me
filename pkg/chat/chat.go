@@ -14,35 +14,35 @@ type ChatMsg struct {
 }
 
 func toChatMsg(twitchMsg twitch.PrivateMessage) ChatMsg {
-    return ChatMsg{
-        Name: twitchMsg.User.DisplayName,
-        Bits: twitchMsg.Bits,
-        Msg:  twitchMsg.Message,
-    }
+	return ChatMsg{
+		Name: twitchMsg.User.DisplayName,
+		Bits: twitchMsg.Bits,
+		Msg:  twitchMsg.Message,
+	}
 }
 
 func NewTwitchChat(ctx context.Context) (chan ChatMsg, error) {
-    messages := make(chan ChatMsg)
+	messages := make(chan ChatMsg)
 
-    client := twitch.NewAnonymousClient()
-    client.OnPrivateMessage(func(msg twitch.PrivateMessage) {
-        messages <- toChatMsg(msg)
-    })
+	client := twitch.NewAnonymousClient()
+	client.OnPrivateMessage(func(msg twitch.PrivateMessage) {
+		messages <- toChatMsg(msg)
+	})
 
-    client.Join("theprimeagen")
+	client.Join("theprimeagen")
 
-    // TODO: on disconnect send done to reconnect everything from the top
-    go func() {
-        slog.Debug("NewTwitchChat# connecting...")
-        err := client.Connect()
-        slog.Warn("twitch client disconnected", "err", err)
-    }()
+	// TODO: on disconnect send done to reconnect everything from the top
+	go func() {
+		slog.Debug("NewTwitchChat# connecting...")
+		err := client.Connect()
+		slog.Warn("twitch client disconnected", "err", err)
+	}()
 
-    go func() {
-        <-ctx.Done()
-        slog.Debug("NewTwitchChat#disconnected")
-        client.Disconnect()
-    }()
+	go func() {
+		<-ctx.Done()
+		slog.Debug("NewTwitchChat#disconnected")
+		client.Disconnect()
+	}()
 
-    return messages, nil
+	return messages, nil
 }

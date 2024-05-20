@@ -8,37 +8,37 @@ import (
 )
 
 type RelayDriver struct {
-	url url.URL
-    uuid string
-    conn *websocket.Conn
+	url  url.URL
+	uuid string
+	conn *websocket.Conn
 }
 
 func NewRelayDriver(addr string, uuid string) *RelayDriver {
 
-    u := url.URL{Scheme: "ws", Host: addr, Path: "/"}
-    return &RelayDriver{
-        url: u,
-        uuid: uuid,
-    }
+	u := url.URL{Scheme: "ws", Host: addr, Path: "/"}
+	return &RelayDriver{
+		url:  u,
+		uuid: uuid,
+	}
 }
 
 func (r *RelayDriver) Connect() error {
-    assert.Assert(r.conn == nil, "attempting to connect while connected")
+	assert.Assert(r.conn == nil, "attempting to connect while connected")
 
 	c, _, err := websocket.DefaultDialer.Dial(r.url.String(), nil)
-    if err != nil {
-        return err
-    }
+	if err != nil {
+		return err
+	}
 
-    r.conn = c
-    return c.WriteMessage(websocket.BinaryMessage, []byte(r.uuid))
+	r.conn = c
+	return c.WriteMessage(websocket.BinaryMessage, []byte(r.uuid))
 }
 
 func (r *RelayDriver) Relay(data []byte) error {
-    return r.conn.WriteMessage(websocket.BinaryMessage, data)
+	return r.conn.WriteMessage(websocket.BinaryMessage, data)
 }
 
 func (r *RelayDriver) Close() {
-    assert.Assert(r.conn != nil, "attempting to close a nil connection")
-    r.conn.Close()
+	assert.Assert(r.conn != nil, "attempting to close a nil connection")
+	r.conn.Close()
 }

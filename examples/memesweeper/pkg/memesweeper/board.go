@@ -35,9 +35,9 @@ var colors = []window.Color{
 
 func toWindowCell(sCell *SweeperCell, row, col int) window.Cell {
 	cell := window.BackgroundCell(' ', components.BACKGROUND_GRAY)
-    if (row + col) % 2 == 0 {
-        cell.Background = window.DEFAULT_BACKGROUND
-    }
+	if (row+col)%2 == 0 {
+		cell.Background = window.DEFAULT_BACKGROUND
+	}
 	if !sCell.revealed {
 		return cell
 	}
@@ -135,10 +135,10 @@ func (r *Board) RevealBombs() {
 }
 
 func (r *Board) Reset() {
-    r.countCount = 0
-    r.state = INIT
-    r.revealCount = 0
-    r.cells = newSweeperCells(r.params.rows, r.params.cols)
+	r.countCount = 0
+	r.state = INIT
+	r.revealCount = 0
+	r.cells = newSweeperCells(r.params.rows, r.params.cols)
 }
 
 func (r *Board) PickSpot(row, col int) {

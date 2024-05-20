@@ -47,21 +47,21 @@ func RGBByteToAnsiRGB(rgb byte) color.RGB {
 	}
 }
 
-type rgb8Bit struct { }
+type rgb8Bit struct{}
 
 func newRGB8Bit() *rgb8Bit {
-    return &rgb8Bit{}
+	return &rgb8Bit{}
 }
 
 func (r *rgb8Bit) read(buffer []byte, offset int) (int, int) {
-    return int(buffer[offset]), offset + 1
+	return int(buffer[offset]), offset + 1
 }
 
 func (r *rgb8Bit) write(buffer []byte, offset int, color *ansi.Rgb) int {
-    buffer[offset] = RGBTo8BitColor(color)
-    return offset + 1
+	buffer[offset] = RGBTo8BitColor(color)
+	return offset + 1
 }
 
 func (w *rgb8Bit) byteLength() int {
-    return 1
+	return 1
 }

@@ -13,8 +13,7 @@ type Lumin struct {
 	idx    int
 }
 
-var defaultBrightnessRange = []BrightnessRange{
-}
+var defaultBrightnessRange = []BrightnessRange{}
 
 func NewLumin(count int) *Lumin {
 	return &Lumin{

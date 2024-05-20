@@ -8,10 +8,10 @@ import (
 
 // TODO(v1): Simple Ascii window needs to use Cells insteasd of bytes
 type SimpleAsciiWindow struct {
-	Rows       int
-	Cols       int
-	cache      [][]Cell
-    changes    []*CellWithLocation
+	Rows    int
+	Cols    int
+	cache   [][]Cell
+	changes []*CellWithLocation
 }
 
 func NewSimpleWindow(rows, cols int) SimpleAsciiWindow {
@@ -24,10 +24,10 @@ func NewSimpleWindow(rows, cols int) SimpleAsciiWindow {
 	}
 
 	return SimpleAsciiWindow{
-		Rows:  rows,
-		Cols:  cols,
-		cache: cache,
-        changes: make([]*CellWithLocation, 0),
+		Rows:    rows,
+		Cols:    cols,
+		cache:   cache,
+		changes: make([]*CellWithLocation, 0),
 	}
 }
 
@@ -43,9 +43,9 @@ func (w *SimpleAsciiWindow) Set(row, col int, value byte) error {
 	if w.cache[row][col].Value != value {
 		w.cache[row][col].Value = value
 		w.changes = append(w.changes, &CellWithLocation{
-            Cell: w.cache[row][col],
-            Location: NewLocation(row, col),
-        })
+			Cell:     w.cache[row][col],
+			Location: NewLocation(row, col),
+		})
 	}
 
 	return nil
@@ -57,10 +57,10 @@ func (w *SimpleAsciiWindow) SetString(row int, value string) {
 	for i, v := range []byte(value) {
 		if w.cache[row][i].Value != v {
 			w.cache[row][i].Value = v
-            w.changes = append(w.changes, &CellWithLocation{
-                Cell: w.cache[row][i],
-                Location: NewLocation(row, i),
-            })
+			w.changes = append(w.changes, &CellWithLocation{
+				Cell:     w.cache[row][i],
+				Location: NewLocation(row, i),
+			})
 		}
 	}
 }
@@ -76,10 +76,10 @@ func (w *SimpleAsciiWindow) SetWindow(value string) error {
 
 		if w.cache[row][col].Value != v {
 			w.cache[row][col].Value = v
-            w.changes = append(w.changes, &CellWithLocation{
-                Cell: w.cache[row][col],
-                Location: NewLocation(row, col),
-            })
+			w.changes = append(w.changes, &CellWithLocation{
+				Cell:     w.cache[row][col],
+				Location: NewLocation(row, col),
+			})
 		}
 	}
 
@@ -87,20 +87,20 @@ func (w *SimpleAsciiWindow) SetWindow(value string) error {
 }
 
 func (r *SimpleAsciiWindow) Dimensions() (byte, byte) {
-    return byte(r.Rows), byte(r.Cols)
+	return byte(r.Rows), byte(r.Cols)
 }
 
 func (w *SimpleAsciiWindow) Render() []*CellWithLocation {
 	w.changes = make([]*CellWithLocation, 0)
 
-    out := make([]*CellWithLocation, 0)
+	out := make([]*CellWithLocation, 0)
 
 	for r, row := range w.cache {
-        for c, cell := range row {
-            out = append(out, &CellWithLocation{
-                Cell: cell,
-                Location: NewLocation(r, c),
-            })
+		for c, cell := range row {
+			out = append(out, &CellWithLocation{
+				Cell:     cell,
+				Location: NewLocation(r, c),
+			})
 		}
 	}
 

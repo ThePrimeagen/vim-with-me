@@ -65,8 +65,8 @@ func connect(opts *Opts, stats *Stats, semaphore chan struct{}, id int) int {
 
 	totalN := 0
 	totalCommands := 0
-    _ = id
-    defer c.Close()
+	_ = id
+	defer c.Close()
 
 	conn := tcp.NewConnection(c, id)
 
@@ -107,10 +107,10 @@ func main() {
 		semaphore <- struct{}{}
 	}
 
-    id := 0
+	id := 0
 	for connections := opts.connections; connections > 0; connections-- {
 		<-semaphore
-        id++
+		id++
 		go connect(&opts, &stats, semaphore, id)
 	}
 

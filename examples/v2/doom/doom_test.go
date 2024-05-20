@@ -13,31 +13,31 @@ import (
 )
 
 func TestDoom8BitParserOneFrame(t *testing.T) {
-    data, err := os.Open("./doomtest")
-    require.NoError(t, err)
+	data, err := os.Open("./doomtest")
+	require.NoError(t, err)
 
-    d := doom.NewDoom()
+	d := doom.NewDoom()
 
-    go func() {
-        defer data.Close()
-        io.Copy(d, data)
-    }()
+	go func() {
+		defer data.Close()
+		io.Copy(d, data)
+	}()
 
-    <-d.Ready()
+	<-d.Ready()
 
-    require.Equal(t, 50, d.Rows)
-    require.Equal(t, 160, d.Cols)
+	require.Equal(t, 50, d.Rows)
+	require.Equal(t, 160, d.Cols)
 
-    frames := d.Frames()
+	frames := d.Frames()
 
-    timer := time.NewTimer(1000000000 * time.Millisecond)
+	timer := time.NewTimer(1000000000 * time.Millisecond)
 
-    select {
-    case f := <-frames:
-        fmt.Println(display.Display(&f, d.Rows, d.Cols))
-    case <-timer.C:
-        panic("YOU SUCK")
-    }
+	select {
+	case f := <-frames:
+		fmt.Println(display.Display(&f, d.Rows, d.Cols))
+	case <-timer.C:
+		panic("YOU SUCK")
+	}
 }
 
 /*
@@ -82,4 +82,3 @@ func TestDoom8BitParserManyFrame(t *testing.T) {
     require.Equal(t, 129, count)
 }
 */
-

@@ -82,14 +82,13 @@ func (c *colorToChar) String() string {
 
 	brightnesses := make(map[string]rgb.BrightnessRange, 0)
 	for _, char := range c.charOrdering {
-        brightnesses[char.char] = char.brightnessRange()
+		brightnesses[char.char] = char.brightnessRange()
 	}
 
-    bytes, err := json.Marshal(brightnesses)
-    if err != nil {
-        return "errored"
-    }
-
+	bytes, err := json.Marshal(brightnesses)
+	if err != nil {
+		return "errored"
+	}
 
 	return string(bytes)
 }

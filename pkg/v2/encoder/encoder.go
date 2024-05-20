@@ -33,11 +33,11 @@ type EncodingFrame struct {
 }
 
 func (e *EncodingFrame) Into(data []byte, offset int) error {
-    data[offset] = byte(e.Encoding)
-    fn, ok := encodeInto[e.Encoding]
-    assert.Assert(ok, "unknown encoding type", "encoding", e.Encoding)
+	data[offset] = byte(e.Encoding)
+	fn, ok := encodeInto[e.Encoding]
+	assert.Assert(ok, "unknown encoding type", "encoding", e.Encoding)
 
-    return fn(e, data, offset)
+	return fn(e, data, offset)
 }
 
 func (e *EncodingFrame) Type() byte {

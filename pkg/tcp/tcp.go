@@ -56,12 +56,12 @@ func (t *TCPCommand) UnmarshalBinary(bytes []byte) error {
 }
 
 type TCP struct {
-	welcomes     []WelcomeCB
-	sockets      []Connection
-	listener     net.Listener
-	mutex        sync.RWMutex
-	FromSockets  chan TCPCommandWrapper
-	NewSocket    chan *Connection
+	welcomes    []WelcomeCB
+	sockets     []Connection
+	listener    net.Listener
+	mutex       sync.RWMutex
+	FromSockets chan TCPCommandWrapper
+	NewSocket   chan *Connection
 }
 
 func (t *TCP) ConnectionCount() int {
@@ -97,7 +97,7 @@ func (t *TCP) Send(command *TCPCommand) {
 
 func (t *TCP) welcome(conn *Connection) error {
 	for _, w := range t.welcomes {
-        cmd := w()
+		cmd := w()
 		err := conn.Writer.Write(cmd)
 
 		if err != nil {
@@ -184,7 +184,7 @@ func (t *TCP) Start() {
 }
 
 func MakeWelcome(cmd *TCPCommand) WelcomeCB {
-    return func() *TCPCommand {
-        return cmd
-    }
+	return func() *TCPCommand {
+		return cmd
+	}
 }

@@ -27,13 +27,13 @@ func (a *AsciiRLE) Length() int {
 }
 
 func (a *AsciiRLE) place() {
-    if a.count == 0 {
-        return
-    }
+	if a.count == 0 {
+		return
+	}
 
-    if a.idx + 1 >= len(a.buffer) {
-        a.buffer = append(a.buffer, make([]byte, 128, 128)...)
-    }
+	if a.idx+1 >= len(a.buffer) {
+		a.buffer = append(a.buffer, make([]byte, 128, 128)...)
+	}
 
 	a.buffer[a.idx] = byte(a.count)
 	a.buffer[a.idx+1] = a.curr
@@ -50,35 +50,35 @@ func (a *AsciiRLE) Debug() {
 
 func (a *AsciiRLE) Reset(buf []byte) {
 	a.idx = 0
-    a.buffer = buf
+	a.buffer = buf
 }
 
 func (a *AsciiRLE) Write(data []byte) {
 	assert.Assert(a.buffer != nil, "AsciiRLE#Write needs a buffer to write into")
 	assert.Assert(len(data) > 0, "AsciiRLE#Write received 0 len data array")
 
-    i := 0
+	i := 0
 
 	if a.count == 0 {
 		a.curr = data[0]
-        a.count = 1
-        i = 1
+		a.count = 1
+		i = 1
 	}
 
 	for ; i < len(data); i++ {
 		if a.count < 255 && a.curr == data[i] {
-            a.count++
+			a.count++
 			continue
 		}
 
 		a.place()
-        a.curr = data[i]
-        a.count = 1
+		a.curr = data[i]
+		a.count = 1
 	}
 }
 
 func (a *AsciiRLE) Finish() {
-    a.place()
+	a.place()
 }
 
 func (a *AsciiRLE) Bytes() []byte {

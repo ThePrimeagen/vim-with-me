@@ -6,9 +6,9 @@ const RLE_ONLY = 1
 type BufferEncoding int
 
 func (b BufferEncoding) NoEncoding() BufferEncoding {
-    return NONE
+	return NONE
 }
 
 func (b BufferEncoding) RleOnly() BufferEncoding {
-    return RLE_ONLY
+	return RLE_ONLY
 }

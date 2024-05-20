@@ -15,55 +15,54 @@ import (
 )
 
 func main() {
-    fake := false
-    flag.BoolVar(&fake, "fake", false, "use fake chat instead of real chat")
+	fake := false
+	flag.BoolVar(&fake, "fake", false, "use fake chat instead of real chat")
 
-    testies.SetupLogger()
-    server, err := testies.CreateServerFromArgs()
+	testies.SetupLogger()
+	server, err := testies.CreateServerFromArgs()
 
-    if err != nil {
-        slog.Error("received error on startup", "err", err)
-        return
-    }
-    ctx, cancel := context.WithCancel(context.Background())
-    _ = cancel
+	if err != nil {
+		slog.Error("received error on startup", "err", err)
+		return
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	_ = cancel
 
-    fmt.Printf("starting twitch chat\n")
-    chat, err := chat.NewTwitchChat(ctx)
-    if err != nil {
-        slog.Error("chat.Start()", "err", err)
-        return
-    }
+	fmt.Printf("starting twitch chat\n")
+	chat, err := chat.NewTwitchChat(ctx)
+	if err != nil {
+		slog.Error("chat.Start()", "err", err)
+		return
+	}
 
-    params := tower_defense.TDParams{ }
+	params := tower_defense.TDParams{}
 
-    fmt.Printf("new tower defense\n")
-    td := tower_defense.NewTD(params)
-    server.WelcomeMessage(func() *tcp.TCPCommand { return td.Commander.ToCommands()} )
-    server.WelcomeMessage(func() *tcp.TCPCommand { return commands.OpenCommand(td.Renderer) })
+	fmt.Printf("new tower defense\n")
+	td := tower_defense.NewTD(params)
+	server.WelcomeMessage(func() *tcp.TCPCommand { return td.Commander.ToCommands() })
+	server.WelcomeMessage(func() *tcp.TCPCommand { return commands.OpenCommand(td.Renderer) })
 
-    defer server.Close()
+	defer server.Close()
 
-    go server.Start()
-    go tower_defense.LinkChatToTowerDefense(&td, chat, ctx)
+	go server.Start()
+	go tower_defense.LinkChatToTowerDefense(&td, chat, ctx)
 
-    ticker := time.NewTicker(time.Second * 10)
-    fmt.Printf("about to start\n")
-    for range ticker.C {
+	ticker := time.NewTicker(time.Second * 10)
+	fmt.Printf("about to start\n")
+	for range ticker.C {
 
-        td.Tick(time.Second * 10)
+		td.Tick(time.Second * 10)
 
-        cells := td.Renderer.Render()
-        cmds := commands.PartialRender(cells)
-        fmt.Printf("cells: %d --- %+v\n", len(cells), cells)
+		cells := td.Renderer.Render()
+		cmds := commands.PartialRender(cells)
+		fmt.Printf("cells: %d --- %+v\n", len(cells), cells)
 
-        if len(cells) == 0 {
-            continue
-        }
+		if len(cells) == 0 {
+			continue
+		}
 
-        server.Send(cmds)
-    }
+		server.Send(cmds)
+	}
 
-    ticker.Stop()
+	ticker.Stop()
 }
-

@@ -10,36 +10,35 @@ import (
 )
 
 func TestConnection(t *testing.T) {
-    testies.SetupLogger()
+	testies.SetupLogger()
 
-    cmd := &tcp.TCPCommand{
-        Command: byte('t'),
-        Data: []byte("69:420"),
-    }
+	cmd := &tcp.TCPCommand{
+		Command: byte('t'),
+		Data:    []byte("69:420"),
+	}
 
-    b := []byte{}
-    bin, err := cmd.MarshalBinary()
-    require.NoError(t, err)
+	b := []byte{}
+	bin, err := cmd.MarshalBinary()
+	require.NoError(t, err)
 
-    for i := 0; i < 100; i++ {
-        require.NoError(t, err)
-        b = append(b, bin...)
-    }
+	for i := 0; i < 100; i++ {
+		require.NoError(t, err)
+		b = append(b, bin...)
+	}
 
-    r := bytes.NewReader(b)
-    w := bytes.NewBuffer(nil)
+	r := bytes.NewReader(b)
+	w := bytes.NewBuffer(nil)
 
-    conn := tcp.Connection{
-        Id: 0,
-        Reader: tcp.NewFrameReader(r),
-        Writer: tcp.NewFrameWriter(w),
-    }
+	conn := tcp.Connection{
+		Id:     0,
+		Reader: tcp.NewFrameReader(r),
+		Writer: tcp.NewFrameWriter(w),
+	}
 
-    for i := 0; i < 100; i++ {
-        outCommand, err := conn.Next()
-        require.NoError(t, err)
-        require.Equal(t, outCommand, cmd)
-    }
+	for i := 0; i < 100; i++ {
+		outCommand, err := conn.Next()
+		require.NoError(t, err)
+		require.Equal(t, outCommand, cmd)
+	}
 
 }
-

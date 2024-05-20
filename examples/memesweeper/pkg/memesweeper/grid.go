@@ -11,9 +11,9 @@ type grid struct {
 }
 
 func newGrid(row, col int, width, height int) *grid {
-	cells := make([][]window.Cell, 0, height + 1)
+	cells := make([][]window.Cell, 0, height+1)
 	for range height + 1 {
-		cell_row := make([]window.Cell, 0, width + 1)
+		cell_row := make([]window.Cell, 0, width+1)
 		for range width + 1 {
 			cell_row = append(cell_row, window.DefaultCell(' '))
 		}
@@ -21,17 +21,17 @@ func newGrid(row, col int, width, height int) *grid {
 	}
 
 	for w := range width {
-        value := byte('A' + w)
-		cells[0][w + 1].Value = string(value)[0]
+		value := byte('A' + w)
+		cells[0][w+1].Value = string(value)[0]
 	}
 
 	for h := range height {
-        value := byte('1' + h)
-		cells[h + 1][0].Value = string(value)[0]
+		value := byte('1' + h)
+		cells[h+1][0].Value = string(value)[0]
 	}
 
-    window.DebugCells(cells)
-    return &grid{row: row, col: col, cells: cells, id: window.GetNextId()}
+	window.DebugCells(cells)
+	return &grid{row: row, col: col, cells: cells, id: window.GetNextId()}
 }
 
 func (g *grid) Render() (window.Location, [][]window.Cell) {

@@ -14,34 +14,34 @@ type TestRenderable struct {
 }
 
 func (t *TestRenderable) Z() int {
-    return t.z
+	return t.z
 }
 
 func (t *TestRenderable) Id() int {
-    return t.id
+	return t.id
 }
 
 var noCell = DefaultCell(0)
 var backgroundColor = NewColor(255, 0, 0, false)
 var background = BackgroundCell(CELL_VALUE_BACKGROUND_COLOR_ONLY, backgroundColor)
-var cell69 = Cell{ Value: 69, }
-var cell70 = Cell{ Value: 70, }
-var cell71 = Cell{ Value: 71, }
-var cell72 = Cell{ Value: 72, }
+var cell69 = Cell{Value: 69}
+var cell70 = Cell{Value: 70}
+var cell71 = Cell{Value: 71}
+var cell72 = Cell{Value: 72}
 var innerCells = [][]Cell{
 	{cell69, cell70},
 	{cell71, cell72},
 }
 
 var hiddenValueCells = [][]Cell{
-    {noCell, noCell},
-    {cell69, background},
+	{noCell, noCell},
+	{cell69, background},
 }
 
-var cell73 = Cell{ Value: 73, }
-var cell74 = Cell{ Value: 74, }
-var cell75 = Cell{ Value: 75, }
-var cell76 = Cell{ Value: 76, }
+var cell73 = Cell{Value: 73}
+var cell74 = Cell{Value: 74}
+var cell75 = Cell{Value: 75}
+var cell76 = Cell{Value: 76}
 
 var outerCells = [][]Cell{
 	{cell73, cell74},
@@ -56,12 +56,12 @@ var allCells = []Cell{
 }
 
 func newTestRenderable(cells [][]Cell, loc Location, z int) TestRenderable {
-    id++
+	id++
 	return TestRenderable{
 		loc:   loc,
 		cells: cells,
-        id: id,
-        z: z,
+		id:    id,
+		z:     z,
 	}
 }
 
@@ -70,13 +70,13 @@ func (t *TestRenderable) Render() (Location, [][]Cell) {
 }
 
 func has(cell Cell, cells []*CellWithLocation) bool {
-    for _, c := range cells {
-        if cell.EqualWithLocation(c) {
-            return true
-        }
-    }
+	for _, c := range cells {
+		if cell.EqualWithLocation(c) {
+			return true
+		}
+	}
 
-    return false
+	return false
 }
 
 func TestRender(t *testing.T) {
@@ -101,21 +101,21 @@ func TestRender(t *testing.T) {
 		74, byte(' '), byte(' '), byte(' '), 73,
 	}
 
-    cells := render.Render()
-    render.Debug()
+	cells := render.Render()
+	render.Debug()
 
 	for i, value := range values {
 		require.Equal(t, render.previous[i].Value, value)
 	}
 
-    require.Equal(t, len(cells), 8)
+	require.Equal(t, len(cells), 8)
 
-    for _, cell := range allCells {
-        require.True(t, has(cell, cells))
-    }
+	for _, cell := range allCells {
+		require.True(t, has(cell, cells))
+	}
 
-    cells = render.Render()
-    require.Equal(t, len(cells), 0)
+	cells = render.Render()
+	require.Equal(t, len(cells), 0)
 }
 
 func TestRenderHiddenValues(t *testing.T) {
@@ -145,16 +145,16 @@ func TestRenderHiddenValues(t *testing.T) {
 		DEFAULT_BACKGROUND, DEFAULT_BACKGROUND, DEFAULT_BACKGROUND, DEFAULT_BACKGROUND, DEFAULT_BACKGROUND,
 	}
 
-    cells := render.Render()
-    render.Debug()
+	cells := render.Render()
+	render.Debug()
 
 	for i, value := range values {
 		require.Equal(t, render.previous[i].Value, value)
 		require.Equal(t, backgrounds[i], render.previous[i].Background)
 	}
 
-    require.Equal(t, len(cells), 4)
+	require.Equal(t, len(cells), 4)
 
-    cells = render.Render()
-    require.Equal(t, len(cells), 0)
+	cells = render.Render()
+	require.Equal(t, len(cells), 0)
 }

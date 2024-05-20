@@ -2,4 +2,3 @@ package main
 
 func main() {
 }
-

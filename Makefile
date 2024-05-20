@@ -19,6 +19,10 @@ go-test:
 	echo "===> Testing"
 	go test ./pkg/v2/...
 
+go-fmt:
+	echo "===> Format"
+	go fmt github.com/theprimeagen/...
+
 pr-ready: lua_fmt lua_lint lua_test
 
 
