@@ -28,13 +28,13 @@ func (c *Conn) read() {
 			break
 		}
 
-        slog.Warn("connection message received", "msg", string(message), "authorized", c.authorized, "id", c.id)
+        slog.Debug("connection message received", "msg", message, "authorized", c.authorized, "id", c.id)
 		if !c.authorized {
 			if c.relay.uuid == string(message) {
 				c.authorized = true
 				continue
 			} else {
-                slog.Warn("unauthorized message :: destroying connection", "id", c.id)
+                slog.Error("unauthorized message :: destroying connection", "id", c.id)
 				break
 			}
 		}
@@ -56,7 +56,7 @@ func (c *Conn) write() {
             continue
         }
 
-		slog.Warn("writing message to client", "id", c.id)
+		slog.Debug("writing message to client", "id", c.id)
 		err := c.conn.WriteMessage(websocket.BinaryMessage, msg)
 		if err != nil {
 			break
