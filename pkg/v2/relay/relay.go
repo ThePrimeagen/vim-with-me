@@ -40,7 +40,11 @@ func NewRelay(ws uint16, uuid string) *Relay {
 	}
 }
 
+//TODO(post doom): Fix this shit
 /** THIS IS SHITTY **/
+/** Relay should really just be something in which i hand connections and that
+* is it, no concept here.  Maybe not even connections but writers */
+/** THIS IS SHITTY /end **/
 func (relay *Relay) Start() {
     tmpl := template.Must(template.ParseGlob("./views/*.html"))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

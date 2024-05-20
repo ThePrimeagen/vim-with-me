@@ -63,6 +63,15 @@ func (b *ByteFramer) Frame(reader io.Reader) error {
 	}
 }
 
+func (b *ByteFramer) FrameChan(reader chan []byte) error {
+	for {
+		if len(b.curr) > HEADER_SIZE {
+			b.frame()
+		}
+        b.curr = append(b.curr, <-reader...)
+	}
+}
+
 func (b *ByteFramer) Frames() chan *Frame {
     return b.ch
 }
