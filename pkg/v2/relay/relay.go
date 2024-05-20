@@ -51,7 +51,7 @@ func (relay *Relay) Start() {
         slog.Warn("healthcheck", "count", count)
     })
 
-	addr := fmt.Sprintf("127.0.0.1:%d", relay.port)
+	addr := fmt.Sprintf("0.0.0.0:%d", relay.port)
     slog.Warn("listening and serving http", "http", addr)
     err := http.ListenAndServe(addr, nil)
 
