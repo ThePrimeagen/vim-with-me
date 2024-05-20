@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/theprimeagen/vim-with-me/examples/v2/doom"
 	ansiparser "github.com/theprimeagen/vim-with-me/pkg/v2/ansi_parser"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/ascii_buffer"
@@ -22,17 +23,19 @@ type RelayClient struct {
 	cache  []byte
 }
 
-func NewRelayClient(r string) RelayClient {
+func NewRelayClient(r string) (*RelayClient, error) {
 	if len(r) == 0 {
-		return RelayClient{}
+		return &RelayClient{}, nil
 	}
 
 	uuid := os.Getenv("AUTH_ID")
 	length := 256 * 256
-	return RelayClient{
+    client := &RelayClient{
 		client: relay.NewRelayDriver(r, "/ws", uuid),
 		cache:  make([]byte, length, length),
 	}
+
+    return client, client.client.Connect()
 }
 
 func (r *RelayClient) send(frame *encoder.EncodingFrame) {
@@ -40,6 +43,7 @@ func (r *RelayClient) send(frame *encoder.EncodingFrame) {
 		return
 	}
 
+    fmt.Printf("sending frame into relay(%d): %d\n", len(r.cache), frame.Len)
 	n, err := frame.Into(r.cache, 0)
 	assert.NoError(err, "relay server could not call frame#into")
 
@@ -48,6 +52,8 @@ func (r *RelayClient) send(frame *encoder.EncodingFrame) {
 }
 
 func main() {
+    godotenv.Load()
+
 	debug := ""
 	flag.StringVar(&debug, "debug", "", "runs the file like the program instead of running doom")
 
@@ -59,15 +65,19 @@ func main() {
 
 	relayStr := ""
 	flag.StringVar(&relayStr, "relay", "", "the relay server to attach to")
-	relay := NewRelayClient(relayStr)
-
 	flag.Parse()
+
 	args := flag.Args()
 	name := args[0]
 
 	fmt.Printf("assert file attached \"%s\"\n", assertF)
 	fmt.Printf("debug file attached \"%s\"\n", debug)
 	fmt.Printf("args file attached \"%v\"\n", args)
+	fmt.Printf("relay \"%v\"\n", relayStr)
+
+	relay, err := NewRelayClient(relayStr)
+    assert.NoError(err, "failed attempting to connect to server")
+
 
 	d := doom.NewDoom()
 

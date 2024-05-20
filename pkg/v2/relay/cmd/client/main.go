@@ -17,7 +17,7 @@ func main() {
 
 	slog.Warn("Connecting client", "addr", addr)
 
-	u := url.URL{Scheme: "ws", Host: addr, Path: "/"}
+	u := url.URL{Scheme: "ws", Host: addr, Path: "/ws"}
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	assert.NoError(err, "unable to connect to the websocket server")
 
