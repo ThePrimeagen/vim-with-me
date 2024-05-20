@@ -21,7 +21,17 @@ func TestAnsi(t *testing.T) {
     case <-timer.C:
         require.Fail(t, "failed to get frame after 10 ms")
     case f := <-parser.Frames():
-        require.Equal(t, f.Empty, 0, "expected framer to have no missing data pieces")
+        require.Equal(t, 2 * 160, len(f.Color))
     }
 
 }
+
+func TestAsciiPixelTest(t *testing.T) {
+    data := []byte("llllll;;llllllllllllllllIIllll>>llllllllll::llllll;;;;IIII;;")
+    data = ansiparser.RemoveAsciiStyledPixels(data)
+
+    require.Equal(t,
+        []byte("lll;llllllllIll>lllll:lll;;II;"),
+        data)
+}
+

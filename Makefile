@@ -15,6 +15,10 @@ lua_clean:
 	echo "===> Cleaning"
 	rm /tmp/lua_*
 
+go-test:
+	echo "===> Testing"
+	go test ./pkg/v2/...
+
 pr-ready: lua_fmt lua_lint lua_test
 
 

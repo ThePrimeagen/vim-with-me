@@ -204,7 +204,6 @@ func partition(data []byte, current *VirtualBox, boxes *[]*VirtualBox, depth int
 
 }
 
-// TODO: I hate this interface...
 func Partition(data []byte, params QuadtreeParam) Quadtree {
 	boxes := &([]*VirtualBox{})
 	v := newVirtualBox(data, params.Rows, params.Cols).
