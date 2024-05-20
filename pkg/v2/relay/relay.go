@@ -2,6 +2,7 @@ package relay
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"log/slog"
 	"net/http"
@@ -39,8 +40,16 @@ func NewRelay(ws uint16, uuid string) *Relay {
 	}
 }
 
+/** THIS IS SHITTY **/
 func (relay *Relay) Start() {
+    tmpl := template.Must(template.ParseGlob("./views/*.html"))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+        tmpl.ExecuteTemplate(w, "index.html", struct{}{})
+    })
+
+    http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("./js"))))
+
+	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		relay.render(w, r)
 	})
 

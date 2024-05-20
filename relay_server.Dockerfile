@@ -10,4 +10,8 @@ RUN rm /app/main
 
 COPY ./pkg/v2 /app/pkg/v2
 RUN go build -o relay /app/pkg/v2/relay/cmd/server/main.go
+
+COPY ./js /app/js
+COPY ./views /app/views
+
 CMD ["./relay"]
