@@ -63,22 +63,22 @@ func Huffman(frame *EncodingFrame) error {
 	return nil
 }
 
-type encoderEncodingFn func(e *EncodingFrame, data []byte, offset int) error
+type encoderEncodingFn func(e *EncodingFrame, data []byte, offset int) (int, error)
 type encoderEncodingMap map[EncoderType]encoderEncodingFn
 
 var encodeInto encoderEncodingMap = encoderEncodingMap{
-	HUFFMAN: func(e *EncodingFrame, data []byte, offset int) error {
+	HUFFMAN: func(e *EncodingFrame, data []byte, offset int) (int, error) {
 		assert.Assert(e.Huff != nil, "the encoding type is huffman but the huff object in nil")
 		bytes := huffman.IntoBytes(e.Huff, e.HuffBitLen, data, offset)
 
 		assert.Assert(bytes+e.Len < len(data), "unable to encode frame into provided buffer")
 		copy(data[bytes:], e.Curr[:e.Len])
-		return nil
+		return bytes + e.Len, nil
 	},
 
-	XOR_RLE: func(e *EncodingFrame, data []byte, offset int) error {
+	XOR_RLE: func(e *EncodingFrame, data []byte, offset int) (int, error) {
 		assert.Assert(e.Len < len(data), "unable to encode frame into provided buffer")
 		copy(data[offset:], e.Curr[:e.Len])
-		return nil
+		return e.Len, nil
 	},
 }
