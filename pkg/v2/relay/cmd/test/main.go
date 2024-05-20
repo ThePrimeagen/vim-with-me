@@ -23,21 +23,25 @@ func client(port uint16, idx int, out chan<- Msg) {
 
 	u := url.URL{Scheme: "ws", Host: fmt.Sprintf("localhost:%d", port), Path: "/"}
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
-	defer c.Close()
 	assert.NoError(err, "unable to connect to the websocket server")
 
-	for {
-		_, msg, err := c.ReadMessage()
-		assert.NoError(err, "read message failed")
+	go func() {
+		defer c.Close()
+		for {
+			_, msg, err := c.ReadMessage()
+			assert.NoError(err, "read message failed")
 
-		out <- Msg{
-			count: count,
-			idx:   idx,
-			msg:   msg,
+			out <- Msg{
+				count: count,
+				idx:   idx,
+				msg:   msg,
+			}
+
+			count++
 		}
+	}()
 
-		count++
-	}
+	return
 }
 
 func main() {
@@ -56,9 +60,9 @@ func main() {
 
 	ch := make(chan Msg, 250)
 
-	go client(port, 1, ch)
-	go client(port, 2, ch)
-	go client(port, 3, ch)
+	client(port, 1, ch)
+	client(port, 2, ch)
+	client(port, 3, ch)
 
 	fmt.Printf("created driver\n")
 	client := relay.NewRelayDriver(fmt.Sprintf("localhost:%d", port), os.Getenv("AUTH_ID"))

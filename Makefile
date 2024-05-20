@@ -19,11 +19,15 @@ go-test:
 	echo "===> Testing"
 	go test ./pkg/v2/...
 
+go-relay-test:
+	echo "===> Testing"
+	go run ./pkg/v2/relay/cmd/test/main.go
+
 go-fmt:
 	echo "===> Format"
 	go fmt github.com/theprimeagen/...
 
-pr-ready: go-test go-fmt
+pr-ready: go-relay-test go-test go-fmt
 
 
 
