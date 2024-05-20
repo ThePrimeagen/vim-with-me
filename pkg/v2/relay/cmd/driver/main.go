@@ -18,7 +18,7 @@ func main() {
 
 	var addr string = ""
 	flag.StringVar(&addr, "addr", "", "the address for the relay driver to send messages to")
-	addr = "vim-with-me.fly.dev:8080"
+    flag.Parse()
 
 	assert.Assert(addr != "", "driver requires an addr")
 
@@ -41,6 +41,6 @@ func main() {
 		err := client.Relay([]byte(txt))
 		assert.NoError(err, "unable to relay data")
 
-		<-time.NewTimer(time.Second).C
+		<-time.NewTimer(time.Millisecond * 100).C
 	}
 }

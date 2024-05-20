@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"log/slog"
 	"os"
 	"strconv"
 
@@ -29,6 +30,7 @@ func main() {
 	uuid := os.Getenv("AUTH_ID")
 	assert.Assert(len(uuid) > 0, "empty auth id, unable to to start relay")
 
+    slog.Warn("port selected", "port", port)
 	r := relay.NewRelay(uint16(port), uuid)
 
 	r.Start()

@@ -3,6 +3,7 @@ package relay
 import (
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"sync"
 
@@ -52,7 +53,11 @@ func (relay *Relay) Messages() chan []byte {
 }
 
 func (relay *Relay) relay(data []byte) {
-	relay.ch <- data
+    // quick write to prevent blocking if there is no listener
+    select {
+    case relay.ch <- data:
+    default:
+    }
 	relay.mutex.RLock()
 	for _, conn := range relay.listeners {
 		conn.msg(data)
@@ -64,6 +69,7 @@ func (relay *Relay) remove(id int) {
 	relay.mutex.Lock()
 	delete(relay.listeners, id)
 	relay.mutex.Unlock()
+    slog.Warn("removing client connection", "id", id)
 }
 
 func (relay *Relay) add(id int, ws *websocket.Conn) {
@@ -90,6 +96,7 @@ func (relay *Relay) render(w http.ResponseWriter, r *http.Request) {
 
 	id := relay.id
 	relay.add(id, c)
+    slog.Warn("connection established", "id", id)
 
 	relay.id++
 }
