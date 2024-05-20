@@ -3,6 +3,7 @@ package relay
 import (
 	"fmt"
 	"html/template"
+	"io"
 	"log"
 	"log/slog"
 	"net/http"
@@ -15,7 +16,8 @@ type Relay struct {
 	port uint16
 	uuid string
 
-	ch chan []byte
+	ch    chan []byte
+	conns chan *Conn
 
 	mutex     sync.RWMutex
 	listeners map[int]*Conn
@@ -46,40 +48,44 @@ func NewRelay(ws uint16, uuid string) *Relay {
 * is it, no concept here.  Maybe not even connections but writers */
 /** THIS IS SHITTY /end **/
 func (relay *Relay) Start() {
-    tmpl := template.Must(template.ParseGlob("./views/*.html"))
+	tmpl := template.Must(template.ParseGlob("./views/*.html"))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-        tmpl.ExecuteTemplate(w, "index.html", struct{}{})
-    })
+		tmpl.ExecuteTemplate(w, "index.html", struct{}{})
+	})
 
-    http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("./js"))))
+	http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("./js"))))
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		relay.render(w, r)
 	})
 
-    count := 0
+	count := 0
 	http.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
-        count++
-        slog.Warn("healthcheck", "count", count)
-    })
+		count++
+		slog.Warn("healthcheck", "count", count)
+	})
 
 	addr := fmt.Sprintf("0.0.0.0:%d", relay.port)
-    slog.Warn("listening and serving http", "http", addr)
-    err := http.ListenAndServe(addr, nil)
+	slog.Warn("listening and serving http", "http", addr)
+	err := http.ListenAndServe(addr, nil)
 
-    log.Fatal(err)
+	log.Fatal(err)
 }
 
 func (relay *Relay) Messages() chan []byte {
 	return relay.ch
 }
 
+func (relay *Relay) NewConnections() chan *Conn {
+	return relay.conns
+}
+
 func (relay *Relay) relay(data []byte) {
-    // quick write to prevent blocking if there is no listener
-    select {
-    case relay.ch <- data:
-    default:
-    }
+	// quick write to prevent blocking if there is no listener
+	select {
+	case relay.ch <- data:
+	default:
+	}
 	relay.mutex.RLock()
 	for _, conn := range relay.listeners {
 		conn.msg(data)
@@ -91,13 +97,13 @@ func (relay *Relay) remove(id int) {
 	relay.mutex.Lock()
 	delete(relay.listeners, id)
 	relay.mutex.Unlock()
-    slog.Warn("removing client connection", "id", id)
+	slog.Warn("removing client connection", "id", id)
 }
 
 func (relay *Relay) add(id int, ws *websocket.Conn) {
 	conn := &Conn{
 		id:    id,
-		conn:  ws,
+		Conn:  ws,
 		msgs:  make(chan []byte, 10),
 		relay: relay,
 	}
@@ -105,6 +111,11 @@ func (relay *Relay) add(id int, ws *websocket.Conn) {
 	relay.mutex.Lock()
 	relay.listeners[id] = conn
 	relay.mutex.Unlock()
+
+	select {
+	case relay.conns <- conn:
+	default:
+	}
 
 	go conn.read()
 	go conn.write()
@@ -116,14 +127,14 @@ func (relay *Relay) render(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    // force sync on ids
-    // probably shoud look into atomic ints here...
-    relay.mutex.Lock()
+	// force sync on ids
+	// probably shoud look into atomic ints here...
+	relay.mutex.Lock()
 	relay.id++
 	id := relay.id
-    relay.mutex.Unlock()
+	relay.mutex.Unlock()
 
 	relay.add(id, c)
-    slog.Warn("connection established", "id", id)
+	slog.Warn("connection established", "id", id)
 
 }

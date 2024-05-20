@@ -7,7 +7,7 @@ import (
 )
 
 type Conn struct {
-	conn *websocket.Conn
+	Conn *websocket.Conn
 	id   int
 
 	msgs  chan []byte
@@ -19,7 +19,7 @@ type Conn struct {
 func (c *Conn) read() {
 	c.authorized = false
 	for {
-		mt, message, err := c.conn.ReadMessage()
+		mt, message, err := c.Conn.ReadMessage()
 		if mt != websocket.BinaryMessage {
 			break
 		}
@@ -45,7 +45,7 @@ func (c *Conn) read() {
 
     slog.Warn("closing down connection", "id", c.id)
 	c.relay.remove(c.id)
-    c.conn.Close()
+    c.Conn.Close()
 }
 
 func (c *Conn) write() {
@@ -57,14 +57,14 @@ func (c *Conn) write() {
         }
 
 		slog.Debug("writing message to client", "id", c.id)
-		err := c.conn.WriteMessage(websocket.BinaryMessage, msg)
+		err := c.Conn.WriteMessage(websocket.BinaryMessage, msg)
 		if err != nil {
 			break
 		}
 	}
 
 	c.relay.remove(c.id)
-    c.conn.Close()
+    c.Conn.Close()
 }
 
 func (c *Conn) msg(msg []byte) {
