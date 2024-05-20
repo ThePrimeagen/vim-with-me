@@ -41,7 +41,6 @@ func NewRelay(ws uint16, uuid string) *Relay {
 
 func (relay *Relay) Start() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-        slog.Warn("new ws command coming in")
 		relay.render(w, r)
 	})
 
@@ -104,9 +103,14 @@ func (relay *Relay) render(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+    // force sync on ids
+    // probably shoud look into atomic ints here...
+    relay.mutex.Lock()
+	relay.id++
 	id := relay.id
+    relay.mutex.Unlock()
+
 	relay.add(id, c)
     slog.Warn("connection established", "id", id)
 
-	relay.id++
 }

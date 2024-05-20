@@ -28,11 +28,13 @@ func (c *Conn) read() {
 			break
 		}
 
+        slog.Warn("connection message received", "msg", string(message), "authorized", c.authorized, "id", c.id)
 		if !c.authorized {
 			if c.relay.uuid == string(message) {
 				c.authorized = true
 				continue
 			} else {
+                slog.Warn("unauthorized message :: destroying connection", "id", c.id)
 				break
 			}
 		}
@@ -41,6 +43,7 @@ func (c *Conn) read() {
 		c.relay.relay(message)
 	}
 
+    slog.Warn("closing down connection", "id", c.id)
 	c.relay.remove(c.id)
     c.conn.Close()
 }
