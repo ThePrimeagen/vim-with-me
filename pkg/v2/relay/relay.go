@@ -44,6 +44,8 @@ func (relay *Relay) Start() {
 		relay.render(w, r)
 	})
 
+	http.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) { })
+
 	addr := fmt.Sprintf("127.0.0.1:%d", relay.port)
 	log.Fatal(http.ListenAndServe(addr, nil))
 }
