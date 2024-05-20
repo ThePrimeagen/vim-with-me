@@ -41,13 +41,21 @@ func NewRelay(ws uint16, uuid string) *Relay {
 
 func (relay *Relay) Start() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+        slog.Warn("new ws command coming in")
 		relay.render(w, r)
 	})
 
-	http.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) { })
+    count := 0
+	http.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
+        count++
+        slog.Warn("healthcheck", "count", count)
+    })
 
 	addr := fmt.Sprintf("127.0.0.1:%d", relay.port)
-	log.Fatal(http.ListenAndServe(addr, nil))
+    slog.Warn("listening and serving http", "http", addr)
+    err := http.ListenAndServe(addr, nil)
+
+    log.Fatal(err)
 }
 
 func (relay *Relay) Messages() chan []byte {
