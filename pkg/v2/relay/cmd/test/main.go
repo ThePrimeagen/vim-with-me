@@ -21,7 +21,7 @@ type Msg struct {
 func client(port uint16, idx int, out chan<- Msg) {
 	count := 0
 
-	u := url.URL{Scheme: "ws", Host: fmt.Sprintf("localhost:%d", port), Path: "/"}
+	u := url.URL{Scheme: "ws", Host: fmt.Sprintf("localhost:%d", port), Path: "/ws"}
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	assert.NoError(err, "unable to connect to the websocket server")
 
@@ -65,7 +65,7 @@ func main() {
 	client(port, 3, ch)
 
 	fmt.Printf("created driver\n")
-	client := relay.NewRelayDriver(fmt.Sprintf("localhost:%d", port), os.Getenv("AUTH_ID"))
+	client := relay.NewRelayDriver(fmt.Sprintf("localhost:%d", port), "/ws", os.Getenv("AUTH_ID"))
 	err := client.Connect()
 	assert.NoError(err, "unable to connect to relay")
 	defer client.Close()

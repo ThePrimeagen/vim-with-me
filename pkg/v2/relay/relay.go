@@ -3,7 +3,6 @@ package relay
 import (
 	"fmt"
 	"html/template"
-	"io"
 	"log"
 	"log/slog"
 	"net/http"

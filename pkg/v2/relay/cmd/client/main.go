@@ -13,9 +13,9 @@ import (
 func main() {
 	var addr string = ""
 	flag.StringVar(&addr, "addr", "localhost:42069", "the address for the relay driver to send messages to")
-    flag.Parse()
+	flag.Parse()
 
-    slog.Warn("Connecting client", "addr", addr)
+	slog.Warn("Connecting client", "addr", addr)
 
 	u := url.URL{Scheme: "ws", Host: addr, Path: "/"}
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)

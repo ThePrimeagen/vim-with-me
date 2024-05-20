@@ -11,10 +11,41 @@ import (
 	"github.com/theprimeagen/vim-with-me/pkg/v2/ascii_buffer"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/encoder"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/relay"
 
 	//"github.com/theprimeagen/vim-with-me/pkg/v2/encoding"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/program"
 )
+
+type RelayClient struct {
+	client *relay.RelayDriver
+	cache  []byte
+}
+
+func NewRelayClient(r string) RelayClient {
+	if len(r) == 0 {
+		return RelayClient{}
+	}
+
+	uuid := os.Getenv("AUTH_ID")
+	length := 256 * 256
+	return RelayClient{
+		client: relay.NewRelayDriver(r, "/ws", uuid),
+		cache:  make([]byte, length, length),
+	}
+}
+
+func (r *RelayClient) send(frame *encoder.EncodingFrame) {
+	if r.client == nil {
+		return
+	}
+
+	n, err := frame.Into(r.cache, 0)
+	assert.NoError(err, "relay server could not call frame#into")
+
+	err = r.client.Relay(r.cache[:n])
+	assert.NoError(err, "relay client errored")
+}
 
 func main() {
 	debug := ""
@@ -23,8 +54,12 @@ func main() {
 	assertF := ""
 	flag.StringVar(&assertF, "assert", "", "add an assert file")
 
-	rounds := 1000
-	flag.IntVar(&rounds, "rounds", 1000, "the rounds of doom to play")
+	rounds := 1000000
+	flag.IntVar(&rounds, "rounds", 1000000, "the rounds of doom to play")
+
+	relayStr := ""
+	flag.StringVar(&relayStr, "relay", "", "the relay server to attach to")
+	relay := NewRelayClient(relayStr)
 
 	flag.Parse()
 	args := flag.Args()
@@ -73,19 +108,13 @@ func main() {
 
 	frames := d.Frames()
 
-	for i := range 1000 {
+	for range rounds {
 		select {
 		case frame := <-frames:
-			original := len(frame.Color)
 			data := ansiparser.RemoveAsciiStyledPixels(frame.Color)
 			encFrame := enc.PushFrame(data)
-
-			if encFrame == nil {
-				fmt.Printf("encoded failed to produce smaller frame: %d\n", len(data))
-				break
-			}
-
-			fmt.Printf("(%d) frame: %d -- encoded(%d): %d\n", original, i, encFrame.Encoding, encFrame.Len)
+			assert.NotNil(encFrame, "expected enc frame to be not nil")
+			relay.send(encFrame)
 		}
 	}
 }

@@ -34,6 +34,6 @@ func (f *Frameable) Into(into []byte, offset int) (int, error) {
 
 	byteutils.Write16(into, offset+2, n)
 
-    // bytes + 4 for header
+	// bytes + 4 for header
 	return n + 4, nil
 }

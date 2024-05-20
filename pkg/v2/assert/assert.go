@@ -81,6 +81,13 @@ func Assert(truth bool, msg string, data ...any) {
 	}
 }
 
+func NotNil(item any, msg string) {
+	if item == nil {
+		slog.Error("NotNil#nil encountered")
+		runAssert(msg)
+	}
+}
+
 func NoError(err error, msg string) {
 	if err != nil {
 		slog.Error("NoError#error encountered", "error", err)

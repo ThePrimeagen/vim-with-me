@@ -13,9 +13,9 @@ type RelayDriver struct {
 	conn *websocket.Conn
 }
 
-func NewRelayDriver(addr string, uuid string) *RelayDriver {
+func NewRelayDriver(host, path, uuid string) *RelayDriver {
 
-	u := url.URL{Scheme: "ws", Host: addr, Path: "/"}
+	u := url.URL{Scheme: "ws", Host: host, Path: path}
 	return &RelayDriver{
 		url:  u,
 		uuid: uuid,

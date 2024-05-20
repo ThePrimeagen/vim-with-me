@@ -18,7 +18,7 @@ func main() {
 
 	var addr string = ""
 	flag.StringVar(&addr, "addr", "", "the address for the relay driver to send messages to")
-    flag.Parse()
+	flag.Parse()
 
 	assert.Assert(addr != "", "driver requires an addr")
 
@@ -29,7 +29,7 @@ func main() {
 	assert.NoError(err, "driver file error")
 
 	fmt.Printf("relay: %s\n", addr)
-	client := relay.NewRelayDriver(addr, os.Getenv("AUTH_ID"))
+	client := relay.NewRelayDriver(addr, "/ws", os.Getenv("AUTH_ID"))
 	err = client.Connect()
 	assert.NoError(err, "unable to connect to relay")
 	defer client.Close()
