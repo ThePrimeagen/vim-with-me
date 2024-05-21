@@ -12,6 +12,7 @@ import (
 	"github.com/theprimeagen/vim-with-me/pkg/v2/ascii_buffer"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/encoder"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/net"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/relay"
 
 	//"github.com/theprimeagen/vim-with-me/pkg/v2/encoding"
@@ -44,7 +45,8 @@ func (r *RelayClient) send(frame *encoder.EncodingFrame) {
 	}
 
     fmt.Printf("sending frame into relay(%d): %d\n", len(r.cache), frame.Len)
-	n, err := frame.Into(r.cache, 0)
+    frameable := net.Frameable{Item: frame}
+	n, err := frameable.Into(r.cache, 0)
 	assert.NoError(err, "relay server could not call frame#into")
 
 	err = r.client.Relay(r.cache[:n])

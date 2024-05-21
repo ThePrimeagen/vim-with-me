@@ -142,8 +142,8 @@ func IntoBytes(huff *Huffman, bitLen int, data []byte, offset int) int {
 	fit := 4+len(huff.DecodingTree) < len(data)-offset
 	assert.Assert(fit, "huffman tree is unable to fit into provided data array")
 
-	binary.BigEndian.PutUint16(data[offset:], uint16(bitLen))
-	binary.BigEndian.PutUint16(data[offset+2:], uint16(len(huff.DecodingTree)))
+    byteutils.Write16(data, offset, bitLen)
+    byteutils.Write16(data, offset + 2, len(huff.DecodingTree))
 	copy(data[offset+4:], huff.DecodingTree)
 
 	return 4 + len(huff.DecodingTree)
