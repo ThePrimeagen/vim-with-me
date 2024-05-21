@@ -1,5 +1,5 @@
 import { types } from "./cmds.js"
-import { asciiPixel, createDecodeFrame, expand, pushFrame } from "./decode/frame.js"
+import { asciiPixel, createDecodeFrame, createOpen, expand, pushFrame } from "./decode/frame.js"
 import { parseFrame } from "./net/frame.js"
 import { WS } from "./ws/index.js"
 
@@ -17,7 +17,8 @@ function run(el) {
         const frame = parseFrame(buf)
         switch (frame.cmd) {
         case types.open:
-            console.log("OPEN", frame)
+            const open = createOpen(frame.data)
+            console.log(open)
             break
         case types.frame:
             pushFrame(decodeFrame, frame)

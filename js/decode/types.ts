@@ -6,3 +6,8 @@ export type DecodeFrame = {
     prevDecodeFrame: Uint8Array | null,
     length: number,
 }
+
+export type Open = {
+    rows: number
+    cols: number
+}

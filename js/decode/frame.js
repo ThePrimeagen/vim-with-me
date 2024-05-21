@@ -223,3 +223,17 @@ export function pushFrame(decoder, frame) {
 
     decoder.prevDecodeFrame = decoder.decodeFrame.slice(0)
 }
+
+/**
+ * @param {Uint8Array} data
+ * @returns {import("./types.ts").Open}
+*/
+export function createOpen(data) {
+    const rows = read16(data, 0)
+    const cols = read16(data, 2)
+
+    return {
+        rows,
+        cols,
+    };
+}
