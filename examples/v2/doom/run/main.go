@@ -39,20 +39,23 @@ func NewRelayClient(r string) (*RelayClient, error) {
     return client, client.client.Connect()
 }
 
-func (r *RelayClient) send(frame *encoder.EncodingFrame) {
-	if r.client == nil {
-		return
-	}
-
-    fmt.Printf("sending frame into relay(%d): %d\n", len(r.cache), frame.Len)
-
-    frameable := net.Frameable{Item: frame}
+func (r *RelayClient) send(frameable *net.Frameable) {
 	n, err := frameable.Into(r.cache, 0)
 
 	assert.NoError(err, "relay server could not call frame#into")
 
 	err = r.client.Relay(r.cache[:n])
 	assert.NoError(err, "relay client errored")
+}
+
+func (r *RelayClient) sendFrame(frame *encoder.EncodingFrame) {
+	if r.client == nil {
+		return
+	}
+
+    fmt.Printf("sending frame into relay(%d): %d\n", len(r.cache), frame.Len)
+
+    r.send(&net.Frameable{Item: frame})
 }
 
 func main() {
@@ -120,6 +123,8 @@ func main() {
 	enc.AddEncoder(encoder.XorRLE)
 	enc.AddEncoder(encoder.Huffman)
 
+    relay.send(net.CreateOpen(d.Rows, d.Cols))
+
 	frames := d.Frames()
 
 	for range rounds {
@@ -128,7 +133,7 @@ func main() {
 			data := ansiparser.RemoveAsciiStyledPixels(frame.Color)
 			encFrame := enc.PushFrame(data)
 			assert.NotNil(encFrame, "expected enc frame to be not nil")
-			relay.send(encFrame)
+			relay.sendFrame(encFrame)
 		}
 	}
 }

@@ -27,6 +27,27 @@ type Frameable struct {
 	Item Encodeable
 }
 
+type Open struct {
+    Rows int
+    Cols int
+}
+
+func (o *Open) Into(into []byte, offset int) (int, error) {
+    byteutils.Write16(into, offset, o.Rows)
+    byteutils.Write16(into, offset + 2, o.Cols)
+    return 4, nil
+}
+
+func (o *Open) Type() byte {
+    return byte(OPEN)
+}
+
+func CreateOpen(rows, cols int) *Frameable {
+    return &Frameable{
+        Item: &Open{Rows: rows, Cols: cols},
+    }
+}
+
 func (f *Frameable) Into(into []byte, offset int) (int, error) {
 	into[offset] = VERSION
 	into[offset+1] = f.Item.Type()

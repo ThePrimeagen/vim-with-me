@@ -47,14 +47,20 @@ func (b *ByteFramer) frame() error {
 	}
 
 	length := byteutils.Read16(b.curr, 2)
-	if len(b.curr) < length+HEADER_SIZE {
+    totalLength := length+HEADER_SIZE
+    remaining := len(b.curr) - totalLength
+
+	if len(b.curr) < totalLength {
 		return nil
 	}
 
 	b.ch <- &Frame{
 		CmdType: b.curr[1],
-		Data:    b.curr[HEADER_SIZE : HEADER_SIZE+length],
+		Data:    b.curr[HEADER_SIZE : totalLength],
 	}
+
+    copy(b.curr, b.curr[totalLength:])
+    b.curr = b.curr[:remaining]
 
 	return nil
 }
@@ -65,6 +71,7 @@ func (b *ByteFramer) Frame(reader io.Reader) error {
 		if len(b.curr) > HEADER_SIZE {
 			b.frame()
 		}
+
 		n, err := reader.Read(data)
 		if err != nil {
 			return err

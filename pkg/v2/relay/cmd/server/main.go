@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log/slog"
 	"os"
 	"strconv"
@@ -56,6 +57,7 @@ func newConnections(relay *relay.Relay, msgs *ConnectionMessages) {
 	for {
 		conn := <-relay.NewConnections()
 		msgs.mutex.RLock()
+        fmt.Printf("new connection, appending open messages: %d\n", len(msgs.messages))
 		for _, msg := range msgs.messages {
 			conn.Conn.WriteMessage(websocket.BinaryMessage, msg)
 		}
@@ -66,13 +68,17 @@ func newConnections(relay *relay.Relay, msgs *ConnectionMessages) {
 func onMessage(relay *relay.Relay, msgs *ConnectionMessages) {
 	framer := net.NewByteFramer()
 	go framer.FrameChan(relay.Messages())
-	for {
-		frame := <-framer.Frames()
+    for frame := range framer.Frames() {
 		switch frame.CmdType {
 		case byte(net.OPEN), byte(net.BRIGHTNESS_TO_ASCII):
-			length := net.HEADER_SIZE + len(frame.Data)
+			length := 1024 * 20
 			encoded := make([]byte, length, length)
-			frame.Into(encoded, 0)
+            n, err := frame.Into(encoded, 0)
+            encoded = encoded[:n]
+
+            assert.NoError(err, "could not encode data into messages data")
+
+            fmt.Printf("appending open message: %+v\n", encoded)
 			msgs.mutex.Lock()
 			msgs.messages = append(msgs.messages, encoded)
 			msgs.mutex.Unlock()
