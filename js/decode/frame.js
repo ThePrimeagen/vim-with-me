@@ -188,6 +188,8 @@ export function expand(decode) {
 export function asciiPixel(decode) {
     const frame = decode.decodeFrame
     const out = new Uint8Array(frame.byteLength)
+
+    console.log("decode in", frame.byteLength)
     for (let j = 0, i = 0; i < frame.byteLength; ++i, j += 2) {
         out[j] = frame[i]
         out[j + 1] = frame[i]

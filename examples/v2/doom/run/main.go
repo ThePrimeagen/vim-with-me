@@ -131,6 +131,7 @@ func main() {
 		select {
 		case frame := <-frames:
 			data := ansiparser.RemoveAsciiStyledPixels(frame.Color)
+
 			encFrame := enc.PushFrame(data)
 			assert.NotNil(encFrame, "expected enc frame to be not nil")
 			relay.sendFrame(encFrame)
