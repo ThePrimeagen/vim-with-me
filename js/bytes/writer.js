@@ -1,4 +1,4 @@
-import { assert, debugAssert } from "../assert"
+import { assert } from "../assert.js"
 
 export class EightBitWriter {
     /** @type {Uint8Array | null} */

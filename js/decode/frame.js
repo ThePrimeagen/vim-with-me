@@ -39,7 +39,7 @@ function isXOR_RLE(decode) {
  * @returns {number}
  **/
 function left(decoder, idx) {
-	assert(decoder.byteLength > idx + 5, "decoder length + idx is shorter than huffmanNode decode length")
+	assert(decoder.byteLength > idx + 5, "decoder length + idx is shorter than huffmanNode decode length", "idx", idx, "decode", decoder.byteLength)
 	return read16(decoder, idx + 2)
 }
 
@@ -81,7 +81,7 @@ function value(decoder, idx) {
  * @returns {boolean}
  **/
 function isLeaf(decoder, idx) {
-	assert(decoder.byteLength > idx + 5, "decoder length + idx is shorter than huffmanNode decode length")
+	assert(decoder.byteLength > idx + 5, "decoder length + idx is shorter than huffmanNode decode length", "idx", idx, "decoder", decoder.byteLength)
 	return read16(decoder, idx + 2) == 0 &&
 		read16(decoder, idx + 4) == 0
 }
@@ -132,12 +132,14 @@ function expandHuffman(decode) {
     // 1 + 2 bytes bitLen
     // 3 + 2 bytes decodingTreeLength
 
-    const bitLen = read16(decode.decodeFrame, 1)
-    const decodingTreeLength = read16(decode.decodeFrame, 3)
-    const decodingTree = decode.decodeFrame.subarray(5, 5 + decodingTreeLength)
+    const data = decode.frame.data
+    const bitLen = read16(data, 1)
+    const decodingTreeLength = read16(data, 3)
+    const decodingTree = data.subarray(5, 5 + decodingTreeLength)
+    const decodedData = data.subarray(5 + decodingTreeLength)
     const writer = scratchWriter8Bit()
 
-    decodeHuffman(decodingTree, decode.decodeFrame, bitLen, writer)
+    decodeHuffman(decodingTree, decodedData, bitLen, writer)
     decode.decodeFrame = writer.data()
 
     assert(decode.decodeFrame.byteLength > 0, "decoding failed")
@@ -191,4 +193,31 @@ export function asciiPixel(decode) {
     return out
 }
 
+/**
+ * @returns {DecodeFrame}
+ */
+export function createDecodeFrame() {
+    return {
+        frame: {
+            cmd: 0,
+            data: scratchArr,
+        },
+        decodeFrame: scratchArr,
+        prevDecodeFrame: null,
+        length: 0,
+    }
+}
 
+/**
+ * @param {DecodeFrame} decoder
+ * @param {import("../types.ts").Frame} frame
+ */
+export function pushFrame(decoder, frame) {
+    decoder.frame = frame
+
+    if (decoder.decodeFrame === scratchArr) {
+        return
+    }
+
+    decoder.prevDecodeFrame = decoder.decodeFrame.slice(0)
+}

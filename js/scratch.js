@@ -1,4 +1,4 @@
-import { EightBitWriter } from "./bytes/writer"
+import { EightBitWriter } from "./bytes/writer.js"
 export const scratchBuff = new ArrayBuffer(1024 * 1024)
 export const scratchArr = new Uint8Array(scratchBuff)
 

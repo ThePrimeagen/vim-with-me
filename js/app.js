@@ -1,3 +1,4 @@
+import { createDecodeFrame, expand, pushFrame } from "./decode/frame.js"
 import { parseFrame } from "./net/frame.js"
 import { WS } from "./ws/index.js"
 
@@ -9,10 +10,13 @@ import { WS } from "./ws/index.js"
 function run(el) {
     const ws = new WS("ws://localhost:8080/ws")
 
-    ws.onMessage(async function(blob) {
-        const buf = new Uint8Array(await blob.arrayBuffer())
+    const decodeFrame = createDecodeFrame()
+    ws.onMessage(async function(buf) {
         const frame = parseFrame(buf)
-        console.log(frame.cmd, frame.data.byteLength)
+        pushFrame(decodeFrame, frame)
+        expand(decodeFrame)
+
+        console.log(decodeFrame.decodeFrame.slice(0, 5))
     })
 }
 

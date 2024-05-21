@@ -1,7 +1,6 @@
 package huffman
 
 import (
-	"encoding/binary"
 	"errors"
 	"fmt"
 	"math"

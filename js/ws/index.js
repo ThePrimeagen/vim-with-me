@@ -3,7 +3,7 @@ const CONNECTED = 1
 const ERROR = 2
 const CLOSE = 3
 
-/** @typedef {(buf: Blob) => void} OnMessage */
+/** @typedef {(buf: Uint8Array) => void} OnMessage */
 
 class WS {
     /** @type {WebSocket} */
@@ -58,12 +58,13 @@ class WS {
             this.#connect()
         }
 
-        ws.onmessage = (msg) => {
-            /** @type {ArrayBuffer} */
-            const arrBuff = msg.data
+        ws.onmessage = async (msg) => {
+            /** @type {Blob} */
+            const blob = msg.data
+            const arrBuff = await blob.arrayBuffer()
 
             if (this.#onmessage) {
-                this.#onmessage(arrBuff);
+                this.#onmessage(new Uint8Array(arrBuff));
             }
         }
     }

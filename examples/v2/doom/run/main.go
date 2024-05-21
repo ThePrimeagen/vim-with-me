@@ -123,6 +123,7 @@ func main() {
 	for range rounds {
 		select {
 		case frame := <-frames:
+            fmt.Printf("Colors: %+v\n", frame.Color[:5])
 			data := ansiparser.RemoveAsciiStyledPixels(frame.Color)
 			encFrame := enc.PushFrame(data)
 			assert.NotNil(encFrame, "expected enc frame to be not nil")
