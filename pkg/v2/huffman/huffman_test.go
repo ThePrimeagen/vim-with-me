@@ -1,6 +1,7 @@
 package huffman_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"

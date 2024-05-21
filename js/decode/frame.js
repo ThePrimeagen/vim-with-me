@@ -92,8 +92,8 @@ function isLeaf(decoder, idx) {
  * @param {number} bitLength
  * @param {import("../types.ts").ByteWriter} writer
 */
-function decodeHuffman(decodingTree, data, bitLength, writer) {
-	assert(data.byteLength >= bitLength/8 + 1, "you did not provide enough data")
+export function decodeHuffman(decodingTree, data, bitLength, writer) {
+	assert(data.byteLength >= Math.floor(bitLength / 8) + 1, "you did not provide enough data")
 
 	let idx = 0
 	let decodeIdx = 0
