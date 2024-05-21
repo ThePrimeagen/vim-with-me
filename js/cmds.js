@@ -5,11 +5,11 @@ export const types = {
 }
 
 export const encodings = {
-	NONE: 1,
-	XOR_RLE: 2,
+	NONE: 0,
+	XOR_RLE: 1,
+    XOR_BIT_DIFF: 2, // NOT USED
 	HUFFMAN: 3,
-	XOR_BIT_DIFF: 4, // Not implement, but i am horned up for it
-	XOR_HUFFMAN: 5,
+	XOR_HUFFMAN: 5, // NOT USED
 	HUFFMAN_QUADTREE: 6, // Maybe implement?
 	XOR_RLE_QUADTREE: 7, // Maybe implement?
 }

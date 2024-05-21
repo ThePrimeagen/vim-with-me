@@ -18,6 +18,7 @@ lua_clean:
 go-test:
 	echo "===> Testing"
 	go test ./pkg/v2/...
+	go test ./examples/v2/...
 
 go-relay-test:
 	echo "===> Testing"

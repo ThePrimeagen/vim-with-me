@@ -1,6 +1,7 @@
 package encoder
 
 import (
+
 	"github.com/theprimeagen/vim-with-me/pkg/v2/ascii_buffer"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/huffman"
@@ -22,10 +23,14 @@ type EncodingFrame struct {
 
 	RLE ascii_buffer.AsciiRLE
 
+    // I AM HAVING A CRISIS ON NAMING RIGHT NOW
+    // I NEED TWO TEMPORARY SPACES
 	Out []byte
 	Tmp []byte
 
 	TmpLen int
+
+    // TOTAL ASS LENGTH
 	Len    int
 
 	Encoding EncoderType
@@ -104,9 +109,11 @@ func NewEncoder(size int, treeParams ascii_buffer.QuadtreeParam) *Encoder {
 	}
 }
 
-func (e *Encoder) AddEncoder(encoder EncodingCall) {
+func (e *Encoder) AddEncoder(encoder EncodingCall) *Encoder {
 	e.encodings = append(e.encodings, encoder)
 	e.frames = append(e.frames, newEncodingFrame(e.size, e.params))
+
+    return e
 }
 
 func (e *Encoder) PushFrame(data []byte) *EncodingFrame {

@@ -45,7 +45,9 @@ func Huffman(frame *EncodingFrame) error {
 	huff := huffman.CalculateHuffman(frame.Freq)
 
 	huffLen := len(huff.DecodingTree)
-	bitLen, err := huff.Encode(createIterator(frame), frame.Out)
+	bitLen, err := huff.Encode(createIterator(frame), frame.Tmp)
+	frame.TmpLen = (bitLen + 7) / 8
+
 	if err != nil {
 		return err
 	}
@@ -68,17 +70,26 @@ type encoderEncodingMap map[EncoderType]encoderEncodingFn
 
 var encodeInto encoderEncodingMap = encoderEncodingMap{
 	HUFFMAN: func(e *EncodingFrame, data []byte, offset int) (int, error) {
-		assert.Assert(e.Huff != nil, "the encoding type is huffman but the huff object in nil")
-		bytes := huffman.IntoBytes(e.Huff, e.HuffBitLen, data, offset)
 
-		assert.Assert(bytes+e.Len < len(data), "unable to encode frame into provided buffer")
-		copy(data[bytes:], e.Curr[:e.Len])
-		return bytes + e.Len, nil
+		assert.Assert(e.Huff != nil, "the encoding type is huffman but the huff object in nil")
+
+		decodeTreeLength := len(e.Huff.DecodingTree)
+        decodeLen := 4+decodeTreeLength+e.TmpLen
+
+		assert.Assert(decodeLen < len(data), "unable to encode frame into provided buffer")
+
+		byteutils.Write16(data, offset, e.HuffBitLen)
+		byteutils.Write16(data, offset+2, decodeTreeLength)
+
+		copy(data[offset+4:], e.Huff.DecodingTree)
+        copy(data[offset+4+decodeTreeLength:], e.Tmp[:e.TmpLen])
+
+		return decodeLen, nil
 	},
 
 	XOR_RLE: func(e *EncodingFrame, data []byte, offset int) (int, error) {
 		assert.Assert(e.Len < len(data), "unable to encode frame into provided buffer")
-		copy(data[offset:], e.Curr[:e.Len])
+		copy(data[offset:], e.Out[:e.Len])
 		return e.Len, nil
 	},
 }

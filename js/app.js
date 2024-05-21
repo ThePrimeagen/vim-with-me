@@ -1,4 +1,4 @@
-import { createDecodeFrame, expand, pushFrame } from "./decode/frame.js"
+import { asciiPixel, createDecodeFrame, expand, pushFrame } from "./decode/frame.js"
 import { parseFrame } from "./net/frame.js"
 import { WS } from "./ws/index.js"
 
@@ -13,10 +13,12 @@ function run(el) {
     const decodeFrame = createDecodeFrame()
     ws.onMessage(async function(buf) {
         const frame = parseFrame(buf)
+
         pushFrame(decodeFrame, frame)
         expand(decodeFrame)
 
-        console.log(decodeFrame.decodeFrame.slice(0, 5))
+        const data = asciiPixel(decodeFrame)
+        console.log(data.slice(0, 5))
     })
 }
 

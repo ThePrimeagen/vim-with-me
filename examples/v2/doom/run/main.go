@@ -45,8 +45,10 @@ func (r *RelayClient) send(frame *encoder.EncodingFrame) {
 	}
 
     fmt.Printf("sending frame into relay(%d): %d\n", len(r.cache), frame.Len)
+
     frameable := net.Frameable{Item: frame}
 	n, err := frameable.Into(r.cache, 0)
+
 	assert.NoError(err, "relay server could not call frame#into")
 
 	err = r.client.Relay(r.cache[:n])
@@ -123,7 +125,6 @@ func main() {
 	for range rounds {
 		select {
 		case frame := <-frames:
-            fmt.Printf("Colors: %+v\n", frame.Color[:5])
 			data := ansiparser.RemoveAsciiStyledPixels(frame.Color)
 			encFrame := enc.PushFrame(data)
 			assert.NotNil(encFrame, "expected enc frame to be not nil")

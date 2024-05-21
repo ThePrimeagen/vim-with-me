@@ -1,6 +1,6 @@
 /** @typedef {import("./types.ts").DecodeFrame} DecodeFrame */
 
-import { assert } from "../assert.js";
+import { assert, debugAssert } from "../assert.js";
 import { read16 } from "../bytes/utils.js";
 import { types, encodings } from "../cmds.js";
 import { scratchArr, scratchWriter8Bit } from "../scratch.js";
@@ -81,7 +81,7 @@ function value(decoder, idx) {
  * @returns {boolean}
  **/
 function isLeaf(decoder, idx) {
-	assert(decoder.byteLength > idx + 5, "decoder length + idx is shorter than huffmanNode decode length", "idx", idx, "decoder", decoder.byteLength)
+	debugAssert(decoder.byteLength > idx + 5, "decoder length + idx is shorter than huffmanNode decode length", "idx", idx, "decoder", decoder.byteLength)
 	return read16(decoder, idx + 2) == 0 &&
 		read16(decoder, idx + 4) == 0
 }
@@ -93,7 +93,7 @@ function isLeaf(decoder, idx) {
  * @param {import("../types.ts").ByteWriter} writer
 */
 export function decodeHuffman(decodingTree, data, bitLength, writer) {
-	assert(data.byteLength >= Math.floor(bitLength / 8) + 1, "you did not provide enough data")
+	debugAssert(data.byteLength >= Math.floor((bitLength + 7) / 8), "you did not provide enough data")
 
 	let idx = 0
 	let decodeIdx = 0
@@ -174,8 +174,10 @@ function expandXOR_RLE(decode) {
 export function expand(decode) {
     if (isXOR_RLE(decode)) {
         expandXOR_RLE(decode)
-    } else {
+    } else if (isHuffmanEncoded(decode)) {
         expandHuffman(decode)
+    } else {
+        throw new Error("WTF unknown encoding: " + decode.frame.data[0])
     }
 }
 

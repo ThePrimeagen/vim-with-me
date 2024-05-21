@@ -1,11 +1,13 @@
 /**
  * @param {any} truthy
  * @param {string} msg
+ * @param {any[]} args
  * */
-export function debugAssert(truthy, msg) {
+export function debugAssert(truthy, msg, ...args) {
     if (!truthy) {
-        debugger
+        console.error("assert context", args.join(" "))
         console.error(msg)
+        debugger
     }
 }
 

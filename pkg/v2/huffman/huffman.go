@@ -3,7 +3,10 @@ package huffman
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"math"
+	"strconv"
+	"strings"
 
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 	byteutils "github.com/theprimeagen/vim-with-me/pkg/v2/byte_utils"
@@ -95,12 +98,42 @@ func (h *Huffman) Encode(iterator byteutils.ByteIterator, out []byte) (int, erro
 	return bitLength, nil
 }
 
+func (h *Huffman) DebugDecodeTree() string {
+    out := make([]string, 0)
+    var walk func(curr []byte, length int, idx int)
+    walk = func(curr []byte, length int, idx int) {
+        if isLeaf(h.DecodingTree, idx) {
+            str := ""
+            for _, b := range curr {
+                str += strconv.Itoa(int(b))
+            }
+            out = append(out, str + " " + fmt.Sprintf("0x%2x", value(h.DecodingTree, idx)))
+            return
+        }
+
+        rightIdx := right(h.DecodingTree, idx)
+
+        curr = append(curr, 0)
+        leftIdx := left(h.DecodingTree, idx)
+        walk(curr, length + 1, leftIdx)
+
+        curr[length] = 1
+        walk(curr, length + 1, rightIdx)
+    }
+
+    walk([]byte{}, 0, 0)
+
+    return strings.Join(out, "\n")
+}
+
 // Will i even use a decoder?  i should write this in typescript
 func (h *Huffman) Decode(data []byte, bitLength int, writer byteutils.ByteWriter) error {
 	assert.Assert(len(data) >= bitLength/8+1, "you did not provide enough data")
 
 	idx := 0
 	decodeIdx := 0
+	decodeIdxCount := 0
+    debugArr := make([]int, 20, 20)
 
 outer:
 	for {
@@ -109,10 +142,19 @@ outer:
 			bitLength--
 
 			decodeIdx = jump(h.DecodingTree, decodeIdx, bit)
+            debugArr[decodeIdxCount] = bit
+            decodeIdxCount++
 
 			if isLeaf(h.DecodingTree, decodeIdx) {
 
-				if err := writer.Write(value(h.DecodingTree, decodeIdx)); err != nil {
+                v := value(h.DecodingTree, decodeIdx)
+                str := ""
+                for _, b := range debugArr[:decodeIdxCount] {
+                    str += strconv.Itoa(int(b))
+                }
+                fmt.Printf("value: %s 0x%2x\n", str, v)
+
+				if err := writer.Write(v); err != nil {
 					return errors.Join(
 						HuffmanDecodingFailedToWrite,
 						err,
@@ -120,9 +162,11 @@ outer:
 				}
 
 				decodeIdx = 0
+                decodeIdxCount = 0
 			}
 
 			if bitLength == 0 {
+                assert.Assert(decodeIdx == 0, "finished decoding with hanging state", "decodeIdx", decodeIdx)
 				break outer
 			}
 		}
@@ -143,6 +187,8 @@ func IntoBytes(huff *Huffman, bitLen int, data []byte, offset int) int {
 
     byteutils.Write16(data, offset, bitLen)
     byteutils.Write16(data, offset + 2, len(huff.DecodingTree))
+
+    slog.Warn("huffman IntoBytes", "bitLen", bitLen, "decodeTree", len(huff.DecodingTree))
 	copy(data[offset+4:], huff.DecodingTree)
 
 	return 4 + len(huff.DecodingTree)

@@ -9,7 +9,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/theprimeagen/vim-with-me/examples/v2/doom"
+	ansiparser "github.com/theprimeagen/vim-with-me/pkg/v2/ansi_parser"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/ansi_parser/display"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/ascii_buffer"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
+	byteutils "github.com/theprimeagen/vim-with-me/pkg/v2/byte_utils"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/encoder"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/net"
 )
 
 func TestDoom8BitParserOneFrame(t *testing.T) {
@@ -30,55 +36,55 @@ func TestDoom8BitParserOneFrame(t *testing.T) {
 
 	frames := d.Frames()
 
-	timer := time.NewTimer(1000000000 * time.Millisecond)
+	enc := encoder.NewEncoder(d.Rows*(d.Cols/2), ascii_buffer.QuadtreeParam{
+		Depth:  2,
+		Stride: 1,
+		Rows:   d.Rows,
+		Cols:   d.Cols / 2,
+	})
+
+	enc.AddEncoder(encoder.XorRLE)
+	enc.AddEncoder(encoder.Huffman)
+
+	timer := time.NewTimer(2000 * time.Millisecond)
 
 	select {
-	case f := <-frames:
-		fmt.Println(display.Display(&f, d.Rows, d.Cols))
+	case frame := <-frames:
+		fmt.Println(display.Display(&frame, d.Rows, d.Cols))
+
+        data := ansiparser.RemoveAsciiStyledPixels(frame.Color)
+        encFrame := enc.PushFrame(data)
+
+        require.NotNil(t, encFrame)
+        require.Equal(t, encoder.HUFFMAN, encFrame.Encoding)
+
+        require.Equal(t, 3253, encFrame.Len)
+        require.Equal(t, 834, len(encFrame.Huff.DecodingTree))
+
+        // Into frame
+        frameData := make([]byte, 4096, 4096)
+        frameable := net.Frameable{Item: encFrame}
+        n, err := frameable.Into(frameData, 0)
+
+        require.NoError(t, err)
+        require.Equal(t, n, 4096)
+
+        // Decode huffman
+
+        writer := byteutils.U8Writer{}
+        writer.Set(frameData)
+
+        /*
+        fmt.Printf("debug: %s\n", encFrame.Huff.DebugDecodeTree())
+        fmt.Printf("data = 0x%2x\n", data[0])
+        fmt.Printf("framedata %+v\n", byteutils.Read16(frameData, 0))
+        */
+        fmt.Printf("first byte: 0x%2x\n", data[0])
+        fmt.Printf("enc first byte: 0x%2x\n", encFrame.Curr[0])
+        //encFrame.Huff.Decode(encFrame.Curr[:1], 4, &writer)
+
+
 	case <-timer.C:
-		panic("YOU SUCK")
+		assert.Assert(false, "YOU SUCK")
 	}
 }
-
-/*
-func TestDoom8BitParserManyFrame(t *testing.T) {
-    data, err := os.Open("./doomtest_large")
-    require.NoError(t, err)
-
-    d := doom.NewDoom()
-
-    go func() {
-        defer data.Close()
-        io.Copy(d, data)
-    }()
-
-    <-d.Ready()
-    fh, err := os.CreateTemp("/tmp", "doomtest")
-    require.NoError(t, err)
-    d.Framer.DebugToFile(fh)
-
-    require.Equal(t, d.Rows, 66)
-    require.Equal(t, d.Cols, 212)
-
-    frames := d.Frames()
-    count := 0
-    length := d.Rows * d.Cols
-
-    outer:
-    for {
-        timer := time.NewTimer(time.Millisecond * 50)
-        select {
-        case frame := <-frames:
-            require.Equal(t, len(frame.Chars), length)
-            require.Equal(t, len(frame.Color), length)
-            count++
-            fmt.Println(display.Clear())
-            fmt.Println(display.Display(&frame, d.Rows, d.Cols))
-        case <-timer.C:
-            break outer
-        }
-    }
-
-    require.Equal(t, 129, count)
-}
-*/

@@ -1,6 +1,10 @@
 package net
 
-import byteutils "github.com/theprimeagen/vim-with-me/pkg/v2/byte_utils"
+import (
+	"fmt"
+
+	byteutils "github.com/theprimeagen/vim-with-me/pkg/v2/byte_utils"
+)
 
 const VERSION = byte(1)
 
@@ -33,6 +37,8 @@ func (f *Frameable) Into(into []byte, offset int) (int, error) {
 	}
 
 	byteutils.Write16(into, offset+2, n)
+
+    fmt.Printf("Frameable#Into: %d + 4 for encoding HEADER\n", n)
 
 	// bytes + 4 for header
 	return n + 4, nil
