@@ -9,13 +9,25 @@ primary_region = 'ord'
 [build]
   dockerfile = "relay_server.Dockerfile"
 
-[http_service]
+[[services]]
   internal_port = 8080
-  force_http = true
-  auto_stop_machines = true
-  auto_start_machines = true
-  min_machines_running = 0
-  processes = ['app']
+  protocol = "tcp"
+
+  [services.concurrency]
+    hard_limit = 10000
+    soft_limit = 8000
+
+  [[services.ports]]
+    handlers = ["http"]
+    port = "80"
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = "443"
+
+  [[services.tcp_checks]]
+    interval = 10000
+    timeout = 2000
 
 [[vm]]
   memory = '1gb'
