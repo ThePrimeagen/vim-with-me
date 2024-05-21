@@ -18,7 +18,6 @@ function run(el) {
         switch (frame.cmd) {
         case types.open:
             const open = createOpen(frame.data)
-            console.log(open)
             break
         case types.frame:
             pushFrame(decodeFrame, frame)
