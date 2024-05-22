@@ -68,22 +68,15 @@ func onMessage(relay *relay.Relay, msgs *ConnectionMessages) {
 	framer := net.NewByteFramer()
 	go framer.FrameChan(relay.Messages())
 	for frame := range framer.Frames() {
-		slog.Warn("received frame", "frame", frame)
+		slog.Debug("received frame", "frame", frame)
 
 		switch frame.CmdType {
 		case byte(net.OPEN):
-			length := 1024 * 20
-			encoded := make([]byte, length, length)
-
-			n, err := (&net.Frameable{Item: frame}).Into(encoded, 0)
-			encoded = encoded[:n]
-
-			assert.NoError(err, "could not encode data into messages data")
-
-			slog.Warn("new open command", "encoded", encoded)
+            bytes := frame.Bytes()
+			slog.Warn("new open command", "encoded", bytes)
 
 			msgs.mutex.Lock()
-			msgs.open = encoded
+			msgs.open = bytes
 			msgs.mutex.Unlock()
 		}
 	}

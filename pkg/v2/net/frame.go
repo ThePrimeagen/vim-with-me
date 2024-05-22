@@ -33,6 +33,16 @@ type Frame struct {
 	Data    []byte
 }
 
+func (f *Frame) Bytes() []byte {
+    out := make([]byte, HEADER_SIZE + len(f.Data))
+    frameHeader(out, 0, f.Type(), f.SeqAndCmd())
+    byteutils.Write16(out, 3, len(f.Data))
+
+    copy(out[HEADER_SIZE:], f.Data)
+
+    return out
+}
+
 func (f *Frame) SeqAndCmd() byte {
 	return FrameSeqAndCmd(f.Seq, f.Flags)
 }

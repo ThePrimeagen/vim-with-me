@@ -11,12 +11,18 @@ import (
 
 var EncoderExceededBufferSize = errors.New("encoder exceeded buffer size of out buffer, useless encoding")
 
+var count = 0
 func XorRLE(frame *EncodingFrame) error {
 	if frame.Prev == nil {
 		frame.Len = len(frame.Out) + 1
 		return nil
 	}
 
+    count++
+    if count % 300 == 0 {
+		frame.Len = len(frame.Out) + 1
+        return nil
+    }
 	ascii_buffer.Xor(frame.Curr, frame.Prev, frame.Tmp)
 	frame.RLE.Reset(frame.Out)
 	frame.RLE.Write(frame.Tmp)
@@ -92,4 +98,16 @@ var encodeInto encoderEncodingMap = encoderEncodingMap{
 		copy(data[offset:], e.Out[:e.Len])
 		return e.Len, nil
 	},
+}
+
+func EncodingName(enc EncoderType) string {
+    switch enc {
+    case HUFFMAN:
+        return "Huffman"
+    case XOR_RLE:
+        return "XorRLE"
+    default:
+        assert.Assert(false, "unable to determine encoding type", "enc", enc)
+    }
+    return "unreachable"
 }
