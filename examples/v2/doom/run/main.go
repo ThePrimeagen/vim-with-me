@@ -122,7 +122,7 @@ func main() {
 		Cols:   d.Cols / 2,
 	})
 
-	enc.AddEncoder(encoder.XorRLE)
+	//enc.AddEncoder(encoder.XorRLE)
 	enc.AddEncoder(encoder.Huffman)
 
     relay.send(net.CreateOpen(d.Rows, d.Cols))

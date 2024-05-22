@@ -16,7 +16,7 @@ const (
 	FRAME
 )
 
-const HEADER_SIZE = 4
+const HEADER_SIZE = 5
 
 type Encodeable interface {
 	Type() byte
@@ -28,39 +28,45 @@ type Frameable struct {
 }
 
 type Open struct {
-    Rows int
-    Cols int
+	Rows int
+	Cols int
 }
 
 func (o *Open) Into(into []byte, offset int) (int, error) {
-    byteutils.Write16(into, offset, o.Rows)
-    byteutils.Write16(into, offset + 2, o.Cols)
-    return 4, nil
+	byteutils.Write16(into, offset, o.Rows)
+	byteutils.Write16(into, offset+2, o.Cols)
+	return 4, nil
 }
 
 func (o *Open) Type() byte {
-    return byte(OPEN)
+	return byte(OPEN)
 }
 
 func CreateOpen(rows, cols int) *Frameable {
-    return &Frameable{
-        Item: &Open{Rows: rows, Cols: cols},
-    }
+	return &Frameable{
+		Item: &Open{Rows: rows, Cols: cols},
+	}
 }
+
+var count = 0
 
 func (f *Frameable) Into(into []byte, offset int) (int, error) {
 	into[offset] = VERSION
 	into[offset+1] = f.Item.Type()
+	into[offset+2] = byte(count % 16)
+    fmt.Printf("seq: %d\n", byte(count % 16))
 
-	n, err := f.Item.Into(into, offset+4)
+	count++
+
+	n, err := f.Item.Into(into, offset+HEADER_SIZE)
 	if err != nil {
 		return 0, err
 	}
 
-	byteutils.Write16(into, offset+2, n)
+	byteutils.Write16(into, offset+3, n)
 
-    fmt.Printf("Frameable#Into: %d + 4 for encoding HEADER\n", n)
+	fmt.Printf("Frameable#Into: %d + 4 for encoding HEADER\n", n)
 
-	// bytes + 4 for header
-	return n + 4, nil
+	// bytes + 5 for header
+	return n + HEADER_SIZE, nil
 }

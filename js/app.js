@@ -1,3 +1,4 @@
+import { assert, debugAssert } from "./assert.js"
 import { types } from "./cmds.js"
 import { createDecodeFrame, createOpen, expand, pushFrame } from "./decode/frame.js"
 import { AsciiWindow } from "./display/window.js"
@@ -32,6 +33,7 @@ function run(el) {
         case types.frame:
             pushFrame(decodeFrame, frame)
             expand(decodeFrame)
+            console.log(decodeFrame.decodeFrame.slice(0, 5))
 
             if (window === null) {
                 console.error("window is null?")
