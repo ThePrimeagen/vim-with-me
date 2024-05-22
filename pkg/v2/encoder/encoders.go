@@ -2,6 +2,7 @@ package encoder
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/theprimeagen/vim-with-me/pkg/v2/ascii_buffer"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
@@ -52,6 +53,8 @@ func Huffman(frame *EncodingFrame) error {
 		return err
 	}
 	byteLen := bitLen/8 + 1
+
+    fmt.Printf("huffman: %d + %d \n", huffLen, byteLen)
 
 	if huffLen+byteLen >= len(frame.Curr) {
 		frame.Len = len(frame.Curr) + 1

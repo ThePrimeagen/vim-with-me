@@ -53,14 +53,16 @@ func TestEncodeFrameXOR_RLE(t *testing.T) {
     }, encFrame.Out[:encFrame.Len])
 
     // write that buf
-    out := make([]byte, 7, 7)
+    out := make([]byte, 8, 8)
     frameable := net.Frameable{Item: encFrame}
     n, err := frameable.Into(out, 0)
     require.NoError(t, err)
-    require.Equal(t, 7, n)
+    // 2 = size, 1 = encoding
+    require.Equal(t, net.HEADER_SIZE + 2 + 1, n)
     require.Equal(t, []byte{
         net.VERSION,
         byte(net.FRAME),
+        0, // seq and frame
 
         // length
         0,

@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/theprimeagen/vim-with-me/examples/v2/doom"
 	ansiparser "github.com/theprimeagen/vim-with-me/pkg/v2/ansi_parser"
-	"github.com/theprimeagen/vim-with-me/pkg/v2/ansi_parser/display"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/ascii_buffer"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 	byteutils "github.com/theprimeagen/vim-with-me/pkg/v2/byte_utils"
@@ -50,8 +49,6 @@ func TestDoom8BitParserOneFrame(t *testing.T) {
 
 	select {
 	case frame := <-frames:
-		fmt.Println(display.Display(&frame, d.Rows, d.Cols))
-
         data := ansiparser.RemoveAsciiStyledPixels(frame.Color)
         encFrame := enc.PushFrame(data)
 
@@ -67,7 +64,7 @@ func TestDoom8BitParserOneFrame(t *testing.T) {
         n, err := frameable.Into(frameData, 0)
 
         require.NoError(t, err)
-        require.Equal(t, n, 4096)
+        require.Equal(t, n, 3263)
 
         // Decode huffman
 

@@ -1,6 +1,7 @@
 package encoder
 
 import (
+	"fmt"
 
 	"github.com/theprimeagen/vim-with-me/pkg/v2/ascii_buffer"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
@@ -37,6 +38,9 @@ type EncodingFrame struct {
 	Flags    byte
 }
 
+func (e *EncodingFrame) String() string {
+    return fmt.Sprintf("EncodingFrame(%d) tmpLen=%d encoding=%d", e.Len, e.TmpLen, e.Encoding)
+}
 func (e *EncodingFrame) Into(data []byte, offset int) (int, error) {
 	data[offset] = byte(e.Encoding)
 	fn, ok := encodeInto[e.Encoding]

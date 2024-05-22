@@ -15,7 +15,6 @@ func nextSeqId() int {
 }
 
 func frameHeader(data []byte, offset int, t, seqFlags byte) {
-    fmt.Printf("frameHeader: %d %d %d %+v\n", offset, t, seqFlags, data)
     data[offset] = VERSION
     data[offset+1] = t
     data[offset+2] = seqFlags
