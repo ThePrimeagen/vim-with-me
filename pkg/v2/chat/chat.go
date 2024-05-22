@@ -1,5 +1,11 @@
 package chat
 
+type ChatMsg struct {
+	Name string
+	Msg  string
+	Bits int
+}
+
 type FilterCB func(msg string) bool
 type MapCB func(msg string) string
 type Occurrence struct {
@@ -17,18 +23,24 @@ type ChatAggregator struct {
 var defaultMax = Occurrence{Count: 0, Msg: ""}
 var identity = func(x string) string { return x }
 
-func NewChatAggregator(filter FilterCB) *ChatAggregator {
-	return &ChatAggregator{
-		filter:      filter,
+func NewChatAggregator() ChatAggregator {
+	return ChatAggregator{
+		filter:      nil,
 		occurrences: make([]*Occurrence, 0),
 		max:         &defaultMax,
 		mapFn:       identity,
 	}
 }
 
-func (c ChatAggregator) WithMap(mapFn MapCB) *ChatAggregator {
+func (c ChatAggregator) WithFilter(filterFn FilterCB) ChatAggregator {
+	c.filter = filterFn
+	return c
+}
+
+
+func (c ChatAggregator) WithMap(mapFn MapCB) ChatAggregator {
 	c.mapFn = mapFn
-	return &c
+	return c
 }
 
 func (c *ChatAggregator) Add(msg string) {
@@ -56,4 +68,10 @@ func (c *ChatAggregator) Reset() Occurrence {
 	c.occurrences = make([]*Occurrence, 0)
 
 	return *max
+}
+
+func (c *ChatAggregator) Pipe(ch chan ChatMsg) {
+	for msg := range ch {
+		c.Add(msg.Msg)
+	}
 }

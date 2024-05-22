@@ -18,6 +18,7 @@ function run(el) {
     let asciiWindow = null
 
     const decodeFrame = createDecodeFrame()
+
     ws.onMessage(async function(buf) {
 
         const frame = parseFrame(buf)

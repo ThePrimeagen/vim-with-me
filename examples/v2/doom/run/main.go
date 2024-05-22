@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"log/slog"
 	"os"
 	"time"
 
@@ -141,7 +140,7 @@ func main() {
 		<-time.After(time.Second * 1)
         prog.SendKey('')
 
-        count := 0
+        count := 1
         for {
             <-time.After(time.Millisecond * 16)
             if count % 100 == 0 {
@@ -152,7 +151,6 @@ func main() {
             count++
 
         }
-		slog.Warn("game loop#started")
     }()
 
 

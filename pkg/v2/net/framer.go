@@ -15,6 +15,7 @@ type Frame struct {
 	CmdType byte
 	Seq     byte
 	Flags   byte
+	Unused  byte
 	Data    []byte
 }
 
@@ -30,7 +31,7 @@ func (f *Frame) Into(data []byte, offset int) (int, error) {
 	assert.Assert(len(data) > HEADER_SIZE+len(f.Data), "unable to encode frame into cache packet")
 	data[0] = VERSION
 	data[1] = f.CmdType
-    data[2] = f.Seq | (f.Flags << 4)
+	data[2] = f.Seq | (f.Flags << 4)
 	byteutils.Write16(data, 3, len(f.Data))
 	copy(data[HEADER_SIZE:], f.Data)
 

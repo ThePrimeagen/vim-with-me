@@ -3,7 +3,9 @@ package doom
 import (
 	"bytes"
 	"fmt"
+	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/theprimeagen/vim-with-me/pkg/assert"
 	ansiparser "github.com/theprimeagen/vim-with-me/pkg/v2/ansi_parser"
@@ -123,4 +125,23 @@ func (d *Doom) Write(data []byte) (int, error) {
 
 	n, err := d.Framer.Write(data)
 	return n + consumed, err
+}
+
+func DoomChatMapFn(msg string) string {
+    if len(msg) > 2 {
+        return msg
+    }
+
+    bytes := []byte(msg)
+    slices.Sort(bytes)
+
+    return string(bytes)
+}
+
+var validMsg = "wasdfeasdwfwawaedfdeeffses"
+func DoomFilterFn(msg string) bool {
+    if len(msg) > 2 {
+        return false
+    }
+    return strings.Contains(validMsg, msg)
 }
