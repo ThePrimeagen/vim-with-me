@@ -51,10 +51,11 @@ class WS {
             this.#connect()
         }
 
-        ws.onerror = () => {
+        ws.onerror = async () => {
             this.#state = ERROR
             // some reporting or something??
             // some backoff?
+            new Promise(res => setTimeout(res, 1000))
             this.#connect()
         }
 

@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log/slog"
 	"os"
 	"strconv"
@@ -16,7 +15,7 @@ import (
 )
 
 type ConnectionMessages struct {
-	messages [][]byte
+	open []byte
 	mutex    sync.RWMutex
 }
 
@@ -43,7 +42,7 @@ func main() {
 	r := relay.NewRelay(uint16(port), uuid)
 
 	connMsgs := &ConnectionMessages{
-		messages: make([][]byte, 0),
+		open: nil,
 		mutex:    sync.RWMutex{},
 	}
 
@@ -56,12 +55,12 @@ func main() {
 func newConnections(relay *relay.Relay, msgs *ConnectionMessages) {
 	for {
 		conn := <-relay.NewConnections()
-		msgs.mutex.RLock()
-        fmt.Printf("new connection, appending open messages: %d\n", len(msgs.messages))
-		for _, msg := range msgs.messages {
-			conn.Conn.WriteMessage(websocket.BinaryMessage, msg)
-		}
-		msgs.mutex.RUnlock()
+        if msgs.open != nil {
+            msgs.mutex.RLock()
+            slog.Warn("new connection, appending open messages", "open", msgs.open)
+            conn.Conn.WriteMessage(websocket.BinaryMessage, msgs.open)
+            msgs.mutex.RUnlock()
+        }
 	}
 }
 
@@ -69,18 +68,22 @@ func onMessage(relay *relay.Relay, msgs *ConnectionMessages) {
 	framer := net.NewByteFramer()
 	go framer.FrameChan(relay.Messages())
     for frame := range framer.Frames() {
+        slog.Warn("received frame", "frame", frame)
+
 		switch frame.CmdType {
-		case byte(net.OPEN), byte(net.BRIGHTNESS_TO_ASCII):
+        case byte(net.OPEN):
 			length := 1024 * 20
 			encoded := make([]byte, length, length)
-            n, err := frame.Into(encoded, 0)
+
+            n, err := (&net.Frameable{Item: frame}).Into(encoded, 0)
             encoded = encoded[:n]
 
             assert.NoError(err, "could not encode data into messages data")
 
-            fmt.Printf("appending open message: %+v\n", encoded)
+            slog.Warn("new open command", "encoded", encoded)
+
 			msgs.mutex.Lock()
-			msgs.messages = append(msgs.messages, encoded)
+			msgs.open = encoded
 			msgs.mutex.Unlock()
 		}
 	}

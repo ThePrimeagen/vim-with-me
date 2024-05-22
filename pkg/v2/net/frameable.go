@@ -1,7 +1,6 @@
 package net
 
 import (
-	"fmt"
 
 	byteutils "github.com/theprimeagen/vim-with-me/pkg/v2/byte_utils"
 )
@@ -15,6 +14,18 @@ const (
 	BRIGHTNESS_TO_ASCII
 	FRAME
 )
+
+func typeToString(t byte) string {
+    switch t {
+    case byte(OPEN):
+        return "open"
+    case byte(BRIGHTNESS_TO_ASCII):
+        return "brightness_to_ascii"
+    case byte(FRAME):
+        return "frame"
+    }
+    return "unknown"
+}
 
 const HEADER_SIZE = 5
 
@@ -54,7 +65,6 @@ func (f *Frameable) Into(into []byte, offset int) (int, error) {
 	into[offset] = VERSION
 	into[offset+1] = f.Item.Type()
 	into[offset+2] = byte(count % 16)
-    fmt.Printf("seq: %d\n", byte(count % 16))
 
 	count++
 
@@ -64,8 +74,6 @@ func (f *Frameable) Into(into []byte, offset int) (int, error) {
 	}
 
 	byteutils.Write16(into, offset+3, n)
-
-	fmt.Printf("Frameable#Into: %d + 4 for encoding HEADER\n", n)
 
 	// bytes + 5 for header
 	return n + HEADER_SIZE, nil

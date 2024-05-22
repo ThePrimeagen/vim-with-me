@@ -15,7 +15,7 @@ function run(el) {
     const ws = new WS(wsHost)
 
     /** @type {AsciiWindow | null} */
-    let window = null
+    let asciiWindow = null
 
     const decodeFrame = createDecodeFrame()
     ws.onMessage(async function(buf) {
@@ -24,23 +24,25 @@ function run(el) {
         switch (frame.cmd) {
         case types.open:
 
-            if (window !== null) {
-                return
+            if (asciiWindow !== null) {
+                asciiWindow.destroy()
             }
+
             const open = createOpen(frame.data)
-            window = new AsciiWindow(el, open.rows, open.cols / 2)
+            console.log("open", open, frame.data)
+            asciiWindow = new AsciiWindow(el, open.rows, open.cols / 2)
+
             break
         case types.frame:
             pushFrame(decodeFrame, frame)
             expand(decodeFrame)
-            console.log(decodeFrame.decodeFrame.slice(0, 5))
 
-            if (window === null) {
+            if (asciiWindow === null) {
                 console.error("window is null?")
                 return
             }
 
-            window.push(decodeFrame.decodeFrame)
+            asciiWindow.push(decodeFrame.decodeFrame)
 
             // render
             // console.log(data.slice(0, 5))

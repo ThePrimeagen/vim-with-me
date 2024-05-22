@@ -13,14 +13,25 @@ var FramerVersionMismatch = errors.New("version mismatch")
 
 type Frame struct {
 	CmdType byte
+	Seq     byte
+	Flags   byte
 	Data    []byte
+}
+
+func (f *Frame) String() string {
+	return fmt.Sprintf("frame(%s): seq=%d flags=%d data=%d", typeToString(f.CmdType), f.Seq, f.Flags, len(f.Data))
+}
+
+func (f *Frame) Type() byte {
+	return f.CmdType
 }
 
 func (f *Frame) Into(data []byte, offset int) (int, error) {
 	assert.Assert(len(data) > HEADER_SIZE+len(f.Data), "unable to encode frame into cache packet")
 	data[0] = VERSION
 	data[1] = f.CmdType
-	byteutils.Write16(data, 2, len(f.Data))
+    data[2] = f.Seq | (f.Flags << 4)
+	byteutils.Write16(data, 3, len(f.Data))
 	copy(data[HEADER_SIZE:], f.Data)
 
 	return HEADER_SIZE + len(f.Data), nil
@@ -46,9 +57,13 @@ func (b *ByteFramer) frame() error {
 		)
 	}
 
-	length := byteutils.Read16(b.curr, 2)
-    totalLength := length+HEADER_SIZE
-    remaining := len(b.curr) - totalLength
+	if len(b.curr) < HEADER_SIZE {
+		return nil
+	}
+
+	length := byteutils.Read16(b.curr, 3)
+	totalLength := length + HEADER_SIZE
+	remaining := len(b.curr) - totalLength
 
 	if len(b.curr) < totalLength {
 		return nil
@@ -56,11 +71,13 @@ func (b *ByteFramer) frame() error {
 
 	b.ch <- &Frame{
 		CmdType: b.curr[1],
-		Data:    b.curr[HEADER_SIZE : totalLength],
+		Seq:     b.curr[2] & 0x0F,
+		Flags:   b.curr[2] & 0xF0 >> 4,
+		Data:    b.curr[HEADER_SIZE:totalLength],
 	}
 
-    copy(b.curr, b.curr[totalLength:])
-    b.curr = b.curr[:remaining]
+	copy(b.curr, b.curr[totalLength:])
+	b.curr = b.curr[:remaining]
 
 	return nil
 }

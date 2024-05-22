@@ -85,8 +85,6 @@ export class AsciiWindow {
                 this.#colors[row][col] = inColor
             }
         }
-
-        console.log("cells changed", count)
     }
 
     #init() {
@@ -116,6 +114,10 @@ export class AsciiWindow {
         }
 
         this.#el.appendChild(cont)
+    }
+
+    destroy() {
+        this.#el.innerHTML = ""
     }
 }
 
