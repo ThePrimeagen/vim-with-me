@@ -59,14 +59,8 @@ func CreateOpen(rows, cols int) *Frameable {
 	}
 }
 
-var count = 0
-
 func (f *Frameable) Into(into []byte, offset int) (int, error) {
-	into[offset] = VERSION
-	into[offset+1] = f.Item.Type()
-	into[offset+2] = byte(count % 16)
-
-	count++
+    frameHeader(into, offset, f.Item.Type(), byte(nextSeqId()))
 
 	n, err := f.Item.Into(into, offset+HEADER_SIZE)
 	if err != nil {

@@ -5,38 +5,10 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 	byteutils "github.com/theprimeagen/vim-with-me/pkg/v2/byte_utils"
 )
 
 var FramerVersionMismatch = errors.New("version mismatch")
-
-type Frame struct {
-	CmdType byte
-	Seq     byte
-	Flags   byte
-	Unused  byte
-	Data    []byte
-}
-
-func (f *Frame) String() string {
-	return fmt.Sprintf("frame(%s): seq=%d flags=%d data=%d", typeToString(f.CmdType), f.Seq, f.Flags, len(f.Data))
-}
-
-func (f *Frame) Type() byte {
-	return f.CmdType
-}
-
-func (f *Frame) Into(data []byte, offset int) (int, error) {
-	assert.Assert(len(data) > HEADER_SIZE+len(f.Data), "unable to encode frame into cache packet")
-	data[0] = VERSION
-	data[1] = f.CmdType
-	data[2] = f.Seq | (f.Flags << 4)
-	byteutils.Write16(data, 3, len(f.Data))
-	copy(data[HEADER_SIZE:], f.Data)
-
-	return HEADER_SIZE + len(f.Data), nil
-}
 
 type ByteFramer struct {
 	curr []byte

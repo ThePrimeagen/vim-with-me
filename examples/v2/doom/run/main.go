@@ -59,6 +59,9 @@ func (r *RelayClient) sendFrame(frame *encoder.EncodingFrame) {
     r.send(&net.Frameable{Item: frame})
 }
 
+func compareFrame() {
+}
+
 func main() {
     godotenv.Load()
 
@@ -67,6 +70,9 @@ func main() {
 
 	assertF := ""
 	flag.StringVar(&assertF, "assert", "", "add an assert file")
+
+	compare := false
+	flag.BoolVar(&compare, "compare", false, "compare the encoded and decoded values")
 
 	rounds := 1000000
 	flag.IntVar(&rounds, "rounds", 1000000, "the rounds of doom to play")
@@ -162,6 +168,9 @@ func main() {
 			encFrame := enc.PushFrame(data)
 			assert.NotNil(encFrame, "expected enc frame to be not nil")
 			relay.sendFrame(encFrame)
+
+            if compare {
+            }
 		}
 	}
 }
