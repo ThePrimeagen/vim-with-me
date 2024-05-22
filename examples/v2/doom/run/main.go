@@ -4,7 +4,9 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log/slog"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/theprimeagen/vim-with-me/examples/v2/doom"
@@ -126,6 +128,21 @@ func main() {
     relay.send(net.CreateOpen(d.Rows, d.Cols))
 
 	frames := d.Frames()
+
+    go func() {
+		<-time.After(time.Second * 1)
+        prog.SendKey('')
+		<-time.After(time.Second * 1)
+        prog.SendKey('')
+		<-time.After(time.Second * 1)
+        prog.SendKey('')
+		<-time.After(time.Second * 1)
+        prog.SendKey('')
+		<-time.After(time.Second * 1)
+        prog.SendKey('')
+		slog.Warn("game loop#started")
+    }()
+
 
 	for range rounds {
 		select {

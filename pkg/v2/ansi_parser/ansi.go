@@ -17,6 +17,7 @@ type AnsiFramer struct {
 	State *AnsiFramerState
 
 	frameStart []byte
+	inputStart []byte
 
 	debug   io.Writer
 	ch      chan display.Frame
@@ -154,6 +155,12 @@ func NewFramer() *AnsiFramer {
 	}
 }
 
+func (a *AnsiFramer) WithInputStart(start []byte) *AnsiFramer {
+	a.inputStart = start
+
+	return a
+}
+
 func (a *AnsiFramer) WithFrameStart(start []byte) *AnsiFramer {
 	a.frameStart = start
 
@@ -186,6 +193,8 @@ func (a *AnsiFramer) reset() {
 
 func (framer *AnsiFramer) place(color *ansi.Rgb, char byte) {
 	assert.Assert(framer.State.CurrentCol != framer.State.Cols, "current cols equals the maximum state cols")
+
+	// Stdin moves the output
 	assert.Assert(framer.State.CurrentIdx < framer.State.Length, "place failed", "color", color, "byte", char, "State.CurrentIdx", framer.State.CurrentIdx, "data length", framer.State.Length)
 
 	framer.State.CurrentLine[framer.State.CurrentCol] = char
@@ -203,6 +212,18 @@ func (framer *AnsiFramer) fillRemainingRow() {
 	for framer.State.CurrentCol < framer.State.Cols {
 		framer.place(&black, ' ')
 	}
+}
+
+func (framer *AnsiFramer) stripInput(line []byte) []byte {
+	for {
+		inputIdx := bytes.Index(line, framer.inputStart)
+		if inputIdx == -1 {
+			break
+		}
+
+		line = append(line[:inputIdx], line[inputIdx+len(framer.inputStart)+1:]...)
+	}
+	return line
 }
 
 var newline = []byte{'\r', '\n'}
@@ -227,6 +248,7 @@ func (framer *AnsiFramer) Write(data []byte) (int, error) {
 	}
 
 	for len(data) > 0 {
+		data = framer.stripInput(data)
 		nextLine := bytes.Index(data, newline)
 		if nextLine == -1 {
 			framer.scratch = make([]byte, len(data), len(data))

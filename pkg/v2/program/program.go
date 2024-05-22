@@ -15,6 +15,8 @@ import (
 
 type Program struct {
 	*os.File
+	cmd    *exec.Cmd
+    stdin  io.WriteCloser
 	path   string
 	rows   int
 	cols   int
@@ -28,8 +30,13 @@ func NewProgram(path string) *Program {
 		rows:   80,
 		cols:   24,
 		writer: nil,
+		cmd:    nil,
 		File:   nil,
 	}
+}
+
+func (a *Program) SendKey(key byte) {
+    a.stdin.Write([]byte{key})
 }
 
 func (a *Program) WithArgs(args []string) *Program {
@@ -57,6 +64,8 @@ func (a *Program) Run(ctx context.Context) error {
 	assert.Assert(a.File == nil, "you have already started the program")
 
 	cmd := exec.Command(a.path, a.args...)
+
+    a.cmd = cmd
 
 	ptmx, err := pty.Start(cmd)
 	if err != nil {

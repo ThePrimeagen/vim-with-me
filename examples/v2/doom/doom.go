@@ -112,7 +112,8 @@ func (d *Doom) Write(data []byte) (int, error) {
 		d.Framer = ansiparser.
 			NewFramer().
 			WithDim(rows, cols).
-			WithFrameStart([]byte("[;H"))
+			WithFrameStart([]byte("[;H")).
+			WithInputStart([]byte("@$"))
 
 		data = data[headerBytes+1:]
 
