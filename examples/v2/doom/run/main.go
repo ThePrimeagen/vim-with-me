@@ -60,6 +60,7 @@ func (r *RelayClient) sendFrame(frame *encoder.EncodingFrame) {
 }
 
 func compareFrame(data []byte, encFrame *encoder.EncodingFrame) {
+    assert.Assert(false, "unimplemented")
 }
 
 func main() {
@@ -126,7 +127,7 @@ func main() {
 		Cols:   d.Cols / 2,
 	})
 
-	//enc.AddEncoder(encoder.XorRLE)
+	enc.AddEncoder(encoder.XorRLE)
 	enc.AddEncoder(encoder.Huffman)
 
 	relay.send(net.CreateOpen(d.Rows, d.Cols))

@@ -1,7 +1,6 @@
 package net
 
 import (
-	"fmt"
 
 	byteutils "github.com/theprimeagen/vim-with-me/pkg/v2/byte_utils"
 )
@@ -64,7 +63,6 @@ func (f *Frameable) Into(into []byte, offset int) (int, error) {
 	frameHeader(into, offset, f.Item.Type(), byte(nextSeqId()))
 
 	n, err := f.Item.Into(into, offset+HEADER_SIZE)
-	fmt.Printf("frameable: %d :: %+v\n", n, into[offset+HEADER_SIZE:])
 	if err != nil {
 		return 0, err
 	}
