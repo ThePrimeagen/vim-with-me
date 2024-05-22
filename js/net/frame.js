@@ -7,7 +7,6 @@ const HEADER_SIZE = 5
 
 let lastSeen = -1
 
-
 /**
  * @param {Uint8Array} buf
  * @return {import("../types.ts").Frame}
@@ -20,7 +19,9 @@ export function parseFrame(buf) {
 
     const seqAndFlags = buf[2]
 
-    if (cmd === types.frame) {
+    if (cmd === types.open) {
+        lastSeen = -1
+    } else if (cmd === types.frame) {
         if (lastSeen !== -1) {
             debugAssert((seqAndFlags & 0x0F) === ((lastSeen + 1) % 16), `frame out of order: expected ${(lastSeen + 1) % 16} got ${seqAndFlags}`)
         }
