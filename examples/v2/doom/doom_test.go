@@ -49,37 +49,36 @@ func TestDoom8BitParserOneFrame(t *testing.T) {
 
 	select {
 	case frame := <-frames:
-        data := ansiparser.RemoveAsciiStyledPixels(frame.Color)
-        encFrame := enc.PushFrame(data)
+		data := ansiparser.RemoveAsciiStyledPixels(frame.Color)
+		encFrame := enc.PushFrame(data)
 
-        require.NotNil(t, encFrame)
-        require.Equal(t, encoder.HUFFMAN, encFrame.Encoding)
+		require.NotNil(t, encFrame)
+		require.Equal(t, encoder.HUFFMAN, encFrame.Encoding)
 
-        require.Equal(t, 3253, encFrame.Len)
-        require.Equal(t, 834, len(encFrame.Huff.DecodingTree))
+		require.Equal(t, 3253, encFrame.Len)
+		require.Equal(t, 834, len(encFrame.Huff.DecodingTree))
 
-        // Into frame
-        frameData := make([]byte, 4096, 4096)
-        frameable := net.Frameable{Item: encFrame}
-        n, err := frameable.Into(frameData, 0)
+		// Into frame
+		frameData := make([]byte, 4096, 4096)
+		frameable := net.Frameable{Item: encFrame}
+		n, err := frameable.Into(frameData, 0)
 
-        require.NoError(t, err)
-        require.Equal(t, n, 3263)
+		require.NoError(t, err)
+		require.Equal(t, n, 3263)
 
-        // Decode huffman
+		// Decode huffman
 
-        writer := byteutils.U8Writer{}
-        writer.Set(frameData)
+		writer := byteutils.U8Writer{}
+		writer.Set(frameData)
 
-        /*
-        fmt.Printf("debug: %s\n", encFrame.Huff.DebugDecodeTree())
-        fmt.Printf("data = 0x%2x\n", data[0])
-        fmt.Printf("framedata %+v\n", byteutils.Read16(frameData, 0))
-        */
-        fmt.Printf("first byte: 0x%2x\n", data[0])
-        fmt.Printf("enc first byte: 0x%2x\n", encFrame.Curr[0])
-        //encFrame.Huff.Decode(encFrame.Curr[:1], 4, &writer)
-
+		/*
+		   fmt.Printf("debug: %s\n", encFrame.Huff.DebugDecodeTree())
+		   fmt.Printf("data = 0x%2x\n", data[0])
+		   fmt.Printf("framedata %+v\n", byteutils.Read16(frameData, 0))
+		*/
+		fmt.Printf("first byte: 0x%2x\n", data[0])
+		fmt.Printf("enc first byte: 0x%2x\n", encFrame.Curr[0])
+		//encFrame.Huff.Decode(encFrame.Curr[:1], 4, &writer)
 
 	case <-timer.C:
 		assert.Assert(false, "YOU SUCK")

@@ -14,7 +14,7 @@ import (
 type Program struct {
 	*os.File
 	cmd    *exec.Cmd
-    stdin  io.WriteCloser
+	stdin  io.WriteCloser
 	path   string
 	rows   int
 	cols   int
@@ -34,7 +34,7 @@ func NewProgram(path string) *Program {
 }
 
 func (a *Program) SendKey(key byte) {
-    a.Write([]byte{key})
+	a.Write([]byte{key})
 }
 
 func (a *Program) WithArgs(args []string) *Program {
@@ -57,26 +57,25 @@ func (a *Program) WithSize(rows, cols int) *Program {
 	return a
 }
 
-
 func echoOff(f *os.File) {
-    fd := int(f.Fd())
-    //      const ioctlReadTermios = unix.TIOCGETA // OSX.
-    const ioctlReadTermios = unix.TCGETS // Linux
-    //      const ioctlWriterTermios =  unix.TIOCSETA // OSX.
-    const ioctlWriteTermios = unix.TCSETS // Linux
+	fd := int(f.Fd())
+	//      const ioctlReadTermios = unix.TIOCGETA // OSX.
+	const ioctlReadTermios = unix.TCGETS // Linux
+	//      const ioctlWriterTermios =  unix.TIOCSETA // OSX.
+	const ioctlWriteTermios = unix.TCSETS // Linux
 
-    termios, err := unix.IoctlGetTermios(fd, ioctlReadTermios)
-    if err != nil {
-        panic(err)
-    }
+	termios, err := unix.IoctlGetTermios(fd, ioctlReadTermios)
+	if err != nil {
+		panic(err)
+	}
 
-    newState := *termios
-    newState.Lflag &^= unix.ECHO
-    newState.Lflag |= unix.ICANON | unix.ISIG
-    newState.Iflag |= unix.ICRNL
-    if err := unix.IoctlSetTermios(fd, ioctlWriteTermios, &newState); err != nil {
-        panic(err)
-    }
+	newState := *termios
+	newState.Lflag &^= unix.ECHO
+	newState.Lflag |= unix.ICANON | unix.ISIG
+	newState.Iflag |= unix.ICRNL
+	if err := unix.IoctlSetTermios(fd, ioctlWriteTermios, &newState); err != nil {
+		panic(err)
+	}
 }
 
 func (a *Program) Run(ctx context.Context) error {
@@ -85,10 +84,10 @@ func (a *Program) Run(ctx context.Context) error {
 
 	cmd := exec.Command(a.path, a.args...)
 
-    a.cmd = cmd
+	a.cmd = cmd
 
 	ptmx, err := pty.Start(cmd)
-    echoOff(ptmx)
+	echoOff(ptmx)
 
 	if err != nil {
 		return err

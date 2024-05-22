@@ -32,8 +32,8 @@ func NewRelay(ws uint16, uuid string) *Relay {
 		port: ws,
 		uuid: uuid,
 
-		ch: make(chan []byte, 10),
-        conns: make(chan *Conn, 10),
+		ch:    make(chan []byte, 10),
+		conns: make(chan *Conn, 10),
 
 		mutex:     sync.RWMutex{},
 		listeners: make(map[int]*Conn),

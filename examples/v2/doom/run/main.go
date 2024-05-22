@@ -32,12 +32,12 @@ func NewRelayClient(r string) (*RelayClient, error) {
 
 	uuid := os.Getenv("AUTH_ID")
 	length := 256 * 256
-    client := &RelayClient{
+	client := &RelayClient{
 		client: relay.NewRelayDriver(r, "/ws", uuid),
 		cache:  make([]byte, length, length),
 	}
 
-    return client, client.client.Connect()
+	return client, client.client.Connect()
 }
 
 func (r *RelayClient) send(frameable *net.Frameable) {
@@ -54,16 +54,16 @@ func (r *RelayClient) sendFrame(frame *encoder.EncodingFrame) {
 		return
 	}
 
-    fmt.Printf("sending frame into relay(%d): %d\n", len(r.cache), frame.Len)
+	fmt.Printf("sending frame into relay(%d): %d\n", len(r.cache), frame.Len)
 
-    r.send(&net.Frameable{Item: frame})
+	r.send(&net.Frameable{Item: frame})
 }
 
 func compareFrame() {
 }
 
 func main() {
-    godotenv.Load()
+	godotenv.Load()
 
 	debug := ""
 	flag.StringVar(&debug, "debug", "", "runs the file like the program instead of running doom")
@@ -90,8 +90,7 @@ func main() {
 	fmt.Printf("relay \"%v\"\n", relayStr)
 
 	relay, err := NewRelayClient(relayStr)
-    assert.NoError(err, "failed attempting to connect to server")
-
+	assert.NoError(err, "failed attempting to connect to server")
 
 	d := doom.NewDoom()
 
@@ -130,35 +129,34 @@ func main() {
 	//enc.AddEncoder(encoder.XorRLE)
 	enc.AddEncoder(encoder.Huffman)
 
-    relay.send(net.CreateOpen(d.Rows, d.Cols))
+	relay.send(net.CreateOpen(d.Rows, d.Cols))
 
 	frames := d.Frames()
 
-    go func() {
+	go func() {
 		<-time.After(time.Second * 1)
-        prog.SendKey('')
+		prog.SendKey('')
 		<-time.After(time.Second * 1)
-        prog.SendKey('')
+		prog.SendKey('')
 		<-time.After(time.Second * 1)
-        prog.SendKey('')
+		prog.SendKey('')
 		<-time.After(time.Second * 1)
-        prog.SendKey('')
+		prog.SendKey('')
 		<-time.After(time.Second * 1)
-        prog.SendKey('')
+		prog.SendKey('')
 
-        count := 1
-        for {
-            <-time.After(time.Millisecond * 16)
-            if count % 100 == 0 {
-                prog.SendKey('f')
-            } else {
-                prog.SendKey('w')
-            }
-            count++
+		count := 1
+		for {
+			<-time.After(time.Millisecond * 16)
+			if count%100 == 0 {
+				prog.SendKey('f')
+			} else {
+				prog.SendKey('w')
+			}
+			count++
 
-        }
-    }()
-
+		}
+	}()
 
 	for range rounds {
 		select {
@@ -169,8 +167,8 @@ func main() {
 			assert.NotNil(encFrame, "expected enc frame to be not nil")
 			relay.sendFrame(encFrame)
 
-            if compare {
-            }
+			if compare {
+			}
 		}
 	}
 }

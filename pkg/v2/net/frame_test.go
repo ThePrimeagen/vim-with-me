@@ -12,7 +12,7 @@ func quickRead(framer *net.ByteFramer) *net.Frame {
 	select {
 	case f := <-framer.Frames():
 		return f
-    case <-time.After(time.Millisecond * 10):
+	case <-time.After(time.Millisecond * 10):
 	}
 	return nil
 }
@@ -44,28 +44,28 @@ func TestFramer(t *testing.T) {
 }
 
 func TestFramerEncode(t *testing.T) {
-    cmd := byte(3)
-    seq := byte(0b1010)
-    flags := byte(0b0101)
-    frame := &net.Frame{
+	cmd := byte(3)
+	seq := byte(0b1010)
+	flags := byte(0b0101)
+	frame := &net.Frame{
 		Seq:     seq,
 		Flags:   flags,
 		Data:    []byte{0x01, 0x02, 0x03},
 		CmdType: cmd,
 	}
 
-    offset := 2
-    out := make([]byte, net.HEADER_SIZE + 3 + offset)
-    n, err := frame.Into(out, offset)
+	offset := 2
+	out := make([]byte, net.HEADER_SIZE+3+offset)
+	n, err := frame.Into(out, offset)
 
-    require.Equal(t, net.HEADER_SIZE + 3, n)
-    require.NoError(t, err)
-    require.Equal(t, []byte{
-        0, 0, // offset
-        net.VERSION,
-        cmd,
-        net.FrameSeqAndCmd(seq, flags),
-        0, 0x03,
-        0x01, 0x02, 0x03,
-    }, out)
+	require.Equal(t, net.HEADER_SIZE+3, n)
+	require.NoError(t, err)
+	require.Equal(t, []byte{
+		0, 0, // offset
+		net.VERSION,
+		cmd,
+		net.FrameSeqAndCmd(seq, flags),
+		0, 0x03,
+		0x01, 0x02, 0x03,
+	}, out)
 }

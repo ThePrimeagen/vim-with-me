@@ -8,20 +8,21 @@ import (
 )
 
 var nextId = 0
+
 func nextSeqId() int {
-    out := nextId
-    nextId++
-    return out
+	out := nextId
+	nextId++
+	return out
 }
 
 func frameHeader(data []byte, offset int, t, seqFlags byte) {
-    data[offset] = VERSION
-    data[offset+1] = t
-    data[offset+2] = seqFlags
+	data[offset] = VERSION
+	data[offset+1] = t
+	data[offset+2] = seqFlags
 }
 
 func FrameSeqAndCmd(seq, flags byte) byte {
-    return seq | (flags << 4)
+	return seq | (flags << 4)
 }
 
 type Frame struct {
@@ -33,7 +34,7 @@ type Frame struct {
 }
 
 func (f *Frame) SeqAndCmd() byte {
-    return FrameSeqAndCmd(f.Seq, f.Flags)
+	return FrameSeqAndCmd(f.Seq, f.Flags)
 }
 
 func (f *Frame) String() string {
@@ -46,10 +47,9 @@ func (f *Frame) Type() byte {
 
 func (f *Frame) Into(data []byte, offset int) (int, error) {
 	assert.Assert(len(data) > HEADER_SIZE+len(f.Data), "unable to encode frame into cache packet")
-    frameHeader(data, offset, f.Type(), f.SeqAndCmd())
+	frameHeader(data, offset, f.Type(), f.SeqAndCmd())
 	byteutils.Write16(data, offset+3, len(f.Data))
 	copy(data[offset+HEADER_SIZE:], f.Data)
 
 	return HEADER_SIZE + len(f.Data), nil
 }
-

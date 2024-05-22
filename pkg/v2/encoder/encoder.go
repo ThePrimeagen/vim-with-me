@@ -24,22 +24,22 @@ type EncodingFrame struct {
 
 	RLE ascii_buffer.AsciiRLE
 
-    // I AM HAVING A CRISIS ON NAMING RIGHT NOW
-    // I NEED TWO TEMPORARY SPACES
+	// I AM HAVING A CRISIS ON NAMING RIGHT NOW
+	// I NEED TWO TEMPORARY SPACES
 	Out []byte
 	Tmp []byte
 
 	TmpLen int
 
-    // TOTAL ASS LENGTH
-	Len    int
+	// TOTAL ASS LENGTH
+	Len int
 
 	Encoding EncoderType
 	Flags    byte
 }
 
 func (e *EncodingFrame) String() string {
-    return fmt.Sprintf("EncodingFrame(%d) tmpLen=%d encoding=%d", e.Len, e.TmpLen, e.Encoding)
+	return fmt.Sprintf("EncodingFrame(%d) tmpLen=%d encoding=%d", e.Len, e.TmpLen, e.Encoding)
 }
 func (e *EncodingFrame) Into(data []byte, offset int) (int, error) {
 	data[offset] = byte(e.Encoding)
@@ -117,7 +117,7 @@ func (e *Encoder) AddEncoder(encoder EncodingCall) *Encoder {
 	e.encodings = append(e.encodings, encoder)
 	e.frames = append(e.frames, newEncodingFrame(e.size, e.params))
 
-    return e
+	return e
 }
 
 func (e *Encoder) PushFrame(data []byte) *EncodingFrame {

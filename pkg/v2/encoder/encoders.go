@@ -54,7 +54,7 @@ func Huffman(frame *EncodingFrame) error {
 	}
 	byteLen := bitLen/8 + 1
 
-    fmt.Printf("huffman: %d + %d \n", huffLen, byteLen)
+	fmt.Printf("huffman: %d + %d \n", huffLen, byteLen)
 
 	if huffLen+byteLen >= len(frame.Curr) {
 		frame.Len = len(frame.Curr) + 1
@@ -77,7 +77,7 @@ var encodeInto encoderEncodingMap = encoderEncodingMap{
 		assert.Assert(e.Huff != nil, "the encoding type is huffman but the huff object in nil")
 
 		decodeTreeLength := len(e.Huff.DecodingTree)
-        decodeLen := 4+decodeTreeLength+e.TmpLen
+		decodeLen := 4 + decodeTreeLength + e.TmpLen
 
 		assert.Assert(decodeLen < len(data), "unable to encode frame into provided buffer")
 
@@ -85,7 +85,7 @@ var encodeInto encoderEncodingMap = encoderEncodingMap{
 		byteutils.Write16(data, offset+2, decodeTreeLength)
 
 		copy(data[offset+4:], e.Huff.DecodingTree)
-        copy(data[offset+4+decodeTreeLength:], e.Tmp[:e.TmpLen])
+		copy(data[offset+4+decodeTreeLength:], e.Tmp[:e.TmpLen])
 
 		return decodeLen, nil
 	},

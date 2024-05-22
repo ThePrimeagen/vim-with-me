@@ -15,8 +15,8 @@ import (
 )
 
 type ConnectionMessages struct {
-	open []byte
-	mutex    sync.RWMutex
+	open  []byte
+	mutex sync.RWMutex
 }
 
 func main() {
@@ -42,8 +42,8 @@ func main() {
 	r := relay.NewRelay(uint16(port), uuid)
 
 	connMsgs := &ConnectionMessages{
-		open: nil,
-		mutex:    sync.RWMutex{},
+		open:  nil,
+		mutex: sync.RWMutex{},
 	}
 
 	go newConnections(r, connMsgs)
@@ -55,32 +55,32 @@ func main() {
 func newConnections(relay *relay.Relay, msgs *ConnectionMessages) {
 	for {
 		conn := <-relay.NewConnections()
-        if msgs.open != nil {
-            msgs.mutex.RLock()
-            slog.Warn("new connection, appending open messages", "open", msgs.open)
-            conn.Conn.WriteMessage(websocket.BinaryMessage, msgs.open)
-            msgs.mutex.RUnlock()
-        }
+		if msgs.open != nil {
+			msgs.mutex.RLock()
+			slog.Warn("new connection, appending open messages", "open", msgs.open)
+			conn.Conn.WriteMessage(websocket.BinaryMessage, msgs.open)
+			msgs.mutex.RUnlock()
+		}
 	}
 }
 
 func onMessage(relay *relay.Relay, msgs *ConnectionMessages) {
 	framer := net.NewByteFramer()
 	go framer.FrameChan(relay.Messages())
-    for frame := range framer.Frames() {
-        slog.Warn("received frame", "frame", frame)
+	for frame := range framer.Frames() {
+		slog.Warn("received frame", "frame", frame)
 
 		switch frame.CmdType {
-        case byte(net.OPEN):
+		case byte(net.OPEN):
 			length := 1024 * 20
 			encoded := make([]byte, length, length)
 
-            n, err := (&net.Frameable{Item: frame}).Into(encoded, 0)
-            encoded = encoded[:n]
+			n, err := (&net.Frameable{Item: frame}).Into(encoded, 0)
+			encoded = encoded[:n]
 
-            assert.NoError(err, "could not encode data into messages data")
+			assert.NoError(err, "could not encode data into messages data")
 
-            slog.Warn("new open command", "encoded", encoded)
+			slog.Warn("new open command", "encoded", encoded)
 
 			msgs.mutex.Lock()
 			msgs.open = encoded

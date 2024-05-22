@@ -8,11 +8,11 @@ import (
 )
 
 func toChatMsg(twitchMsg twitch.PrivateMessage) ChatMsg {
-    return ChatMsg{
-        Name: twitchMsg.User.DisplayName,
-        Bits: twitchMsg.Bits,
-        Msg:  twitchMsg.Message,
-    }
+	return ChatMsg{
+		Name: twitchMsg.User.DisplayName,
+		Bits: twitchMsg.Bits,
+		Msg:  twitchMsg.Message,
+	}
 }
 
 func NewTwitchChat(ctx context.Context) (chan ChatMsg, error) {
@@ -40,4 +40,3 @@ func NewTwitchChat(ctx context.Context) (chan ChatMsg, error) {
 
 	return messages, nil
 }
-

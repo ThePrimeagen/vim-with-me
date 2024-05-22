@@ -99,31 +99,31 @@ func (h *Huffman) Encode(iterator byteutils.ByteIterator, out []byte) (int, erro
 }
 
 func (h *Huffman) DebugDecodeTree() string {
-    out := make([]string, 0)
-    var walk func(curr []byte, length int, idx int)
-    walk = func(curr []byte, length int, idx int) {
-        if isLeaf(h.DecodingTree, idx) {
-            str := ""
-            for _, b := range curr {
-                str += strconv.Itoa(int(b))
-            }
-            out = append(out, str + " " + fmt.Sprintf("0x%2x", value(h.DecodingTree, idx)))
-            return
-        }
+	out := make([]string, 0)
+	var walk func(curr []byte, length int, idx int)
+	walk = func(curr []byte, length int, idx int) {
+		if isLeaf(h.DecodingTree, idx) {
+			str := ""
+			for _, b := range curr {
+				str += strconv.Itoa(int(b))
+			}
+			out = append(out, str+" "+fmt.Sprintf("0x%2x", value(h.DecodingTree, idx)))
+			return
+		}
 
-        rightIdx := right(h.DecodingTree, idx)
+		rightIdx := right(h.DecodingTree, idx)
 
-        curr = append(curr, 0)
-        leftIdx := left(h.DecodingTree, idx)
-        walk(curr, length + 1, leftIdx)
+		curr = append(curr, 0)
+		leftIdx := left(h.DecodingTree, idx)
+		walk(curr, length+1, leftIdx)
 
-        curr[length] = 1
-        walk(curr, length + 1, rightIdx)
-    }
+		curr[length] = 1
+		walk(curr, length+1, rightIdx)
+	}
 
-    walk([]byte{}, 0, 0)
+	walk([]byte{}, 0, 0)
 
-    return strings.Join(out, "\n")
+	return strings.Join(out, "\n")
 }
 
 // Will i even use a decoder?  i should write this in typescript
@@ -133,7 +133,7 @@ func (h *Huffman) Decode(data []byte, bitLength int, writer byteutils.ByteWriter
 	idx := 0
 	decodeIdx := 0
 	decodeIdxCount := 0
-    debugArr := make([]int, 20, 20)
+	debugArr := make([]int, 20, 20)
 
 outer:
 	for {
@@ -142,17 +142,17 @@ outer:
 			bitLength--
 
 			decodeIdx = jump(h.DecodingTree, decodeIdx, bit)
-            debugArr[decodeIdxCount] = bit
-            decodeIdxCount++
+			debugArr[decodeIdxCount] = bit
+			decodeIdxCount++
 
 			if isLeaf(h.DecodingTree, decodeIdx) {
 
-                v := value(h.DecodingTree, decodeIdx)
-                str := ""
-                for _, b := range debugArr[:decodeIdxCount] {
-                    str += strconv.Itoa(int(b))
-                }
-                fmt.Printf("value: %s 0x%2x\n", str, v)
+				v := value(h.DecodingTree, decodeIdx)
+				str := ""
+				for _, b := range debugArr[:decodeIdxCount] {
+					str += strconv.Itoa(int(b))
+				}
+				fmt.Printf("value: %s 0x%2x\n", str, v)
 
 				if err := writer.Write(v); err != nil {
 					return errors.Join(
@@ -162,11 +162,11 @@ outer:
 				}
 
 				decodeIdx = 0
-                decodeIdxCount = 0
+				decodeIdxCount = 0
 			}
 
 			if bitLength == 0 {
-                assert.Assert(decodeIdx == 0, "finished decoding with hanging state", "decodeIdx", decodeIdx)
+				assert.Assert(decodeIdx == 0, "finished decoding with hanging state", "decodeIdx", decodeIdx)
 				break outer
 			}
 		}
@@ -185,10 +185,10 @@ func IntoBytes(huff *Huffman, bitLen int, data []byte, offset int) int {
 	fit := 4+len(huff.DecodingTree) < len(data)-offset
 	assert.Assert(fit, "huffman tree is unable to fit into provided data array")
 
-    byteutils.Write16(data, offset, bitLen)
-    byteutils.Write16(data, offset + 2, len(huff.DecodingTree))
+	byteutils.Write16(data, offset, bitLen)
+	byteutils.Write16(data, offset+2, len(huff.DecodingTree))
 
-    slog.Warn("huffman IntoBytes", "bitLen", bitLen, "decodeTree", len(huff.DecodingTree))
+	slog.Warn("huffman IntoBytes", "bitLen", bitLen, "decodeTree", len(huff.DecodingTree))
 	copy(data[offset+4:], huff.DecodingTree)
 
 	return 4 + len(huff.DecodingTree)

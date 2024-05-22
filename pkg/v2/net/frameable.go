@@ -17,15 +17,15 @@ const (
 )
 
 func typeToString(t byte) string {
-    switch t {
-    case byte(OPEN):
-        return "open"
-    case byte(BRIGHTNESS_TO_ASCII):
-        return "brightness_to_ascii"
-    case byte(FRAME):
-        return "frame"
-    }
-    return "unknown"
+	switch t {
+	case byte(OPEN):
+		return "open"
+	case byte(BRIGHTNESS_TO_ASCII):
+		return "brightness_to_ascii"
+	case byte(FRAME):
+		return "frame"
+	}
+	return "unknown"
 }
 
 const HEADER_SIZE = 5
@@ -61,10 +61,10 @@ func CreateOpen(rows, cols int) *Frameable {
 }
 
 func (f *Frameable) Into(into []byte, offset int) (int, error) {
-    frameHeader(into, offset, f.Item.Type(), byte(nextSeqId()))
+	frameHeader(into, offset, f.Item.Type(), byte(nextSeqId()))
 
 	n, err := f.Item.Into(into, offset+HEADER_SIZE)
-    fmt.Printf("frameable: %d :: %+v\n", n, into[offset+HEADER_SIZE:])
+	fmt.Printf("frameable: %d :: %+v\n", n, into[offset+HEADER_SIZE:])
 	if err != nil {
 		return 0, err
 	}

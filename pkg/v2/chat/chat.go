@@ -37,7 +37,6 @@ func (c ChatAggregator) WithFilter(filterFn FilterCB) ChatAggregator {
 	return c
 }
 
-
 func (c ChatAggregator) WithMap(mapFn MapCB) ChatAggregator {
 	c.mapFn = mapFn
 	return c
