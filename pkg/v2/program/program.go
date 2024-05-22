@@ -3,14 +3,12 @@ package program
 import (
 	"context"
 	"io"
-	"log/slog"
 	"os"
 	"os/exec"
-	"os/signal"
-	"syscall"
 
 	"github.com/creack/pty"
 	"github.com/theprimeagen/vim-with-me/pkg/assert"
+	"golang.org/x/sys/unix"
 )
 
 type Program struct {
@@ -36,7 +34,7 @@ func NewProgram(path string) *Program {
 }
 
 func (a *Program) SendKey(key byte) {
-    a.stdin.Write([]byte{key})
+    a.Write([]byte{key})
 }
 
 func (a *Program) WithArgs(args []string) *Program {
@@ -59,6 +57,28 @@ func (a *Program) WithSize(rows, cols int) *Program {
 	return a
 }
 
+
+func echoOff(f *os.File) {
+    fd := int(f.Fd())
+    //      const ioctlReadTermios = unix.TIOCGETA // OSX.
+    const ioctlReadTermios = unix.TCGETS // Linux
+    //      const ioctlWriterTermios =  unix.TIOCSETA // OSX.
+    const ioctlWriteTermios = unix.TCSETS // Linux
+
+    termios, err := unix.IoctlGetTermios(fd, ioctlReadTermios)
+    if err != nil {
+        panic(err)
+    }
+
+    newState := *termios
+    newState.Lflag &^= unix.ECHO
+    newState.Lflag |= unix.ICANON | unix.ISIG
+    newState.Iflag |= unix.ICRNL
+    if err := unix.IoctlSetTermios(fd, ioctlWriteTermios, &newState); err != nil {
+        panic(err)
+    }
+}
+
 func (a *Program) Run(ctx context.Context) error {
 	assert.Assert(a.writer != nil, "you must provide a reader before you call run")
 	assert.Assert(a.File == nil, "you have already started the program")
@@ -68,28 +88,13 @@ func (a *Program) Run(ctx context.Context) error {
     a.cmd = cmd
 
 	ptmx, err := pty.Start(cmd)
+    echoOff(ptmx)
+
 	if err != nil {
 		return err
 	}
 
 	a.File = ptmx
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, syscall.SIGWINCH)
-	go func() {
-		for range ch {
-			if err := pty.Setsize(os.Stdin, &pty.Winsize{
-				X: 0,
-				Y: 0,
-
-				Rows: uint16(a.rows),
-				Cols: uint16(a.cols),
-			}); err != nil {
-				slog.Error("unable to resize pty", "err", err)
-			}
-		}
-	}()
-	ch <- syscall.SIGWINCH                        // Initial resize.
-	defer func() { signal.Stop(ch); close(ch) }() // Cleanup signals when done.
 
 	_, err = io.Copy(a.writer, ptmx)
 	return err

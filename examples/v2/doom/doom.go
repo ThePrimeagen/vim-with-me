@@ -113,7 +113,7 @@ func (d *Doom) Write(data []byte) (int, error) {
 			NewFramer().
 			WithDim(rows, cols).
 			WithFrameStart([]byte("[;H")).
-			WithInputStart([]byte("@$"))
+			WithInputStart([]byte{'7'})
 
 		data = data[headerBytes+1:]
 

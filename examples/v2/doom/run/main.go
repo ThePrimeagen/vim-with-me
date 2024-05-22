@@ -140,6 +140,18 @@ func main() {
         prog.SendKey('')
 		<-time.After(time.Second * 1)
         prog.SendKey('')
+
+        count := 0
+        for {
+            <-time.After(time.Millisecond * 16)
+            if count % 100 == 0 {
+                prog.SendKey('f')
+            } else {
+                prog.SendKey('w')
+            }
+            count++
+
+        }
 		slog.Warn("game loop#started")
     }()
 
