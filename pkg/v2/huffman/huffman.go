@@ -152,7 +152,6 @@ outer:
 				for _, b := range debugArr[:decodeIdxCount] {
 					str += strconv.Itoa(int(b))
 				}
-				fmt.Printf("value: %s 0x%2x\n", str, v)
 
 				if err := writer.Write(v); err != nil {
 					return errors.Join(

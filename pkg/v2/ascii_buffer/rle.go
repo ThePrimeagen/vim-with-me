@@ -53,6 +53,10 @@ func (a *AsciiRLE) Reset(buf []byte) {
 	a.buffer = buf
 }
 
+func (a *AsciiRLE) String() string {
+    return fmt.Sprintf("AsciiRLE: curr=%d count=%d bufLen=%d buf=%+v", a.curr, a.count, a.idx, a.buffer[:a.idx])
+}
+
 func (a *AsciiRLE) Write(data []byte) {
 	assert.Assert(a.buffer != nil, "AsciiRLE#Write needs a buffer to write into")
 	assert.Assert(len(data) > 0, "AsciiRLE#Write received 0 len data array")
@@ -79,8 +83,23 @@ func (a *AsciiRLE) Write(data []byte) {
 
 func (a *AsciiRLE) Finish() {
 	a.place()
+    a.count = 0
 }
 
 func (a *AsciiRLE) Bytes() []byte {
 	return a.buffer[:a.idx]
+}
+
+func ExpandRLE(frame []byte, offset int, previous []byte, out []byte) {
+    assert.Assert(len(previous) <= len(out), "cannot decode an rle frame into a smaller frame (out is smaller than previous)", "previous", len(previous), "out", len(out))
+    idx := 0
+    for i := offset; i < len(frame); i += 2 {
+        repeat := frame[i]
+        char := frame[i + 1]
+        for count := byte(0); count < repeat; count++ {
+            out[idx] = char ^ previous[idx]
+            idx++
+        }
+    }
+
 }

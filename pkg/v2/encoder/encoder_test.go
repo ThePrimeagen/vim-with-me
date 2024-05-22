@@ -7,7 +7,6 @@ import (
 	"github.com/theprimeagen/vim-with-me/pkg/v2/ascii_buffer"
 	byteutils "github.com/theprimeagen/vim-with-me/pkg/v2/byte_utils"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/encoder"
-	"github.com/theprimeagen/vim-with-me/pkg/v2/net"
 )
 
 func getEncoder() *encoder.Encoder {
@@ -37,9 +36,28 @@ func getTestData() []byte {
 	}
 }
 
+func getTestDataChange() []byte {
+	return []byte{
+		'A', 'A', 'A',
+		'A', 'A', 'A',
+		'A', 'A', 'A',
+		'A', 'A', 'C',
+		'A', 'A', 'A',
+		'A', 'A', 'A',
+		'A', 'A', 'A',
+		'A', 'A', 'D',
+		'A', 'A', 'A',
+		'A', 'A', 'A',
+		'A', 'A', 'A',
+		'A', 'A', 'E',
+		'C', 'B', 'B',
+	}
+}
+
 func TestEncodeFrameXOR_RLE(t *testing.T) {
 	data := getTestData()
 	data2 := getTestData()
+	data3 := getTestDataChange()
 	enc := getEncoder().AddEncoder(encoder.XorRLE)
 
 	encFrame := enc.PushFrame(data)
@@ -52,28 +70,18 @@ func TestEncodeFrameXOR_RLE(t *testing.T) {
 		39, 0,
 	}, encFrame.Out[:encFrame.Len])
 
-	// write that buf
-	out := make([]byte, 8, 8)
-	frameable := net.Frameable{Item: encFrame}
-	n, err := frameable.Into(out, 0)
-	require.NoError(t, err)
-	// 2 = size, 1 = encoding
-	require.Equal(t, net.HEADER_SIZE+2+1, n)
+	encFrame = enc.PushFrame(data3)
+	require.NotNil(t, encFrame, "encframe was nil")
+	require.Equal(t, 14, encFrame.Len)
 	require.Equal(t, []byte{
-		net.VERSION,
-		byte(net.FRAME),
-		0, // seq and frame
-
-		// length
-		0,
-		3, // 1 encoding, 2 XorRLE
-
-		// encoding
-		byte(encoder.XOR_RLE),
-
-		// Data
-		39, 0,
-	}, out)
+		11, 0,
+        1, 'A' ^ 'C',
+		11, 0,
+        1, 'A' ^ 'D',
+		11, 0,
+        1, 'A' ^ 'E',
+		3, 0,
+	}, encFrame.Out[:encFrame.Len])
 }
 
 func TestEncodeFrameHuffman(t *testing.T) {

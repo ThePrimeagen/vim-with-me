@@ -59,7 +59,7 @@ func (r *RelayClient) sendFrame(frame *encoder.EncodingFrame) {
 	r.send(&net.Frameable{Item: frame})
 }
 
-func compareFrame() {
+func compareFrame(data []byte, encFrame *encoder.EncodingFrame) {
 }
 
 func main() {
@@ -168,6 +168,7 @@ func main() {
 			relay.sendFrame(encFrame)
 
 			if compare {
+                compareFrame(data, encFrame)
 			}
 		}
 	}
