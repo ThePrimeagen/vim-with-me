@@ -11,7 +11,8 @@ import { WS } from "./ws/index.js"
  * @param {HTMLElement} el
  */
 function run(el) {
-    const wsHost = false ? "wss://vim-with-me.fly.dev/ws" : "ws://localhost:8080/ws"
+    const wsHost = (window.location.protocol === "https:" ? "wss://" : "ws://") +
+        window.location.host + ":" + window.location.port + "/ws"
     const ws = new WS(wsHost)
 
     /** @type {AsciiWindow | null} */
