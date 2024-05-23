@@ -1,9 +1,11 @@
 package controller_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/controller"
 )
 
@@ -44,4 +46,18 @@ func TestController(t *testing.T) {
         "d",
         "da",
     }
+
+    ctx := context.Background()
+    go cont.Start(ctx)
+
+    play <- time.Now()
+    require.Equal(t, 0, len(send.received))
+
+    input <- time.Now()
+    play <- time.Now()
+    play <- time.Now()
+    play <- time.Now()
+    require.Equal(t, []string{
+        "w", "w", "w",
+    }, send.received)
 }
