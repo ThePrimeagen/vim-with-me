@@ -39,7 +39,7 @@ func main() {
 	}
 
 	if staticMetricsFilename == "" {
-	    staticMetricsFilename = os.Getenv("METRICS_FILENAME")
+		staticMetricsFilename = os.Getenv("METRICS_FILENAME")
 	}
 
 	assert.Assert(port != 0, "please provide a port for the relay server")
@@ -60,17 +60,22 @@ func main() {
 
 	if staticMetricsFilename != "" {
 		ticker := time.NewTicker(10 * time.Second)
+		defer ticker.Stop()
 		go func() {
 			for {
 				<-ticker.C
 				current, maxConcurrent, total := r.GetConnectionStats()
-				os.WriteFile(staticMetricsFilename,
+				writeErr := os.WriteFile(staticMetricsFilename,
 					[]byte(fmt.Sprintf(
-						"Current:           %d\n" +
-						"Max concurrent:    %d\n" +
-						"Total connections: %d",
+						"         Current: %d\n"+
+						"  Max concurrent: %d\n"+
+						"Cumulatice total: %d",
 						current, maxConcurrent, total)),
 					0644)
+				if writeErr != nil {
+					slog.Error(writeErr.Error(), "filename", staticMetricsFilename)
+					return
+				}
 			}
 		}()
 	}
