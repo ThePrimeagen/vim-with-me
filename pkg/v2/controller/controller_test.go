@@ -15,6 +15,10 @@ type Next struct {
 }
 
 func (n *Next) Next() string {
+    if len(n.next) == n.idx {
+        return ""
+    }
+
     out := n.next[n.idx]
     n.idx++
     return out
@@ -41,9 +45,7 @@ func TestController(t *testing.T) {
 
     next.next = []string{
         "w",
-        "a",
-        "s",
-        "d",
+        "",
         "da",
     }
 
@@ -53,11 +55,49 @@ func TestController(t *testing.T) {
     play <- time.Now()
     require.Equal(t, 0, len(send.received))
 
+    // w
     input <- time.Now()
     play <- time.Now()
     play <- time.Now()
     play <- time.Now()
     require.Equal(t, []string{
         "w", "w", "w",
+    }, send.received)
+    <-time.After(time.Millisecond)
+
+    // ""
+    input <- time.Now()
+    require.Equal(t, []string{
+        "w", "w", "w",
+    }, send.received)
+    play <- time.Now()
+    play <- time.Now()
+    require.Equal(t, []string{
+        "w", "w", "w",
+    }, send.received)
+    <-time.After(time.Millisecond)
+
+    // 'da'
+    input <- time.Now()
+    require.Equal(t, []string{
+        "w", "w", "w",
+    }, send.received)
+    play <- time.Now()
+    require.Equal(t, []string{
+        "w", "w", "w",
+        "da",
+    }, send.received)
+    <-time.After(time.Millisecond)
+
+    // ""
+    input <- time.Now()
+    require.Equal(t, []string{
+        "w", "w", "w",
+        "da",
+    }, send.received)
+    play <- time.Now()
+    require.Equal(t, []string{
+        "w", "w", "w",
+        "da",
     }, send.received)
 }

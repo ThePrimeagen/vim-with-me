@@ -45,7 +45,7 @@ outer:
 		select {
 		case <-c.playInput:
             if c.curr == "" {
-                continue
+                break
             }
             c.send.SendKey(c.curr)
 		case <-c.nextInput:
