@@ -24,6 +24,7 @@ func main() {
 
 	var port uint = 0
 	flag.UintVar(&port, "port", 0, "the port to run on for the websocket")
+	flag.Parse()
 
 	if port == 0 {
 		portStr := os.Getenv("PORT")
