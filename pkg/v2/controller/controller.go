@@ -16,6 +16,7 @@ type SendKey interface {
 type Controller struct {
 	next      Next
 	send      SendKey
+    curr      string
 	nextInput controllerChan
 	playInput controllerChan
 }
@@ -24,6 +25,7 @@ func NewController(next Next, send SendKey) *Controller {
 	return &Controller{
         next: next,
         send: send,
+        curr: "",
     }
 }
 
@@ -42,7 +44,12 @@ outer:
 	for {
 		select {
 		case <-c.playInput:
+            if c.curr == "" {
+                continue
+            }
+            c.send.SendKey(c.curr)
 		case <-c.nextInput:
+            c.curr = c.next.Next()
 		case <-ctx.Done():
 			break outer
 		}
