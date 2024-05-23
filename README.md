@@ -4,17 +4,28 @@ information about it or how to use until i get to a 1.0
 
 ## Doom ascii test
 **What is left**
-[ ] - unit tests
-    [ ] - huffman tree encoding
-    [ ] - encoding pipeline
-[ ] - brightness -> ascii tree for doom
-[ ] - open command to tell the front-end how big
-[ ] - fly.io relay
-    [ ] - store open command
+```
+[x] - unit tests
+    [x] - huffman tree encoding
+    [x] - encoding pipeline
+[x] - open command to tell the front-end how big
+[x] - fly.io relay
+    [x] - store open command
+[ ] - controller (current)
+[ ] - stats to auth socket
+```
+
+## V1 engine
+**What is left**
+```
+[ ] - brightness -> ascii tree for doom.
+[ ] - Relay Work
     [ ] - store ascii tree
     [ ] - default "nothing to see here" frame
-[ ] - ui to display out the buffer
-    [ ] - brightness -> ascii replay
-[ ] - framing of data (current)
+[ ] - Quadtree encodings
+[ ] - Lossy encodings
+[ ] - 16bit Colors
+[ ] - Color Compression
+```
 
 
