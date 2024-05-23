@@ -66,8 +66,8 @@ func main() {
 				current, maxConcurrent, total := r.GetConnectionStats()
 				os.WriteFile(staticMetricsFilename,
 					[]byte(fmt.Sprintf(
-						"Current: %d\n" +
-						"Max concurrent: %d\n" +
+						"Current:           %d\n" +
+						"Max concurrent:    %d\n" +
 						"Total connections: %d",
 						current, maxConcurrent, total)),
 					0644)
