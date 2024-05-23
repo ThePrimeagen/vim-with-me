@@ -10,7 +10,7 @@ type Next interface {
 	Next() string
 }
 type SendKey interface {
-	SendKey(string) string
+	SendKey(string)
 }
 
 type Controller struct {
@@ -29,12 +29,12 @@ func NewController(next Next, send SendKey) *Controller {
     }
 }
 
-func (c *Controller) WithNextInput(nextInput controllerChan) *Controller {
+func (c *Controller) WithInputTimer(nextInput controllerChan) *Controller {
 	c.nextInput = nextInput
 	return c
 }
 
-func (c *Controller) WithPlayInput(playInput controllerChan) *Controller {
+func (c *Controller) WithPlayTimer(playInput controllerChan) *Controller {
 	c.playInput = playInput
 	return c
 }
