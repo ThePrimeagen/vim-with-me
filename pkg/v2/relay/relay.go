@@ -6,6 +6,7 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -17,6 +18,9 @@ type Relay struct {
 
 	ch    chan []byte
 	conns chan *Conn
+
+	maxConcurrentConnections int
+	totalConnections         int
 
 	mutex     sync.RWMutex
 	listeners map[int]*Conn
@@ -42,6 +46,12 @@ func NewRelay(ws uint16, uuid string) *Relay {
 	}
 }
 
+func (relay *Relay) GetConnectionStats() (int, int, int) {
+    relay.mutex.RLock()
+    defer relay.mutex.RUnlock()
+    return len(relay.listeners), relay.maxConcurrentConnections, relay.totalConnections
+}
+
 //TODO(post doom): Fix this shit
 /** THIS IS SHITTY **/
 /** Relay should really just be something in which i hand connections and that
@@ -51,6 +61,19 @@ func (relay *Relay) Start() {
 	tmpl := template.Must(template.ParseGlob("./views/*.html"))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		tmpl.ExecuteTemplate(w, "index.html", struct{}{})
+	})
+
+	http.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
+		current, maxConcurrent, total := relay.GetConnectionStats()
+		w.Write([]byte("# help connections_current total number of current connections\n"))
+		w.Write([]byte("# type connections_current gauge\n"))
+		w.Write([]byte("connections_current_total " + strconv.Itoa(current) + "\n"))
+		w.Write([]byte("# help connections_maxconcurrent maximum number of concurrent connections\n")) 
+		w.Write([]byte("# type connections_maxconcurrent gauge\n"))
+		w.Write([]byte("connections_maxconcurrent_total " + strconv.Itoa(maxConcurrent) + "\n"))
+		w.Write([]byte("# help connections_total number of connections\n"))
+		w.Write([]byte("# type connections_total counter\n"))
+		w.Write([]byte("connections_total " + strconv.Itoa(total) + "\n"))
 	})
 
 	http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("./js"))))
@@ -109,8 +132,16 @@ func (relay *Relay) add(id int, ws *websocket.Conn) {
 	}
 
 	relay.mutex.Lock()
-	relay.listeners[id] = conn
-	relay.mutex.Unlock()
+    
+    relay.listeners[id] = conn
+
+    relay.totalConnections++
+    numConnections := len(relay.listeners)
+    if numConnections > relay.maxConcurrentConnections {
+        relay.maxConcurrentConnections = numConnections
+    }
+	
+    relay.mutex.Unlock()
 
 	select {
 	case relay.conns <- conn:
