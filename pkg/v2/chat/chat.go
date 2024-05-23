@@ -69,6 +69,10 @@ func (c *ChatAggregator) Reset() Occurrence {
 	return *max
 }
 
+func (c *ChatAggregator) Next() string {
+    return c.Reset().Msg
+}
+
 func (c *ChatAggregator) Pipe(ch chan ChatMsg) {
 	for msg := range ch {
 		c.Add(msg.Msg)
