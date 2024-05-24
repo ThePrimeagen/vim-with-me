@@ -1,64 +1,136 @@
 package doom_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/theprimeagen/vim-with-me/examples/v2/doom"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/controller"
 )
 
 type Send struct {
-    received []string
+	received []string
+	last     string
 }
 
 func (s *Send) SendKey(k string) {
-    s.received = append(s.received, k)
+	s.received = append(s.received, k)
+	s.last = k
 }
 
 func TestDoomController(t *testing.T) {
-    timeBetween := time.Millisecond * 250
-    send := &Send{}
-    dc := doom.
-        NewDoomController(send).
-        WithTimeBetweenUse(timeBetween)
-    <-time.After(timeBetween)
+	timeBetween := time.Millisecond * 250
+	send := &Send{}
+	dc := doom.
+		NewDoomController(send).
+		WithTimeBetweenUse(timeBetween)
+	<-time.After(timeBetween)
 
-    dc.SendKey("w")
-    require.Equal(t, []string{
-        "w",
-    }, send.received)
+	dc.SendKey("w")
+	require.Equal(t, []string{
+		"w",
+	}, send.received)
 
-    dc.SendKey("a")
-    require.Equal(t, []string{
-        "w", "a",
-    }, send.received)
+	dc.SendKey("a")
+	require.Equal(t, []string{
+		"w", "a",
+	}, send.received)
 
-    dc.SendKey("e")
-    require.Equal(t, []string{
-        "w", "a", "e",
-    }, send.received)
+	dc.SendKey("e")
+	require.Equal(t, []string{
+		"w", "a", "e",
+	}, send.received)
 
-    dc.SendKey("e")
-    dc.SendKey("e")
-    dc.SendKey("e")
-    require.Equal(t, []string{
-        "w", "a", "e",
-    }, send.received)
+	dc.SendKey("e")
+	dc.SendKey("e")
+	dc.SendKey("e")
+	require.Equal(t, []string{
+		"w", "a", "e",
+	}, send.received)
 
-    <-time.After(timeBetween / 2)
-    dc.SendKey("e")
-    dc.SendKey("e")
-    dc.SendKey("e")
-    require.Equal(t, []string{
-        "w", "a", "e",
-    }, send.received)
-    <-time.After(timeBetween / 2)
-    dc.SendKey("e")
-    dc.SendKey("e")
-    require.Equal(t, []string{
-        "w", "a", "e", "e",
-    }, send.received)
+	<-time.After(timeBetween / 2)
+	dc.SendKey("e")
+	dc.SendKey("e")
+	dc.SendKey("e")
+	require.Equal(t, []string{
+		"w", "a", "e",
+	}, send.received)
+	<-time.After(timeBetween / 2)
+	dc.SendKey("e")
+	dc.SendKey("e")
+	require.Equal(t, []string{
+		"w", "a", "e", "e",
+	}, send.received)
 }
 
+type Next struct {
+	next []string
+	idx  int
+}
 
+func (n *Next) Next() string {
+	if len(n.next) == n.idx {
+		return ""
+	}
+
+	out := n.next[n.idx]
+	n.idx++
+	return out
+}
+
+func TestWithContrtoller(t *testing.T) {
+	input := make(chan time.Time)
+	play := make(chan time.Time)
+	next := &Next{}
+	send := &Send{}
+
+	doomCtrl := doom.
+		NewDoomController(send).
+		WithTimeBetweenUse(time.Millisecond * 0)
+
+    ctrl := controller.
+		NewController(next, doomCtrl).
+		WithInputTimer(input).
+		WithPlayTimer(play)
+
+    go ctrl.Start(context.Background())
+
+    /*
+	success := []string{
+		"w",
+		"a",
+		"s",
+		"d",
+		"f",
+		"e",
+
+		"wa",
+		"wd",
+		"wf",
+		"we",
+
+		"sa",
+		"sd",
+		"sf",
+		"se",
+
+		"fw",
+		"fa",
+		"fs",
+		"fd",
+	}
+
+	filtered := []string{
+		"ws",
+		"ww",
+		"fe",
+		"ff",
+	}
+    */
+
+	doomCtrl.Play()
+	input <- time.Now()
+	require.Equal(t, "w", send.last)
+}

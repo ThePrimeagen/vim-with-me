@@ -29,6 +29,10 @@ type ChatAggregator struct {
 	max         *Occurrence
 }
 
+func (c *Occurrence) String() string {
+    return fmt.Sprintf("Occurrence(%d): %s", c.Count, c.Msg)
+}
+
 var defaultMax = Occurrence{Count: 0, Msg: ""}
 var identity = func(x string) string { return x }
 
@@ -74,6 +78,8 @@ func (c *ChatAggregator) Reset() Occurrence {
 	max := c.max
 	c.max = &defaultMax
 	c.occurrences = make([]*Occurrence, 0)
+
+    fmt.Printf("max chat agg: %s\n", max)
 
 	return *max
 }

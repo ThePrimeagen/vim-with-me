@@ -71,11 +71,6 @@ func TestDoom8BitParserOneFrame(t *testing.T) {
 		writer := byteutils.U8Writer{}
 		writer.Set(frameData)
 
-		/*
-		   fmt.Printf("debug: %s\n", encFrame.Huff.DebugDecodeTree())
-		   fmt.Printf("data = 0x%2x\n", data[0])
-		   fmt.Printf("framedata %+v\n", byteutils.Read16(frameData, 0))
-		*/
 		fmt.Printf("first byte: 0x%2x\n", data[0])
 		fmt.Printf("enc first byte: 0x%2x\n", encFrame.Curr[0])
 		//encFrame.Huff.Decode(encFrame.Curr[:1], 4, &writer)

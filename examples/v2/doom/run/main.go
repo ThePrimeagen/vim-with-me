@@ -56,8 +56,6 @@ func (r *RelayClient) sendFrame(frame *encoder.EncodingFrame) {
 		return
 	}
 
-	fmt.Printf("sending frame into relay(%s): %d\n", encoder.EncodingName(frame.Encoding), frame.Len)
-
 	r.send(&net.Frameable{Item: frame})
 }
 
