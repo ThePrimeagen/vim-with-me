@@ -21,13 +21,17 @@ type fileWriter struct {
 	frequency time.Duration
 }
 
-func newFileWriter(metrics *Metrics, filename string, format string, frequency time.Duration) *fileWriter {
-	return &fileWriter{
+func newFileWriter(metrics *Metrics, filename string, format string, frequency time.Duration, start bool) *fileWriter {
+	fw := &fileWriter{
 		metrics:   metrics,
 		filename:  filename,
 		format:    format,
 		frequency: frequency,
 	}
+	if start {
+		fw.Start()
+	}
+	return fw
 }
 
 func (fw *fileWriter) Start() {
