@@ -35,7 +35,7 @@ func New() *Metrics {
 func (m *Metrics) WithFileWriter(filename string, format string, frequency time.Duration) *Metrics {
 	m.Lock()
 	defer m.Unlock()
-	m.fileWriters = append(m.fileWriters, newFileWriter(m, filename, format, frequency))
+	m.fileWriters = append(m.fileWriters, newFileWriter(m, filename, format, frequency, true))
 	return m
 }
 
