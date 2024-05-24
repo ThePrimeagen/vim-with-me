@@ -12,6 +12,7 @@ import (
 	ansiparser "github.com/theprimeagen/vim-with-me/pkg/v2/ansi_parser"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/ascii_buffer"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/chat"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/encoder"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/net"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/relay"
@@ -130,32 +131,33 @@ func main() {
 	enc.AddEncoder(encoder.XorRLE)
 	enc.AddEncoder(encoder.Huffman)
 
+    //doom create controller
+    twitchChat, err := chat.NewTwitchChat(ctx)
+    assert.NoError(err, "twitch cannot initialize")
+    chtAgg := chat.
+        NewChatAggregator().
+        WithFilter(doom.DoomFilterFn).
+        WithMap(doom.DoomChatMapFn)
+    go chtAgg.Pipe(twitchChat)
+    doom.NewDoomController(prog)
+
 	relay.send(net.CreateOpen(d.Rows, d.Cols))
 
 	frames := d.Frames()
 
 	go func() {
 		<-time.After(time.Second * 1)
-		prog.SendKey('')
+		prog.SendKey("")
 		<-time.After(time.Second * 1)
-		prog.SendKey('')
+		prog.SendKey("")
 		<-time.After(time.Second * 1)
-		prog.SendKey('')
+		prog.SendKey("")
 		<-time.After(time.Second * 1)
-		prog.SendKey('')
+		prog.SendKey("")
 		<-time.After(time.Second * 1)
-		prog.SendKey('')
+		prog.SendKey("")
 
-		count := 1
 		for {
-			<-time.After(time.Millisecond * 16)
-			if count%100 == 0 {
-				prog.SendKey('f')
-			} else {
-				prog.SendKey('w')
-			}
-			count++
-
 		}
 	}()
 

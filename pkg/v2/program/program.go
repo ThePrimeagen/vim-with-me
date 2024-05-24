@@ -33,8 +33,8 @@ func NewProgram(path string) *Program {
 	}
 }
 
-func (a *Program) SendKey(key byte) {
-	a.Write([]byte{key})
+func (a *Program) SendKey(key string) {
+	a.Write([]byte(key))
 }
 
 func (a *Program) WithArgs(args []string) *Program {
