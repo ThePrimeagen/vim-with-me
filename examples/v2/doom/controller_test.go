@@ -2,7 +2,6 @@ package doom_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -18,10 +17,11 @@ type Send struct {
 }
 
 func (s *Send) SendKey(k string) {
-	fmt.Printf("doom send key: %s\n", k)
 	s.received = append(s.received, k)
 	s.last = k
-	s.ch <- struct{}{}
+    if s.ch != nil {
+        s.ch <- struct{}{}
+    }
 }
 
 type Next struct {
@@ -39,13 +39,15 @@ func (n *Next) Next() string {
 	return out
 }
 
-/*
 func TestDoomController(t *testing.T) {
 	timeBetween := time.Millisecond * 250
 	send := &Send{}
 	dc := doom.
 		NewDoomController(send).
 		WithTimeBetweenUse(timeBetween)
+
+    dc.Play()
+
 	<-time.After(timeBetween)
 
 	dc.SendKey("w")
@@ -84,8 +86,6 @@ func TestDoomController(t *testing.T) {
 		"w", "a", "e", "e",
 	}, send.received)
 }
-
-*/
 
 func TestWithController(t *testing.T) {
 	input := make(chan time.Time)
