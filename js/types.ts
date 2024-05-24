@@ -9,3 +9,7 @@ export interface ByteWriter {
     len(): number
     data(): Uint8Array
 }
+
+export interface SendKey {
+    send(str: string): void
+}
