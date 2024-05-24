@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type controllerChan chan time.Time
+type controllerChan <-chan time.Time
 type Next interface {
 	Next() string
 }

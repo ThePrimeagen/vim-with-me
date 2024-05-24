@@ -1,9 +1,18 @@
 package chat
 
+import "fmt"
+
 type ChatMsg struct {
 	Name string
 	Msg  string
 	Bits int
+}
+
+func (c *ChatMsg) String() string {
+    if c.Bits > 0 {
+        return fmt.Sprintf("ChatMsg(bits: %d from: %s): %s", c.Bits, c.Name, c.Msg)
+    }
+    return fmt.Sprintf("ChatMsg(%s): %s", c.Name, c.Msg)
 }
 
 type FilterCB func(msg string) bool
@@ -75,6 +84,7 @@ func (c *ChatAggregator) Next() string {
 
 func (c *ChatAggregator) Pipe(ch chan ChatMsg) {
 	for msg := range ch {
+        fmt.Printf("chat: %s\n", msg)
 		c.Add(msg.Msg)
 	}
 }

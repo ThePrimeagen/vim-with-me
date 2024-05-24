@@ -1,4 +1,3 @@
-import { assert, debugAssert } from "./assert.js"
 import { types } from "./cmds.js"
 import { createDecodeFrame, createOpen, expand, pushFrame } from "./decode/frame.js"
 import { AsciiWindow } from "./display/window.js"
@@ -11,8 +10,9 @@ import { WS } from "./ws/index.js"
  * @param {HTMLElement} el
  */
 function run(el) {
+    // Note: host contains port
     const wsHost = (window.location.protocol === "https:" ? "wss://" : "ws://") +
-        window.location.host + ":" + window.location.port + "/ws"
+        window.location.host + "/ws"
     const ws = new WS(wsHost)
 
     /** @type {AsciiWindow | null} */

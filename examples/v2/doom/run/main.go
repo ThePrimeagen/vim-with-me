@@ -13,6 +13,7 @@ import (
 	"github.com/theprimeagen/vim-with-me/pkg/v2/ascii_buffer"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/chat"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/controller"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/encoder"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/net"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/relay"
@@ -139,10 +140,14 @@ func main() {
         WithFilter(doom.DoomFilterFn).
         WithMap(doom.DoomChatMapFn)
     go chtAgg.Pipe(twitchChat)
-    doom.NewDoomController(prog)
+    doomCtrl := doom.NewDoomController(prog)
+    ctrl := controller.
+        NewController(&chtAgg, doomCtrl).
+        WithInputTimer(time.NewTicker(time.Millisecond * 75).C).
+        WithPlayTimer(time.NewTicker(time.Millisecond * 16).C)
+    go ctrl.Start(ctx)
 
 	relay.send(net.CreateOpen(d.Rows, d.Cols))
-
 	frames := d.Frames()
 
 	go func() {
@@ -157,8 +162,7 @@ func main() {
 		<-time.After(time.Second * 1)
 		prog.SendKey("")
 
-		for {
-		}
+        doomCtrl.Play()
 	}()
 
 	for range rounds {
