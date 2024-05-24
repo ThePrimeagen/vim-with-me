@@ -67,7 +67,7 @@ func DoomChatMapFn(msg string) string {
 	return string(bytes)
 }
 
-var validMsg = "wasdfeasdwfwawaedfdeeffses"
+var validMsg = "wasdfeasdwfwawaedfdeeffsesewdsaf"
 
 func DoomFilterFn(msg string) bool {
 	if len(msg) > 2 {

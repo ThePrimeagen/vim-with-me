@@ -104,39 +104,15 @@ func TestWithController(t *testing.T) {
 
 	go ctrl.Start(context.Background())
 
-    success := []string{
-        "w",
-        "a",
-        "s",
-        "d",
-        "f",
-        "e",
-
-        "wa",
-        "wd",
-        "wf",
-        "we",
-
-        "sa",
-        "sd",
-        "sf",
-        "se",
-
-        "fw",
-        "fa",
-        "fs",
-        "fd",
-    }
-
 	doomCtrl.Play()
 
-	next.next = success
+	next.next = expectedPass
 	next.idx = 0
 
-    for i := range len(success) {
+    for i := range len(expectedPass) {
         input <- time.Now()
         play <- time.Now()
-        for range len(success[i]) {
+        for range len(expectedPass[i]) {
             <-send.ch
         }
     }
@@ -160,3 +136,38 @@ func TestWithController(t *testing.T) {
     }, send.received)
 
 }
+
+func mf(str string) bool {
+    return doom.DoomFilterFn(doom.DoomChatMapFn(str))
+}
+
+func TestWithMapAndFilter(t *testing.T) {
+    for _, str := range expectedPass {
+        require.Equal(t, true, mf(str), str)
+    }
+}
+
+var expectedPass = []string{
+    "w",
+    "a",
+    "s",
+    "d",
+    "f",
+    "e",
+
+    "wa",
+    "wd",
+    "wf",
+    "we",
+
+    "sa",
+    "sd",
+    "sf",
+    "se",
+
+    "fw",
+    "fa",
+    "fs",
+    "fd",
+}
+
