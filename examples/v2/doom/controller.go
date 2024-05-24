@@ -1,41 +1,45 @@
 package doom
 
 import (
-	"context"
 	"time"
 
 	"github.com/theprimeagen/vim-with-me/pkg/v2/controller"
 )
 
-var timeBetweenUse = time.Millisecond * 500
 type DoomController struct {
-	send       controller.SendKey
-	controller *controller.Controller
+	send controller.SendKey
 
-    timeSinceLastUse time.Time
+	timeSinceLastUse time.Time
+	timeBetweenUse   time.Duration
 }
 
-func NewDoomController(next controller.Next, send controller.SendKey) {
-    dc := DoomController{}
-    dc.controller = controller.NewController(next, &dc)
-    dc.timeSinceLastUse = time.Now()
+func NewDoomController(send controller.SendKey) *DoomController {
+	dc := DoomController{}
+	dc.timeSinceLastUse = time.Now()
+	dc.timeBetweenUse = 500
+	dc.send = send
+    return &dc
 }
 
-func (dc *DoomController) Start(ctx context.Context) {
-    go dc.controller.Start(ctx)
+func (dc *DoomController) WithTimeBetweenUse(useTime time.Duration) *DoomController {
+	dc.timeBetweenUse = useTime
+	return dc
+}
+
+func (dc *DoomController) Init() *DoomController {
+	return dc
 }
 
 func (dc *DoomController) SendKey(key string) {
-    now := time.Now()
-    for _, k := range key {
-        if k == 'e' {
-            if dc.timeSinceLastUse.Sub(now) >= timeBetweenUse {
-                dc.timeSinceLastUse = now
-            } else {
-                continue
-            }
-        }
-        dc.send.SendKey(string(k))
-    }
+	now := time.Now()
+	for _, k := range key {
+		if k == 'e' {
+			if now.Sub(dc.timeSinceLastUse) >= dc.timeBetweenUse {
+				dc.timeSinceLastUse = now
+			} else {
+				continue
+			}
+		}
+		dc.send.SendKey(string(k))
+	}
 }
-
