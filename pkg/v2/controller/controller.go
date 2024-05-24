@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"time"
 )
 
@@ -55,4 +56,8 @@ outer:
 		}
 
 	}
+}
+
+func (c *Controller) String() string {
+    return fmt.Sprintf("Controller: %s", c.curr)
 }

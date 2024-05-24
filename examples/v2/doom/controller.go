@@ -1,6 +1,8 @@
 package doom
 
 import (
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/theprimeagen/vim-with-me/pkg/v2/controller"
@@ -52,4 +54,24 @@ func (dc *DoomController) SendKey(key string) {
             dc.send.SendKey(string(k))
         }
 	}
+}
+
+func DoomChatMapFn(msg string) string {
+	if len(msg) > 2 {
+		return msg
+	}
+
+	bytes := []byte(msg)
+	slices.Sort(bytes)
+
+	return string(bytes)
+}
+
+var validMsg = "wasdfeasdwfwawaedfdeeffses"
+
+func DoomFilterFn(msg string) bool {
+	if len(msg) > 2 {
+		return false
+	}
+	return strings.Contains(validMsg, msg)
 }

@@ -2,6 +2,7 @@ package doom_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -13,13 +14,32 @@ import (
 type Send struct {
 	received []string
 	last     string
+	ch       chan struct{}
 }
 
 func (s *Send) SendKey(k string) {
+	fmt.Printf("doom send key: %s\n", k)
 	s.received = append(s.received, k)
 	s.last = k
+	s.ch <- struct{}{}
 }
 
+type Next struct {
+	next []string
+	idx  int
+}
+
+func (n *Next) Next() string {
+	if len(n.next) == n.idx {
+		return ""
+	}
+
+	out := n.next[n.idx]
+	n.idx++
+	return out
+}
+
+/*
 func TestDoomController(t *testing.T) {
 	timeBetween := time.Millisecond * 250
 	send := &Send{}
@@ -65,72 +85,78 @@ func TestDoomController(t *testing.T) {
 	}, send.received)
 }
 
-type Next struct {
-	next []string
-	idx  int
-}
+*/
 
-func (n *Next) Next() string {
-	if len(n.next) == n.idx {
-		return ""
-	}
-
-	out := n.next[n.idx]
-	n.idx++
-	return out
-}
-
-func TestWithContrtoller(t *testing.T) {
+func TestWithController(t *testing.T) {
 	input := make(chan time.Time)
 	play := make(chan time.Time)
 	next := &Next{}
-	send := &Send{}
+	send := &Send{ch: make(chan struct{})}
 
 	doomCtrl := doom.
 		NewDoomController(send).
 		WithTimeBetweenUse(time.Millisecond * 0)
 
-    ctrl := controller.
+	ctrl := controller.
 		NewController(next, doomCtrl).
 		WithInputTimer(input).
 		WithPlayTimer(play)
 
-    go ctrl.Start(context.Background())
+	go ctrl.Start(context.Background())
 
-    /*
-	success := []string{
-		"w",
-		"a",
-		"s",
-		"d",
-		"f",
-		"e",
+    success := []string{
+        "w",
+        "a",
+        "s",
+        "d",
+        "f",
+        "e",
 
-		"wa",
-		"wd",
-		"wf",
-		"we",
+        "wa",
+        "wd",
+        "wf",
+        "we",
 
-		"sa",
-		"sd",
-		"sf",
-		"se",
+        "sa",
+        "sd",
+        "sf",
+        "se",
 
-		"fw",
-		"fa",
-		"fs",
-		"fd",
-	}
-
-	filtered := []string{
-		"ws",
-		"ww",
-		"fe",
-		"ff",
-	}
-    */
+        "fw",
+        "fa",
+        "fs",
+        "fd",
+    }
 
 	doomCtrl.Play()
-	input <- time.Now()
-	require.Equal(t, "w", send.last)
+
+	next.next = success
+	next.idx = 0
+
+    for i := range len(success) {
+        input <- time.Now()
+        play <- time.Now()
+        for range len(success[i]) {
+            <-send.ch
+        }
+    }
+    require.Equal(t, []string{
+        "w", "a", "s", "d", "f", "e",
+
+        "w", "a",
+        "w", "d",
+        "w", "f",
+        "w", "e",
+
+        "s", "a",
+        "s", "d",
+        "s", "f",
+        "s", "e",
+
+        "f", "w",
+        "f", "a",
+        "f", "s",
+        "f", "d",
+    }, send.received)
+
 }
