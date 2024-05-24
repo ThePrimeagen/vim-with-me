@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log/slog"
 	"os"
 	"strconv"
@@ -14,6 +13,7 @@ import (
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/net"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/relay"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/metrics"
 )
 
 type ConnectionMessages struct {
@@ -42,13 +42,18 @@ func main() {
 		staticMetricsFilename = os.Getenv("METRICS_FILENAME")
 	}
 
+	stats := metrics.New()
+	if staticMetricsFilename != "" {
+		stats.WithFileWriter(staticMetricsFilename, metrics.FileWriterFormatText, 10 * time.Second)
+	}
+
 	assert.Assert(port != 0, "please provide a port for the relay server")
 
 	uuid := os.Getenv("AUTH_ID")
 	assert.Assert(len(uuid) > 0, "empty auth id, unable to to start relay")
 
 	slog.Warn("port selected", "port", port)
-	r := relay.NewRelay(uint16(port), uuid)
+	r := relay.NewRelay(uint16(port), uuid, stats)
 
 	connMsgs := &ConnectionMessages{
 		open:  nil,
@@ -57,28 +62,6 @@ func main() {
 
 	go newConnections(r, connMsgs)
 	go onMessage(r, connMsgs)
-
-	if staticMetricsFilename != "" {
-		ticker := time.NewTicker(10 * time.Second)
-		defer ticker.Stop()
-		go func() {
-			for {
-				<-ticker.C
-				current, maxConcurrent, total := r.GetConnectionStats()
-				writeErr := os.WriteFile(staticMetricsFilename,
-					[]byte(fmt.Sprintf(
-						"         Current: %d\n"+
-						"  Max concurrent: %d\n"+
-						"Cumulatice total: %d",
-						current, maxConcurrent, total)),
-					0644)
-				if writeErr != nil {
-					slog.Error(writeErr.Error(), "filename", staticMetricsFilename)
-					return
-				}
-			}
-		}()
-	}
 
 	r.Start()
 }

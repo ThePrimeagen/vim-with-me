@@ -6,10 +6,11 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
-	"strconv"
 	"sync"
 
 	"github.com/gorilla/websocket"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/metrics"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 )
 
 type Relay struct {
@@ -19,18 +20,18 @@ type Relay struct {
 	ch    chan []byte
 	conns chan *Conn
 
-	maxConcurrentConnections int
-	totalConnections         int
-
 	mutex     sync.RWMutex
 	listeners map[int]*Conn
+
+	stats *metrics.Metrics
 
 	id int
 }
 
 var upgrader = websocket.Upgrader{} // use default options
 
-func NewRelay(ws uint16, uuid string) *Relay {
+func NewRelay(ws uint16, uuid string, stats *metrics.Metrics) *Relay {
+	assert.NotNil(stats, "a metrics object must be provided")
 
 	return &Relay{
 		port: ws,
@@ -42,14 +43,10 @@ func NewRelay(ws uint16, uuid string) *Relay {
 		mutex:     sync.RWMutex{},
 		listeners: make(map[int]*Conn),
 
+		stats: stats,
+
 		id: 0,
 	}
-}
-
-func (relay *Relay) GetConnectionStats() (int, int, int) {
-    relay.mutex.RLock()
-    defer relay.mutex.RUnlock()
-    return len(relay.listeners), relay.maxConcurrentConnections, relay.totalConnections
 }
 
 //TODO(post doom): Fix this shit
@@ -63,17 +60,8 @@ func (relay *Relay) Start() {
 		tmpl.ExecuteTemplate(w, "index.html", struct{}{})
 	})
 
-	http.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
-		current, maxConcurrent, total := relay.GetConnectionStats()
-		w.Write([]byte("# help connections_current total number of current connections\n"))
-		w.Write([]byte("# type connections_current gauge\n"))
-		w.Write([]byte("connections_current_total " + strconv.Itoa(current) + "\n"))
-		w.Write([]byte("# help connections_maxconcurrent maximum number of concurrent connections\n")) 
-		w.Write([]byte("# type connections_maxconcurrent gauge\n"))
-		w.Write([]byte("connections_maxconcurrent_total " + strconv.Itoa(maxConcurrent) + "\n"))
-		w.Write([]byte("# help connections_total number of connections\n"))
-		w.Write([]byte("# type connections_total counter\n"))
-		w.Write([]byte("connections_total " + strconv.Itoa(total) + "\n"))
+	http.HandleFunc("/metrics", func(w http.ResponseWriter, _ *http.Request) {
+		relay.stats.WritePrometheus(w)
 	})
 
 	http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("./js"))))
@@ -121,6 +109,7 @@ func (relay *Relay) remove(id int) {
 	delete(relay.listeners, id)
 	relay.mutex.Unlock()
 	slog.Warn("removing client connection", "id", id)
+	relay.stats.Set(metrics.CurrentConnections, len(relay.listeners))
 }
 
 func (relay *Relay) add(id int, ws *websocket.Conn) {
@@ -132,15 +121,7 @@ func (relay *Relay) add(id int, ws *websocket.Conn) {
 	}
 
 	relay.mutex.Lock()
-    
     relay.listeners[id] = conn
-
-    relay.totalConnections++
-    numConnections := len(relay.listeners)
-    if numConnections > relay.maxConcurrentConnections {
-        relay.maxConcurrentConnections = numConnections
-    }
-	
     relay.mutex.Unlock()
 
 	select {
@@ -150,6 +131,10 @@ func (relay *Relay) add(id int, ws *websocket.Conn) {
 
 	go conn.read()
 	go conn.write()
+
+	relay.stats.Set(metrics.CurrentConnections, len(relay.listeners))
+	relay.stats.SetIfGreater(metrics.MaxConcurrentConnections, len(relay.listeners))
+	relay.stats.Inc(metrics.TotalConnections)
 }
 
 func (relay *Relay) render(w http.ResponseWriter, r *http.Request) {
