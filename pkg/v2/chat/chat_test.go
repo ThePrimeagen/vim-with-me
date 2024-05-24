@@ -41,3 +41,16 @@ func TestChat(t *testing.T) {
 		test.test(&c, t)
 	}
 }
+
+func TestOneMessageChat(t *testing.T) {
+	c := chat.
+		NewChatAggregator().
+		WithMap(doom.DoomChatMapFn).
+		WithFilter(doom.DoomFilterFn)
+
+    c.Add("w")
+    occ := c.Reset()
+
+    require.Equal(t, "w", occ.Msg)
+    require.Equal(t, 1, occ.Count)
+}

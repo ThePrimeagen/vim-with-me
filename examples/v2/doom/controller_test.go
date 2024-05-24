@@ -117,17 +117,17 @@ func TestWithController(t *testing.T) {
         }
     }
     require.Equal(t, []string{
-        "w", "a", "s", "d", "f", "e",
+        "w", "a", "s", "d", "f", "u",
 
         "w", "a",
         "w", "d",
         "w", "f",
-        "w", "e",
+        "w", "u",
 
         "s", "a",
         "s", "d",
         "s", "f",
-        "s", "e",
+        "s", "u",
 
         "f", "w",
         "f", "a",
@@ -153,17 +153,17 @@ var expectedPass = []string{
     "s",
     "d",
     "f",
-    "e",
+    "u",
 
     "wa",
     "wd",
     "wf",
-    "we",
+    "wu",
 
     "sa",
     "sd",
     "sf",
-    "se",
+    "su",
 
     "fw",
     "fa",

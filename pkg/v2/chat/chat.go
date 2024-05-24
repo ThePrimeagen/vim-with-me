@@ -55,31 +55,47 @@ func (c ChatAggregator) WithMap(mapFn MapCB) ChatAggregator {
 	return c
 }
 
+func (c *ChatAggregator) incAndMax(occurrence *Occurrence) {
+    occurrence.Count++
+    if occurrence.Count > c.max.Count {
+        c.max = occurrence
+    }
+}
+
 func (c *ChatAggregator) Add(msg string) {
 	msg = c.mapFn(msg)
 	if !c.filter(msg) {
+        fmt.Printf("filtering msg: %s\n", msg)
 		return
 	}
 
 	for _, occurrence := range c.occurrences {
 		if occurrence.Msg == msg {
-			occurrence.Count++
-			if occurrence.Count > c.max.Count {
-				c.max = occurrence
-			}
+            c.incAndMax(occurrence)
 			return
 		}
 	}
 
-	c.occurrences = append(c.occurrences, &Occurrence{Count: 1, Msg: msg})
+    occurrence := &Occurrence{Count: 0, Msg: msg}
+	c.occurrences = append(c.occurrences, occurrence)
+    c.incAndMax(occurrence)
+}
+
+func (c *ChatAggregator) String() string {
+    out := fmt.Sprintf("ChatAggregator:(%v)\n", c.max)
+
+    for _, o := range c.occurrences {
+        out += fmt.Sprintf("%v\n", o)
+    }
+
+    return out
 }
 
 func (c *ChatAggregator) Reset() Occurrence {
+    fmt.Printf("%v\n", c)
 	max := c.max
 	c.max = &defaultMax
 	c.occurrences = make([]*Occurrence, 0)
-
-    fmt.Printf("max chat agg: %s\n", max)
 
 	return *max
 }
@@ -90,7 +106,7 @@ func (c *ChatAggregator) Next() string {
 
 func (c *ChatAggregator) Pipe(ch chan ChatMsg) {
 	for msg := range ch {
-        fmt.Printf("chat: %s\n", msg)
+        fmt.Printf("chat: %v\n", msg)
 		c.Add(msg.Msg)
 	}
 }

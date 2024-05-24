@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/creack/pty"
 	"github.com/theprimeagen/vim-with-me/pkg/assert"
@@ -34,7 +35,10 @@ func NewProgram(path string) *Program {
 }
 
 func (a *Program) SendKey(key string) {
-	a.Write([]byte(key))
+    for _, k := range key {
+        a.Write([]byte{byte(k)})
+        <-time.After(time.Millisecond * 40)
+    }
 }
 
 func (a *Program) WithArgs(args []string) *Program {

@@ -141,8 +141,8 @@ func main() {
     doomCtrl := doom.NewDoomController(prog)
     ctrl := controller.
         NewController(&chtAgg, doomCtrl).
-        WithInputTimer(time.NewTicker(time.Millisecond * 75).C).
-        WithPlayTimer(time.NewTicker(time.Millisecond * 16).C)
+        WithInputTimer(time.NewTicker(time.Millisecond * 175).C).
+        WithPlayTimer(time.NewTicker(time.Millisecond * 20).C)
     go ctrl.Start(ctx)
 
 	relay.send(net.CreateOpen(d.Rows, d.Cols))
