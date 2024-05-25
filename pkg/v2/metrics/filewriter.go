@@ -1,17 +1,16 @@
 package metrics
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 	"os"
 	"time"
-	"encoding/json"
 )
 
 const (
-	FileWriterFormatText = "text"
-	FileWriterFormatJSON = "json"
-	FileWriterFormatHTML = "html"
+	FileWriterFormatText       = "text"
+	FileWriterFormatAppendJSON = "json"
 )
 
 type fileWriter struct {
@@ -36,67 +35,60 @@ func newFileWriter(metrics *Metrics, filename string, format string, frequency t
 
 func (fw *fileWriter) Start() {
 	go func() {
-		var err error
 		ticker := time.NewTicker(fw.frequency)
 		defer ticker.Stop()
 		for {
 			<-ticker.C
 
-			var f *os.File
-			f, err = os.OpenFile(fw.filename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-			if err != nil {
-				assert.NoError(err, "unable to open file for writing")
-			}
+			// wrap in a func to defer closing the file
+			func() {
+				perms := os.O_CREATE | os.O_WRONLY
+				if fw.format == FileWriterFormatAppendJSON {
+					perms |= os.O_APPEND
+				} else {
+					perms |= os.O_TRUNC
+				}
 
-			stats := fw.metrics.GetAll()
-			switch fw.format {
-			case FileWriterFormatText:
-				fw.writeText(f, stats)
-			case FileWriterFormatJSON:
-				fw.writeJSON(f, stats)
-			case FileWriterFormatHTML:
-				fw.writeHTML(f, stats)
-			default:
-				assert.Assert(false, "unknown file writer format: %s", fw.format)
-			}
+				f, err := os.OpenFile(fw.filename, perms, 0644)
+				assert.NoError(err, "failed to open file for writing")
+				defer f.Close()
 
-			_ = f.Close()
+				stats := fw.metrics.GetAll()
+
+				switch fw.format {
+				case FileWriterFormatText:
+					fw.writeText(f, stats)
+				case FileWriterFormatAppendJSON:
+					fw.appendJSON(f, stats)
+				default:
+					assert.Assert(false, "unknown file writer format: %s", fw.format)
+				}
+			}()
 		}
 	}()
 }
 
+func writeBytes(f *os.File, data []byte) {
+	_, err := f.Write(data)
+	assert.NoError(err, "failed to write to file")
+}
+
+func writeString(f *os.File, data string) {
+	_, err := f.WriteString(data)
+	assert.NoError(err, "failed to write to file")
+}
+
 func (fw *fileWriter) writeText(f *os.File, stats map[string]int) {
 	for key, value := range stats {
-		_, err := f.WriteString(fmt.Sprintf("%s: %d\n", key, value))
-		if err != nil {
-			assert.NoError(err, "unable to write to file")
-		}
+		writeString(f, fmt.Sprintf("%s: %d\n", key, value))
 	}
 }
 
-func (fw *fileWriter) writeJSON(f *os.File, stats map[string]int) {
+func (fw *fileWriter) appendJSON(f *os.File, stats map[string]int) {
+	stats["timestamp"] = int(time.Now().Unix())
 	data, err := json.Marshal(stats)
-	if err != nil {
-		assert.NoError(err, "unable to marshal stats")
-	}
-	_, err = f.Write(data)
-}
+	assert.NoError(err, "failed to marshal stats")
 
-func (fw *fileWriter) writeHTML(f *os.File, stats map[string]int) {
-	_, err := f.WriteString("<html><body><table>")
-	if err != nil {
-		assert.NoError(err, "unable to write to file")
-	}
-
-	for key, value := range stats {
-		_, err := f.WriteString(fmt.Sprintf("<tr><td>%s</td><td>%d</td></tr>", key, value))
-		if err != nil {
-			assert.NoError(err, "unable to write to file")
-		}
-	}
-
-	_, err = f.WriteString("</table></body></html>")
-	if err != nil {
-		assert.NoError(err, "unable to write to file")
-	}
+	writeBytes(f, data)
+	writeBytes(f, []byte("\n"))
 }
