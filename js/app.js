@@ -1,6 +1,7 @@
 import { types } from "./cmds.js"
 import { createDecodeFrame, createOpen, expand, pushFrame } from "./decode/frame.js"
 import { AsciiWindow } from "./display/window.js"
+import { Cache } from "./net/cache.js"
 import { parseFrame } from "./net/frame.js"
 import { WS } from "./ws/index.js"
 
@@ -19,6 +20,7 @@ function run(el) {
     let asciiWindow = null
 
     const decodeFrame = createDecodeFrame()
+    const cache = new Cache()
 
     ws.onMessage(async function(buf) {
 
@@ -30,21 +32,27 @@ function run(el) {
                 asciiWindow.destroy()
             }
 
+            cache.reset()
             const open = createOpen(frame.data)
             console.log("open", open, frame.data)
             asciiWindow = new AsciiWindow(el, open.rows, open.cols / 2)
 
             break
         case types.frame:
-            pushFrame(decodeFrame, frame)
-            expand(decodeFrame)
+            cache.push(frame)
 
-            if (asciiWindow === null) {
-                console.error("window is null?")
-                return
+            let f = null
+            while (f = cache.pop()) {
+                pushFrame(decodeFrame, frame)
+                expand(decodeFrame)
+                if (asciiWindow === null) {
+                    console.error("window is null?")
+                    return
+                }
+
+                asciiWindow.push(decodeFrame.decodeFrame)
             }
 
-            asciiWindow.push(decodeFrame.decodeFrame)
 
             // render
             // console.log(data.slice(0, 5))

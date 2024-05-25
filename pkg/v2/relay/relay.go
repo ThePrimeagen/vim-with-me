@@ -21,13 +21,13 @@ type Relay struct {
 	mutex     sync.RWMutex
 	listeners map[int]*Conn
 
-	id int
+	id   int
+	send int
 }
 
 var upgrader = websocket.Upgrader{} // use default options
 
 func NewRelay(ws uint16, uuid string) *Relay {
-
 	return &Relay{
 		port: ws,
 		uuid: uuid,
@@ -38,8 +38,14 @@ func NewRelay(ws uint16, uuid string) *Relay {
 		mutex:     sync.RWMutex{},
 		listeners: make(map[int]*Conn),
 
-		id: 0,
+		id:   0,
+		send: 16,
 	}
+}
+
+func (relay *Relay) WithSendCount(count int) *Relay {
+	relay.send = count
+	return relay
 }
 
 //TODO(post doom): Fix this shit
@@ -80,16 +86,43 @@ func (relay *Relay) NewConnections() chan *Conn {
 	return relay.conns
 }
 
+var count = 0
+func (relay *Relay) relayRange(listeners []*Conn, data []byte, wait *sync.WaitGroup) {
+    for _, conn := range listeners {
+		conn.msg(data)
+	}
+
+    wait.Done()
+}
+
 func (relay *Relay) relay(data []byte) {
 	// quick write to prevent blocking if there is no listener
 	select {
 	case relay.ch <- data:
 	default:
 	}
+
 	relay.mutex.RLock()
-	for _, conn := range relay.listeners {
-		conn.msg(data)
+    msgCount := (len(relay.listeners) / relay.send + 1)
+    wait := sync.WaitGroup{}
+
+    curr := make([]*Conn, 0, msgCount)
+    for _, conn := range relay.listeners {
+        if len(curr) == msgCount {
+            wait.Add(1)
+
+            go relay.relayRange(curr, data, &wait)
+            curr = make([]*Conn, 0, msgCount)
+        }
+        curr = append(curr, conn)
 	}
+
+    if len(curr) > 0 {
+        wait.Add(1)
+        go relay.relayRange(curr, data, &wait)
+    }
+
+    wait.Wait()
 	relay.mutex.RUnlock()
 }
 
