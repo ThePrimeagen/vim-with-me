@@ -63,6 +63,40 @@ func compareFrame(data []byte, encFrame *encoder.EncodingFrame) {
     assert.Assert(false, "unimplemented")
 }
 
+func runChat(prog *program.Program) {
+    ctx := context.Background()
+
+    //doom create controller
+    twitchChat, err := chat.NewTwitchChat(ctx)
+    assert.NoError(err, "twitch cannot initialize")
+    chtAgg := chat.
+        NewChatAggregator().
+        WithFilter(doom.DoomFilterFn).
+        WithMap(doom.DoomChatMapFn)
+    go chtAgg.Pipe(twitchChat)
+    doomCtrl := doom.NewDoomController(prog)
+    ctrl := controller.
+        NewController(&chtAgg, doomCtrl).
+        WithInputTimer(time.NewTicker(time.Millisecond * 175).C).
+        WithPlayTimer(time.NewTicker(time.Millisecond * 20).C)
+    go ctrl.Start(ctx)
+
+    go func() {
+        <-time.After(time.Second * 1)
+        prog.SendKey("")
+        <-time.After(time.Second * 1)
+        prog.SendKey("")
+        <-time.After(time.Second * 1)
+        prog.SendKey("")
+        <-time.After(time.Second * 1)
+        prog.SendKey("")
+        <-time.After(time.Second * 1)
+        prog.SendKey("")
+
+        doomCtrl.Play()
+    }()
+}
+
 func main() {
 	godotenv.Load()
 
@@ -74,6 +108,9 @@ func main() {
 
 	compare := false
 	flag.BoolVar(&compare, "compare", false, "compare the encoded and decoded values")
+
+	allowChat := false
+	flag.BoolVar(&allowChat, "chat", false, "allow for chat interfacing")
 
 	rounds := 1000000
 	flag.IntVar(&rounds, "rounds", 1000000, "the rounds of doom to play")
@@ -130,38 +167,12 @@ func main() {
 	enc.AddEncoder(encoder.XorRLE)
 	enc.AddEncoder(encoder.Huffman)
 
-    //doom create controller
-    twitchChat, err := chat.NewTwitchChat(ctx)
-    assert.NoError(err, "twitch cannot initialize")
-    chtAgg := chat.
-        NewChatAggregator().
-        WithFilter(doom.DoomFilterFn).
-        WithMap(doom.DoomChatMapFn)
-    go chtAgg.Pipe(twitchChat)
-    doomCtrl := doom.NewDoomController(prog)
-    ctrl := controller.
-        NewController(&chtAgg, doomCtrl).
-        WithInputTimer(time.NewTicker(time.Millisecond * 175).C).
-        WithPlayTimer(time.NewTicker(time.Millisecond * 20).C)
-    go ctrl.Start(ctx)
-
 	relay.send(net.CreateOpen(d.Rows, d.Cols))
 	frames := d.Frames()
 
-	go func() {
-		<-time.After(time.Second * 1)
-		prog.SendKey("")
-		<-time.After(time.Second * 1)
-		prog.SendKey("")
-		<-time.After(time.Second * 1)
-		prog.SendKey("")
-		<-time.After(time.Second * 1)
-		prog.SendKey("")
-		<-time.After(time.Second * 1)
-		prog.SendKey("")
-
-        doomCtrl.Play()
-	}()
+    if allowChat {
+        runChat(prog)
+    }
 
 	for range rounds {
 		select {

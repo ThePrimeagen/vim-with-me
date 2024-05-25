@@ -27,7 +27,7 @@ func typeToString(t byte) string {
 	return "unknown"
 }
 
-const HEADER_SIZE = 5
+const HEADER_SIZE = 6
 
 type Encodeable interface {
 	Type() byte
@@ -67,7 +67,7 @@ func (f *Frameable) Into(into []byte, offset int) (int, error) {
 		return 0, err
 	}
 
-	byteutils.Write16(into, offset+3, n)
+	byteutils.Write16(into, offset+4, n)
 
 	// bytes + 5 for header
 	return n + HEADER_SIZE, nil

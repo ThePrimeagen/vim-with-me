@@ -1,6 +1,6 @@
 export type Frame = {
     cmd: number
-    seqAndFlags: number
+    seq: number
     data: Uint8Array
 }
 
