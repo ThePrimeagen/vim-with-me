@@ -18,12 +18,12 @@ type DoomController struct {
 }
 
 func NewDoomController(send controller.SendKey) *DoomController {
-	dc := DoomController{}
-	dc.timeSinceLastUse = time.Now()
-	dc.timeBetweenUse = 500
-	dc.send = send
-    dc.playing = false
-    return &dc
+    return &DoomController{
+        timeSinceLastUse: time.Now(),
+        timeBetweenUse: 500,
+        send: send,
+        playing: false,
+    }
 }
 
 func (dc *DoomController) Play() {
