@@ -69,7 +69,7 @@ func TestDoomController(t *testing.T) {
 	dc.SendKey("e")
 	dc.SendKey("e")
 	require.Equal(t, []string{
-		"w", "a", "e",
+		"w", "a", "e", "e", "e", "e",
 	}, send.received)
 
 	<-time.After(timeBetween / 2)
@@ -77,13 +77,14 @@ func TestDoomController(t *testing.T) {
 	dc.SendKey("e")
 	dc.SendKey("e")
 	require.Equal(t, []string{
-		"w", "a", "e",
+		"w", "a", "e", "e", "e", "e", "e", "e", "e",
 	}, send.received)
+
 	<-time.After(timeBetween / 2)
 	dc.SendKey("e")
 	dc.SendKey("e")
 	require.Equal(t, []string{
-		"w", "a", "e", "e",
+		"w", "a", "e", "e", "e", "e", "e", "e", "e", "e", "e",
 	}, send.received)
 }
 
