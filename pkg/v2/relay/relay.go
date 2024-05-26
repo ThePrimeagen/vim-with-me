@@ -144,13 +144,12 @@ func (relay *Relay) render(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// force sync on ids
-	// probably shoud look into atomic ints here...
+	// probably should look into atomic ints here...
 	relay.mutex.Lock()
 	relay.id++
 	id := relay.id
 	relay.mutex.Unlock()
 
 	relay.add(id, c)
-	slog.Warn("connection established", "id", id)
-
+	slog.Warn("connection established", "id", id, "addr", c.RemoteAddr())
 }
