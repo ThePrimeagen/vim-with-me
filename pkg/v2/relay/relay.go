@@ -94,6 +94,14 @@ func (relay *Relay) NewConnections() chan *Conn {
 	return relay.conns
 }
 
+func (relay *Relay) relayRange(listeners []*Conn, data []byte, wait *sync.WaitGroup) {
+    for _, conn := range listeners {
+		conn.msg(data)
+	}
+
+    wait.Done()
+}
+
 func (relay *Relay) relay(data []byte) {
 	// quick write to prevent blocking if there is no listener
 	select {
@@ -101,9 +109,25 @@ func (relay *Relay) relay(data []byte) {
 	default:
 	}
 	relay.mutex.RLock()
-	for _, conn := range relay.listeners {
-		conn.msg(data)
+    msgCount := (len(relay.listeners) / relay.send + 1)
+    wait := sync.WaitGroup{}
+
+    curr := make([]*Conn, 0, msgCount)
+    for _, conn := range relay.listeners {
+        if len(curr) == msgCount {
+            wait.Add(1)
+
+            go relay.relayRange(curr, data, &wait)
+            curr = make([]*Conn, 0, msgCount)
+        }
+        curr = append(curr, conn)
 	}
+
+    if len(curr) > 0 {
+        wait.Add(1)
+        go relay.relayRange(curr, data, &wait)
+    }
+    wait.Wait()
 	relay.mutex.RUnlock()
 }
 

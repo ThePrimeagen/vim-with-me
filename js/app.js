@@ -41,6 +41,8 @@ function run(el) {
         case types.frame:
             cache.push(frame)
 
+                // TODO: xor-rle seems to work locally but goes WILD when
+                // hosted on a remote service...
             let f = null
             while (f = cache.pop()) {
                 pushFrame(decodeFrame, frame)
