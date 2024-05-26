@@ -49,7 +49,7 @@ func (fw *fileWriter) Start() {
 					perms |= os.O_TRUNC
 				}
 
-				f, err := os.OpenFile(fw.filename, perms, 0644)
+				f, err := os.OpenFile(fw.filename, perms, 0666)
 				assert.NoError(err, "failed to open file for writing")
 				defer f.Close()
 
@@ -79,6 +79,7 @@ func writeString(f *os.File, data string) {
 }
 
 func (fw *fileWriter) writeText(f *os.File, stats map[string]int) {
+	writeString(f, fmt.Sprintf("timestamp: %s\n", time.Now().Format(time.RFC3339)))
 	for key, value := range stats {
 		writeString(f, fmt.Sprintf("%s: %d\n", key, value))
 	}
