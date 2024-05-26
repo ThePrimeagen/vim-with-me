@@ -21,7 +21,7 @@ func TestParseChat(t *testing.T) {
 
 	chat := toChatMsg(toPrivateMessage(name, msg, 0))
 
-	require.Equal(t, &ChatMsg{
+	require.Equal(t, ChatMsg{
 		Name: name,
 		Msg:  msg,
 		Bits: 0,
@@ -33,7 +33,7 @@ func TestParseBit(t *testing.T) {
 	msg := "i like armoranth"
 
 	chat := toChatMsg(toPrivateMessage(name, msg, 69))
-	require.Equal(t, &ChatMsg{
+	require.Equal(t, ChatMsg{
 		Name: name,
 		Msg:  msg,
 		Bits: 69,

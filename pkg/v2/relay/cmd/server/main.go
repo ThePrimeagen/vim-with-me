@@ -6,12 +6,15 @@ import (
 	"os"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/net"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/relay"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/metrics"
+	"runtime"
 )
 
 type ConnectionMessages struct {
@@ -20,10 +23,18 @@ type ConnectionMessages struct {
 }
 
 func main() {
+	runtime.GOMAXPROCS(runtime.GOMAXPROCS(0) - 1)
+
 	godotenv.Load()
 
 	var port uint = 0
+	var staticMetricsFilename, jsonMetricsFilename string
 	flag.UintVar(&port, "port", 0, "the port to run on for the websocket")
+	flag.StringVar(&staticMetricsFilename, "text-metrics-filename", os.Getenv("STATIC_METRICS_FILENAME"),
+		"a filename to periodically update with fresh metrics in text format (every 10 seconds)")
+	flag.StringVar(&jsonMetricsFilename, "json-metrics-filename", os.Getenv("JSON_METRICS_FILENAME"),
+		"a filename to periodically append JSON metrics to (every 10 seconds)")
+	flag.Parse()
 
 	if port == 0 {
 		portStr := os.Getenv("PORT")
@@ -32,14 +43,21 @@ func main() {
 			port = uint(portEnv)
 		}
 	}
-
 	assert.Assert(port != 0, "please provide a port for the relay server")
+
+	stats := metrics.New()
+	if staticMetricsFilename != "" {
+		stats.WithFileWriter(staticMetricsFilename, metrics.FileWriterFormatText, 10 * time.Second)
+	}
+	if jsonMetricsFilename != "" {
+		stats.WithFileWriter(jsonMetricsFilename, metrics.FileWriterFormatAppendJSON, 10 * time.Second)
+	}
 
 	uuid := os.Getenv("AUTH_ID")
 	assert.Assert(len(uuid) > 0, "empty auth id, unable to to start relay")
 
 	slog.Warn("port selected", "port", port)
-	r := relay.NewRelay(uint16(port), uuid)
+	r := relay.NewRelay(uint16(port), uuid, stats)
 
 	connMsgs := &ConnectionMessages{
 		open:  nil,

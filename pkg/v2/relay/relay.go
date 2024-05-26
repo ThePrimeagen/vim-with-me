@@ -9,6 +9,8 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/metrics"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 )
 
 type Relay struct {
@@ -21,12 +23,15 @@ type Relay struct {
 	mutex     sync.RWMutex
 	listeners map[int]*Conn
 
+	stats *metrics.Metrics
+
 	id int
 }
 
 var upgrader = websocket.Upgrader{} // use default options
 
-func NewRelay(ws uint16, uuid string) *Relay {
+func NewRelay(ws uint16, uuid string, stats *metrics.Metrics) *Relay {
+	assert.NotNil(stats, "a metrics object must be provided")
 
 	return &Relay{
 		port: ws,
@@ -37,6 +42,8 @@ func NewRelay(ws uint16, uuid string) *Relay {
 
 		mutex:     sync.RWMutex{},
 		listeners: make(map[int]*Conn),
+
+		stats: stats,
 
 		id: 0,
 	}
@@ -51,6 +58,10 @@ func (relay *Relay) Start() {
 	tmpl := template.Must(template.ParseGlob("./views/*.html"))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		tmpl.ExecuteTemplate(w, "index.html", struct{}{})
+	})
+
+	http.HandleFunc("/metrics", func(w http.ResponseWriter, _ *http.Request) {
+		relay.stats.WritePrometheus(w)
 	})
 
 	http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("./js"))))
@@ -98,6 +109,7 @@ func (relay *Relay) remove(id int) {
 	delete(relay.listeners, id)
 	relay.mutex.Unlock()
 	slog.Warn("removing client connection", "id", id)
+	relay.stats.Set(metrics.CurrentConnections, len(relay.listeners))
 }
 
 func (relay *Relay) add(id int, ws *websocket.Conn) {
@@ -109,8 +121,8 @@ func (relay *Relay) add(id int, ws *websocket.Conn) {
 	}
 
 	relay.mutex.Lock()
-	relay.listeners[id] = conn
-	relay.mutex.Unlock()
+    relay.listeners[id] = conn
+    relay.mutex.Unlock()
 
 	select {
 	case relay.conns <- conn:
@@ -119,6 +131,10 @@ func (relay *Relay) add(id int, ws *websocket.Conn) {
 
 	go conn.read()
 	go conn.write()
+
+	relay.stats.Set(metrics.CurrentConnections, len(relay.listeners))
+	relay.stats.SetIfGreater(metrics.MaxConcurrentConnections, len(relay.listeners))
+	relay.stats.Inc(metrics.TotalConnections)
 }
 
 func (relay *Relay) render(w http.ResponseWriter, r *http.Request) {
@@ -128,13 +144,12 @@ func (relay *Relay) render(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// force sync on ids
-	// probably shoud look into atomic ints here...
+	// probably should look into atomic ints here...
 	relay.mutex.Lock()
 	relay.id++
 	id := relay.id
 	relay.mutex.Unlock()
 
 	relay.add(id, c)
-	slog.Warn("connection established", "id", id)
-
+	slog.Warn("connection established", "id", id, "addr", c.RemoteAddr())
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/relay"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/metrics"
 )
 
 type Msg struct {
@@ -51,8 +52,10 @@ func main() {
 
 	port := uint16(42069)
 
+	m := metrics.New()
+
 	fmt.Printf("creating relay\n")
-	r := relay.NewRelay(port, uuid)
+	r := relay.NewRelay(port, uuid, m)
 	go r.Start()
 
 	<-time.NewTimer(time.Millisecond * 500).C
@@ -95,4 +98,7 @@ func main() {
 		}
 	}
 
+	assert.Assert(m.Get(metrics.CurrentConnections) == 1, "expected 1 current connection, got %d", m.Get(metrics.CurrentConnections))
+	assert.Assert(m.Get(metrics.MaxConcurrentConnections) == 1, "expected 1 max connection, got %d", m.Get(metrics.MaxConcurrentConnections))
+	assert.Assert(m.Get(metrics.TotalConnections) == 1, "expected 1 total connection, got %d", m.Get(metrics.TotalConnections))
 }
