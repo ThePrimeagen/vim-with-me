@@ -19,14 +19,16 @@ func quickRead(framer *net.ByteFramer) *net.Frame {
 
 func TestFramer(t *testing.T) {
 	framer := net.NewByteFramer()
-	ch := make(chan []byte, 10)
+	ch := make(chan []byte, 11)
 	go framer.FrameChan(ch)
 
 	ch <- []byte{net.VERSION}
 	require.Nil(t, quickRead(framer))
 	ch <- []byte{3}
 	require.Nil(t, quickRead(framer))
-	ch <- []byte{0b01011010}
+	ch <- []byte{0b00001010}
+	require.Nil(t, quickRead(framer))
+	ch <- []byte{0} // flags
 	require.Nil(t, quickRead(framer))
 	ch <- []byte{0x00, 0x03} // length 3
 	require.Nil(t, quickRead(framer))
@@ -37,7 +39,7 @@ func TestFramer(t *testing.T) {
 	ch <- []byte{0x03}
 	require.Equal(t, &net.Frame{
 		Seq:     0b1010,
-		Flags:   0b0101,
+		Flags:   0b0000,
 		Data:    []byte{0x01, 0x02, 0x03},
 		CmdType: 3,
 	}, quickRead(framer))
@@ -64,7 +66,8 @@ func TestFramerEncode(t *testing.T) {
 		0, 0, // offset
 		net.VERSION,
 		cmd,
-		net.FrameSeqAndCmd(seq, flags),
+		seq,
+        0,
 		0, 0x03,
 		0x01, 0x02, 0x03,
 	}, out)

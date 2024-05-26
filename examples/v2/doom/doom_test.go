@@ -64,7 +64,7 @@ func TestDoom8BitParserOneFrame(t *testing.T) {
 		n, err := frameable.Into(frameData, 0)
 
 		require.NoError(t, err)
-		require.Equal(t, n, 3263)
+		require.Equal(t, n, 3264)
 
 		// Decode huffman
 

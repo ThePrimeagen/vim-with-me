@@ -34,7 +34,7 @@ func (b *ByteFramer) frame() error {
 		return nil
 	}
 
-	length := byteutils.Read16(b.curr, 3)
+	length := byteutils.Read16(b.curr, 4)
 	totalLength := length + HEADER_SIZE
 	remaining := len(b.curr) - totalLength
 
@@ -44,8 +44,8 @@ func (b *ByteFramer) frame() error {
 
 	b.ch <- &Frame{
 		CmdType: b.curr[1],
-		Seq:     b.curr[2] & 0x0F,
-		Flags:   b.curr[2] & 0xF0 >> 4,
+		Seq:     b.curr[2],
+		Flags:   b.curr[3],
 		Data:    b.curr[HEADER_SIZE:totalLength],
 	}
 

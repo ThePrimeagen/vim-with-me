@@ -42,7 +42,7 @@ func (dc *DoomController) WithTimeBetweenUse(useTime time.Duration) *DoomControl
 func (dc *DoomController) SendKey(key string) {
 	now := time.Now()
 	for _, k := range key {
-		if k == 'u' {
+		if k == 'e' {
 			if now.Sub(dc.timeSinceLastUse) >= dc.timeBetweenUse {
 				dc.timeSinceLastUse = now
 			} else {
@@ -67,7 +67,7 @@ func DoomChatMapFn(msg string) string {
 	return string(bytes)
 }
 
-var validMsg = "wasdfuasdwfwawaudfduuffsusuwdsaf"
+var validMsg = "wasdfeasdwfwawaedfdeeffsesewdsaf"
 
 func DoomFilterFn(msg string) bool {
 	if len(msg) > 2 {
