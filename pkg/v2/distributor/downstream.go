@@ -23,13 +23,10 @@ func NewDownstream(addr string) *Downstream {
 func (ds *Downstream) Run() {
 	var err error
 	for {
-		// Reconnect if necessary
-		if ds.conn == nil {
-			slog.Info("Connecting to downstream server", "addr", ds.addr)
-			u := url.URL{Scheme: "ws", Host: ds.addr, Path: "/ws"}
-			ds.conn, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
-			assert.NoError(err, "unable to connect to downstream server "+ds.addr)
-		}
+		slog.Info("Connecting to downstream server", "addr", ds.addr)
+		u := url.URL{Scheme: "ws", Host: ds.addr, Path: "/ws"}
+		ds.conn, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
+		assert.NoError(err, "unable to connect to downstream server "+ds.addr)
 
 		for {
 			// Discard any incoming messages
