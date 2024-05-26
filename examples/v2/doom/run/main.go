@@ -10,6 +10,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/theprimeagen/vim-with-me/examples/v2/doom"
 	ansiparser "github.com/theprimeagen/vim-with-me/pkg/v2/ansi_parser"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/ansi_parser/display"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/ascii_buffer"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/chat"
@@ -112,6 +113,10 @@ func main() {
 	allowChat := false
 	flag.BoolVar(&allowChat, "chat", false, "allow for chat interfacing")
 
+	displayOutput := false
+	flag.BoolVar(&displayOutput, "display", false, "displays doom in the terminal")
+
+
 	rounds := 1000000
 	flag.IntVar(&rounds, "rounds", 1000000, "the rounds of doom to play")
 
@@ -188,6 +193,10 @@ func main() {
 			if compare {
                 compareFrame(data, encFrame)
 			}
+
+            if displayOutput {
+                fmt.Printf(display.Display(&frame, d.Rows, d.Cols))
+            }
 		}
 	}
 }
