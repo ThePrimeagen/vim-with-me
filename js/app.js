@@ -22,6 +22,23 @@ function run(el) {
     const decodeFrame = createDecodeFrame()
     const cache = new Cache()
 
+    function render() {
+        let f = null
+        while (f = cache.pop()) {
+            pushFrame(decodeFrame, f)
+            expand(decodeFrame)
+            if (asciiWindow === null) {
+                console.error("window is null?")
+                return
+            }
+
+            asciiWindow.push(decodeFrame.decodeFrame)
+        }
+
+        requestAnimationFrame(render)
+    }
+    requestAnimationFrame(render)
+
     ws.onMessage(async function(buf) {
 
         const frame = parseFrame(buf)
@@ -40,24 +57,6 @@ function run(el) {
             break
         case types.frame:
             cache.push(frame)
-
-                // TODO: xor-rle seems to work locally but goes WILD when
-                // hosted on a remote service...
-            let f = null
-            while (f = cache.pop()) {
-                pushFrame(decodeFrame, frame)
-                expand(decodeFrame)
-                if (asciiWindow === null) {
-                    console.error("window is null?")
-                    return
-                }
-
-                asciiWindow.push(decodeFrame.decodeFrame)
-            }
-
-
-            // render
-            // console.log(data.slice(0, 5))
             break
         default:
             throw new Error("unhandled frame type " + frame.cmd)

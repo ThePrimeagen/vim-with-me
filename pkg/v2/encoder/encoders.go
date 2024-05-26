@@ -19,7 +19,7 @@ func XorRLE(frame *EncodingFrame) error {
 	}
 
     count++
-    if count % 300 == 0 {
+    if count % 20 == 0 {
 		frame.Len = len(frame.Out) + 1
         return nil
     }

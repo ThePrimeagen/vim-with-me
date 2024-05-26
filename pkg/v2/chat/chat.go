@@ -115,7 +115,6 @@ func (c *ChatAggregator) Next() string {
 
 func (c *ChatAggregator) Pipe(ch chan ChatMsg) {
 	for msg := range ch {
-		fmt.Printf("chat: %v\n", msg)
 		c.Add(msg.Msg)
 	}
 }

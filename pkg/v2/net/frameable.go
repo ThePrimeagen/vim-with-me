@@ -1,7 +1,6 @@
 package net
 
 import (
-
 	byteutils "github.com/theprimeagen/vim-with-me/pkg/v2/byte_utils"
 )
 
@@ -36,6 +35,15 @@ type Encodeable interface {
 
 type Frameable struct {
 	Item Encodeable
+	seq  byte
+}
+
+func NewFrameable(item Encodeable) *Frameable {
+    return &Frameable{
+        Item: item,
+        seq: byte(nextSeqId()),
+    }
+
 }
 
 type Open struct {
@@ -54,13 +62,11 @@ func (o *Open) Type() byte {
 }
 
 func CreateOpen(rows, cols int) *Frameable {
-	return &Frameable{
-		Item: &Open{Rows: rows, Cols: cols},
-	}
+	return NewFrameable(&Open{Rows: rows, Cols: cols})
 }
 
 func (f *Frameable) Into(into []byte, offset int) (int, error) {
-	frameHeader(into, offset, f.Item.Type(), byte(nextSeqId()))
+	frameHeader(into, offset, f.Item.Type(), f.seq)
 
 	n, err := f.Item.Into(into, offset+HEADER_SIZE)
 	if err != nil {

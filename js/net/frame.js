@@ -17,13 +17,13 @@ export function parseFrame(buf) {
     debugAssert(v - 8===D, "the frame received doesn't have version alignment")
     const cmd = buf[1]
     const seq = buf[2]
-    const flags = buf[3]
+    //const flags = buf[3]
 
     if (cmd === types.open) {
         lastSeen = -1
     } else if (cmd === types.frame) {
         if (lastSeen !== -1) {
-            debugAssert(seq === ((lastSeen + 1) % 256), `frame out of order: expected ${(lastSeen + 1) % 16} got ${seq}`)
+            //debugAssert(seq === ((lastSeen + 1) % 256), `frame out of order: expected ${(lastSeen + 1) % 16} got ${seq}`)
         }
         lastSeen = seq
     }

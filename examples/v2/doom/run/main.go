@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -26,6 +27,7 @@ import (
 type RelayClient struct {
 	client *relay.RelayDriver
 	cache  []byte
+    url    string
 }
 
 func NewRelayClient(r string) (*RelayClient, error) {
@@ -38,6 +40,7 @@ func NewRelayClient(r string) (*RelayClient, error) {
 	client := &RelayClient{
 		client: relay.NewRelayDriver(r, "/ws", uuid),
 		cache:  make([]byte, length, length),
+        url: r,
 	}
 
 	return client, client.client.Connect()
@@ -98,6 +101,16 @@ func runChat(prog *program.Program) {
     }()
 }
 
+func send(relays []*RelayClient, frameable *net.Frameable) {
+    fmt.Printf("send relay client\n")
+
+    for _, relay := range relays {
+        fmt.Printf("sending %s\n", relay.url)
+        relay.send(frameable)
+    }
+    fmt.Printf("done sending")
+}
+
 func main() {
 	godotenv.Load()
 
@@ -132,8 +145,16 @@ func main() {
 	fmt.Printf("args file attached \"%v\"\n", args)
 	fmt.Printf("relay \"%v\"\n", relayStr)
 
-	relay, err := NewRelayClient(relayStr)
-	assert.NoError(err, "failed attempting to connect to server")
+    relays := make([]*RelayClient, 0)
+    relayDests := strings.Split(relayStr, ",")
+
+    for _, r := range relayDests {
+        relay, err := NewRelayClient(r)
+        assert.NoError(err, "failed attempting to connect to server")
+
+        relays = append(relays, relay)
+    }
+
 
 	d := doom.NewDoom()
 
@@ -172,7 +193,8 @@ func main() {
 	enc.AddEncoder(encoder.XorRLE)
 	enc.AddEncoder(encoder.Huffman)
 
-	relay.send(net.CreateOpen(d.Rows, d.Cols))
+    send(relays, net.CreateOpen(d.Rows, d.Cols))
+
 	frames := d.Frames()
 
     if allowChat {
@@ -188,7 +210,8 @@ func main() {
             if encFrame == nil {
                 break
             }
-			relay.sendFrame(encFrame)
+
+            send(relays, net.NewFrameable(encFrame))
 
 			if compare {
                 compareFrame(data, encFrame)
