@@ -28,6 +28,7 @@ type EncodingFrame struct {
 	// I NEED TWO TEMPORARY SPACES
 	Out []byte
 	Tmp []byte
+	Xor []byte
 
 	TmpLen int
 
@@ -102,6 +103,7 @@ type Encoder struct {
 	frames    []*EncodingFrame
 	size      int
 	params    ascii_buffer.QuadtreeParam
+	prev      []byte
 }
 
 func NewEncoder(size int, treeParams ascii_buffer.QuadtreeParam) *Encoder {
@@ -110,6 +112,7 @@ func NewEncoder(size int, treeParams ascii_buffer.QuadtreeParam) *Encoder {
 		frames:    make([]*EncodingFrame, 0),
 		size:      size,
 		params:    treeParams,
+		prev:      nil,
 	}
 }
 
@@ -120,9 +123,35 @@ func (e *Encoder) AddEncoder(encoder EncodingCall) *Encoder {
 	return e
 }
 
+func (e *Encoder) sameAsPrevious(data []byte) bool {
+    if e.prev == nil {
+        return false
+    }
+
+    for i, b := range data {
+        if e.prev[i] != b {
+            return false
+        }
+    }
+
+    return true
+}
+
+func (e *Encoder) pushPrevious(data []byte) {
+    if e.prev == nil {
+        e.prev = make([]byte, len(data), len(data))
+    }
+    copy(e.prev, data)
+}
+
 func (e *Encoder) PushFrame(data []byte) *EncodingFrame {
 	min := len(data)
 	var outFrame *EncodingFrame = nil
+
+    if e.sameAsPrevious(data) {
+        e.pushPrevious(data)
+        return nil
+    }
 
 	for i, encoder := range e.encodings {
 		frame := e.frames[i]
@@ -138,6 +167,8 @@ func (e *Encoder) PushFrame(data []byte) *EncodingFrame {
 			outFrame = frame
 		}
 	}
+
+    e.pushPrevious(data)
 
 	return outFrame
 }

@@ -180,7 +180,9 @@ func main() {
 			data := ansiparser.RemoveAsciiStyledPixels(frame.Color)
 
 			encFrame := enc.PushFrame(data)
-			assert.NotNil(encFrame, "expected enc frame to be not nil")
+            if encFrame == nil {
+                break
+            }
 			relay.sendFrame(encFrame)
 
 			if compare {

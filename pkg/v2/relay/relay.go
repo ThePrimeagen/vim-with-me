@@ -6,11 +6,12 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"runtime"
 	"sync"
 
 	"github.com/gorilla/websocket"
-	"github.com/theprimeagen/vim-with-me/pkg/v2/metrics"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/metrics"
 )
 
 type Relay struct {
@@ -47,7 +48,7 @@ func NewRelay(ws uint16, uuid string, stats *metrics.Metrics) *Relay {
 		stats: stats,
 
 		id:   0,
-		send: 16,
+		send: runtime.NumCPU(),
 	}
 }
 
