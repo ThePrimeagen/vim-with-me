@@ -54,14 +54,15 @@ func (fw *fileWriter) Start() {
 				defer f.Close()
 
 				stats := fw.metrics.GetAll()
-
-				switch fw.format {
-				case FileWriterFormatText:
-					fw.writeText(f, stats)
-				case FileWriterFormatAppendJSON:
-					fw.appendJSON(f, stats)
-				default:
-					assert.Assert(false, "unknown file writer format: %s", fw.format)
+				if len(stats) > 0 {
+					switch fw.format {
+					case FileWriterFormatText:
+						fw.writeText(f, stats)
+					case FileWriterFormatAppendJSON:
+						fw.appendJSON(f, stats)
+					default:
+						assert.Assert(false, "unknown file writer format: %s", fw.format)
+					}
 				}
 			}()
 		}
