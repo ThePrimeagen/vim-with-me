@@ -15,8 +15,6 @@ const (
 	upstreamConnectedMetricName       = "distributor_upstream_connected"
 	upstreamBytesReceivedMetricName   = "distributor_upstream_bytes_received"
 	upstreamBytesSentMetricName       = "distributor_upstream_bytes_sent"
-	downstreamBytesReceivedMetricName = "distributor_downstream_bytes_received"
-	downstreamBytesSentMetricName     = "distributor_downstream_bytes_sent"
 )
 
 type Distributor struct {
@@ -32,11 +30,16 @@ type Distributor struct {
 }
 
 func NewDistributor(listenPort int, authId string, downstreams []string) *Distributor {
+	stats := metrics.New()
+	stats.Set(upstreamConnectedMetricName, 0)
+	stats.Set(upstreamBytesReceivedMetricName, 0)
+	stats.Set(upstreamBytesSentMetricName, 0)
+
 	return &Distributor{
 		listenPort:  listenPort,
 		authId:      authId,
 		downstreams: downstreams,
-		stats:       metrics.New(),
+		stats:       stats,
 	}
 }
 

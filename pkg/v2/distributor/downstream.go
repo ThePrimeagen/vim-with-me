@@ -9,6 +9,10 @@ import (
 	"fmt"
 )
 
+const (
+	downstreamBytesReceivedMetricName = "distributor_downstream_bytes_received"
+	downstreamBytesSentMetricName     = "distributor_downstream_bytes_sent"
+)
 type Downstream struct {
 	addr  string
 	conn  *websocket.Conn
@@ -20,6 +24,8 @@ func NewDownstream(addr string, stats *metrics.Metrics) *Downstream {
 		addr:  addr,
 		stats: stats,
 	}
+	stats.Set(ds.makeMetricName(downstreamBytesReceivedMetricName), 0)
+	stats.Set(ds.makeMetricName(downstreamBytesSentMetricName), 0)
 	go ds.Run()
 	return ds
 }
