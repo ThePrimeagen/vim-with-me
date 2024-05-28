@@ -16,9 +16,9 @@ func (m *Metrics) WritePrometheus(w io.Writer) {
 		}
 
 		_, _ = w.Write([]byte(fmt.Sprintf(
-			"# help %s\n"+
-				"# type %s %s\n"+
-				"%s %d\n",
+			//"# help %s\n"+
+			//"# type %s %s\n"+
+			"%s %d\n",
 			key, key, typ, key, value)))
 	}
 }
