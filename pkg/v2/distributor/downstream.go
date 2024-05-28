@@ -1,20 +1,24 @@
 package distributor
 
 import (
-	"net/url"
 	"github.com/gorilla/websocket"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/metrics"
 	"log/slog"
+	"net/url"
+	"fmt"
 )
 
 type Downstream struct {
-	addr string
-	conn *websocket.Conn
+	addr  string
+	conn  *websocket.Conn
+	stats *metrics.Metrics
 }
 
-func NewDownstream(addr string) *Downstream {
+func NewDownstream(addr string, stats *metrics.Metrics) *Downstream {
 	ds := &Downstream{
-		addr: addr,
+		addr:  addr,
+		stats: stats,
 	}
 	go ds.Run()
 	return ds
@@ -30,12 +34,14 @@ func (ds *Downstream) Run() {
 
 		for {
 			// Discard any incoming messages
-			mt, _, err := ds.conn.ReadMessage()
+			mt, msg, err := ds.conn.ReadMessage()
 			if err != nil || mt != websocket.BinaryMessage {
 				// Reconnect
 				slog.Warn("Downstream connection closed", "addr", ds.addr, "err", err)
 				break
 			}
+
+			ds.stats.Add(ds.makeMetricName(downstreamBytesReceivedMetricName), len(msg))
 		}
 
 		slog.Error("Downstream connection closed, reconnecting", "addr", ds.addr)
@@ -52,5 +58,12 @@ func (ds *Downstream) SendMessage(msgType int, msg []byte) {
 		slog.Warn("Failed to send to downstream, closing", "addr", ds.addr, "err", err)
 		_ = ds.conn.Close()
 		ds.conn = nil
+		return
 	}
+
+	ds.stats.Add(ds.makeMetricName(downstreamBytesSentMetricName), len(msg))
+}
+
+func (ds *Downstream) makeMetricName(name string) string {
+	return fmt.Sprintf("%s{addr=\"%s\"}", name, ds.addr)
 }

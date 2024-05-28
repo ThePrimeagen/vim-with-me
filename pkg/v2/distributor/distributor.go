@@ -4,10 +4,19 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
+	"github.com/theprimeagen/vim-with-me/pkg/v2/metrics"
 	"log"
 	"log/slog"
 	"net/http"
 	"sync"
+)
+
+const (
+	upstreamConnectedMetricName       = "distributor_upstream_connected"
+	upstreamBytesReceivedMetricName   = "distributor_upstream_bytes_received"
+	upstreamBytesSentMetricName       = "distributor_upstream_bytes_sent"
+	downstreamBytesReceivedMetricName = "distributor_downstream_bytes_received"
+	downstreamBytesSentMetricName     = "distributor_downstream_bytes_sent"
 )
 
 type Distributor struct {
@@ -19,6 +28,7 @@ type Distributor struct {
 	downstreams        []string
 	downstreamConns    []*Downstream
 	msgChan            chan []byte
+	stats              *metrics.Metrics
 }
 
 func NewDistributor(listenPort int, authId string, downstreams []string) *Distributor {
@@ -26,13 +36,18 @@ func NewDistributor(listenPort int, authId string, downstreams []string) *Distri
 		listenPort:  listenPort,
 		authId:      authId,
 		downstreams: downstreams,
+		stats:       metrics.New(),
 	}
 }
 
 func (d *Distributor) Run() {
 	for _, addr := range d.downstreams {
-		d.downstreamConns = append(d.downstreamConns, NewDownstream(addr))
+		d.downstreamConns = append(d.downstreamConns, NewDownstream(addr, d.stats))
 	}
+
+	http.HandleFunc("/metrics", func(w http.ResponseWriter, _ *http.Request) {
+		d.stats.WritePrometheus(w)
+	})
 
 	http.HandleFunc("/ws", d.handleIncomingConnection)
 
@@ -69,6 +84,8 @@ func (d *Distributor) handleIncomingConnection(w http.ResponseWriter, r *http.Re
 		assert.NoError(err, "unable to upgrade connection")
 
 		d.upstreamConnection = c
+
+		d.stats.Set(upstreamConnectedMetricName, 1)
 	}()
 
 	for {
@@ -83,11 +100,13 @@ func (d *Distributor) handleIncomingConnection(w http.ResponseWriter, r *http.Re
 			break
 		}
 
+		d.stats.Add(upstreamBytesReceivedMetricName, len(msg))
 		for _, downstream := range d.downstreamConns {
 			downstream.SendMessage(mt, msg)
 		}
 	}
 
+	d.stats.Set(upstreamConnectedMetricName, 0)
 	_ = d.upstreamConnection.Close()
 	d.upstreamConnection = nil
 }
