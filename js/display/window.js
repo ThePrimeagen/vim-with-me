@@ -1,3 +1,4 @@
+import { assert } from "../assert.js"
 
 /**
  * @param {number} val
@@ -19,25 +20,22 @@ const blueMask = 0b000_00_111
 
 /**
  * @param {number} color
- * @returns {string}
+ * @returns {Array<number>}
  */
 function toRgb(color) {
     const r = (color & redMask) >> 5
     const g = (color & greenMask) >> 3
     const b = (color & blueMask)
 
-    return `#${toHex(r * 255 / 7)}${toHex(g * 255 / 3)}${toHex(b * 255 / 7)}`
+    return [Math.round(r * 255 / 7), Math.round(g * 255 / 3), Math.round(b * 255 / 7)]
 }
 
 export class AsciiWindow {
     /** @type {HTMLElement} */
     #el
 
-    /** @type {HTMLDivElement} */
-    #container
-
-    /** @type {HTMLDivElement[][]} */
-    #divs
+    /** @type {HTMLCanvasElement} */
+    #canvas
 
     /** @type {number[][]} */
     #colors
@@ -47,6 +45,9 @@ export class AsciiWindow {
     /** @type {number} */
     #cols
 
+    /** @type {?CanvasRenderingContext2D} */
+    #context
+
     /**
      * @param {HTMLElement} el
      * @param {number} rows
@@ -54,11 +55,11 @@ export class AsciiWindow {
      * */
     constructor(el, rows, cols) {
         this.#colors = []
-        this.#divs = []
         this.#el = el
-        this.#container = document.createElement("div")
+        this.#canvas = document.createElement("canvas")
         this.#rows = rows
         this.#cols = cols
+        this.#context = null
 
         this.#init()
     }
@@ -67,11 +68,16 @@ export class AsciiWindow {
      * @param {Uint8Array} frame
      */
     push(frame) {
-        let count = 0
-        let black = 0
+        if(!this.#context){
+            throw new Error("No context")
+        }
+        const imageData = this.#context.getImageData(0, 0, this.#canvas.width, this.#canvas.height);
+
+        const data = imageData.data;
 
         for (let row = 0; row < this.#rows; ++row) {
             for (let col = 0; col < this.#cols; ++col) {
+
                 const idx = row * this.#cols + col
                 const color = this.#colors[row][col]
                 const inColor = frame[idx]
@@ -80,44 +86,77 @@ export class AsciiWindow {
                     continue
                 }
 
-                count++
-                this.#divs[row][col].style.backgroundColor = toRgb(inColor)
+                const pixel = toRgb(inColor)
+
+                data[4 * idx] = pixel[0]
+                data[4 * idx + 1] = pixel[1]
+                data[4 * idx + 2] = pixel[2]
+
                 this.#colors[row][col] = inColor
             }
         }
+        this.#context.putImageData(imageData, 0, 0);
+    }
+
+    /** 
+    * @param {MouseEvent} event
+    * @param {number} scale
+    */
+    #scaleCanvas(event, scale) {
+        this.#canvas.style.width  = (this.#cols * scale) + "px"
+        this.#canvas.style.height = (this.#rows * scale) + "px"
+
+        for ( let btn of document.getElementsByTagName('button') ){
+            btn.style.fontWeight = 'normal';
+        }
+
+        event.target.style.fontWeight = 'bold'
+
     }
 
     #init() {
-        /** @type {HTMLDivElement[][]} */
-        const divs = this.#divs
-        const cont = this.#container
         const colors = this.#colors
 
-        cont.style.display = "grid"
-        cont.style.gridTemplateColumns = `repeat(${this.#cols}, 1fr)`
-        cont.style.gridTemplateRows = `repeat(${this.#rows}, 1fr)`
-        cont.style.height = "100vh"
+        this.#canvas.width  = this.#cols
+        this.#canvas.height = this.#rows
+        this.#canvas.style.width  = this.#cols + "px"
+        this.#canvas.style.height = this.#rows + "px"
 
         for (let row = 0; row < this.#rows; ++row) {
-            divs[row] = []
             colors[row] = []
 
             for (let col = 0; col < this.#cols; ++col) {
-                const div = document.createElement("div")
-                divs[row].push(div)
-
-                div.style.backgroundColor = "#000"
                 colors[row].push(0)
-
-                cont.appendChild(div)
             }
         }
 
-        this.#el.appendChild(cont)
+        
+        const btnDiv = document.createElement('div')
+        this.#el.appendChild(btnDiv)
+
+        ;[1, 2, 4, 8].forEach((v) => {
+            const btn = document.createElement('button')
+            btn.textContent = "x" + v;
+            btn.addEventListener("click", (b)=>this.#scaleCanvas(b, v));
+            btn.style.fontSize = "110%"
+            btnDiv.appendChild(btn)
+        })
+                
+
+        this.#el.appendChild(this.#canvas)
+
+        this.#context = this.#canvas.getContext('2d')
+        if (this.#context !== null) {
+            this.#context.fillStyle = "black";
+            this.#context.fillRect(0, 0, this.#canvas.width, this.#canvas.height)
+        } else {
+            throw new Error("Can't load canvas context!");
+        }
     }
 
     destroy() {
         this.#el.innerHTML = ""
     }
+
 }
 
