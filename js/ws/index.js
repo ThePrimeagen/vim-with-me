@@ -55,7 +55,7 @@ class WS {
             this.#state = ERROR
             // some reporting or something??
             // some backoff?
-            new Promise(res => setTimeout(res, 1000))
+            await new Promise(res => setTimeout(res, 1000))
             this.#connect()
         }
 
