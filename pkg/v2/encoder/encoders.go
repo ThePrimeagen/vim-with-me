@@ -11,18 +11,29 @@ import (
 
 var EncoderExceededBufferSize = errors.New("encoder exceeded buffer size of out buffer, useless encoding")
 
-var count = 0
+func NoneEncoding(frame *EncodingFrame) error {
+	frame.Len = len(frame.Curr)
+	frame.Encoding = NONE
+
+	return nil
+}
+
+func RLEEncoding(frame *EncodingFrame) error {
+	frame.RLE.Reset(frame.Out)
+	frame.RLE.Write(frame.Curr)
+	frame.RLE.Finish()
+	frame.Len = frame.RLE.Length()
+	frame.Encoding = RLE
+
+	return nil
+}
+
 func XorRLE(frame *EncodingFrame) error {
 	if frame.Prev == nil {
 		frame.Len = len(frame.Out) + 1
 		return nil
 	}
 
-    count++
-    if count % 20 == 0 {
-		frame.Len = len(frame.Out) + 1
-        return nil
-    }
 	ascii_buffer.Xor(frame.Curr, frame.Prev, frame.Tmp)
 	frame.RLE.Reset(frame.Out)
 	frame.RLE.Write(frame.Tmp)
@@ -94,6 +105,12 @@ var encodeInto encoderEncodingMap = encoderEncodingMap{
 	},
 
 	XOR_RLE: func(e *EncodingFrame, data []byte, offset int) (int, error) {
+		assert.Assert(e.Len < len(data), "unable to encode frame into provided buffer")
+		copy(data[offset:], e.Out[:e.Len])
+		return e.Len, nil
+	},
+
+	RLE: func(e *EncodingFrame, data []byte, offset int) (int, error) {
 		assert.Assert(e.Len < len(data), "unable to encode frame into provided buffer")
 		copy(data[offset:], e.Out[:e.Len])
 		return e.Len, nil

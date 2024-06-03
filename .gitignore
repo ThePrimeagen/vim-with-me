@@ -5,3 +5,5 @@ main
 /assert.debug
 /debug.doom
 /.env
+zig-cache/
+zig-out/

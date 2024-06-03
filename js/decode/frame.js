@@ -18,11 +18,11 @@ export function createFrame(frame) {
 }
 
 /**
- * @param {DecodeFrame} decode
+ * @param {Uint8Array} data
  * @return {boolean}
 */
-function isHuffmanEncoded(decode) {
-    return decode.frame.data[0] === encodings.HUFFMAN
+export function isHuffmanEncoded(data) {
+    return data[0] === encodings.HUFFMAN
 }
 
 /**
@@ -174,7 +174,7 @@ function expandXOR_RLE(decode) {
 export function expand(decode) {
     if (isXOR_RLE(decode)) {
         expandXOR_RLE(decode)
-    } else if (isHuffmanEncoded(decode)) {
+    } else if (isHuffmanEncoded(decode.frame.data)) {
         expandHuffman(decode)
     } else {
         throw new Error("WTF unknown encoding: " + decode.frame.data[0])

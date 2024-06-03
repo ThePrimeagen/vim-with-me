@@ -7,7 +7,7 @@ app = 'vim-with-me'
 primary_region = 'ord'
 
 [build]
-  dockerfile = "relay_server.Dockerfile"
+  dockerfile = "test.Dockerfile"
 
 [[services]]
   internal_port = 8080

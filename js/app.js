@@ -23,8 +23,9 @@ function run(el) {
     const cache = new Cache()
 
     function render() {
-        let f = null
-        while (f = cache.pop()) {
+        cache.seek()
+        let f = cache.pop()
+        if (f) {
             pushFrame(decodeFrame, f)
             expand(decodeFrame)
             if (asciiWindow === null) {

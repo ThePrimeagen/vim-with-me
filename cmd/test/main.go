@@ -3,23 +3,51 @@ package main
 import (
 	"fmt"
 	"log"
+	"log/slog"
+	"net/http"
+	"time"
 
-	"github.com/gempir/go-twitch-irc/v4"
+	"github.com/gorilla/websocket"
 )
 
-func main() {
-	client := twitch.NewAnonymousClient()
+var count = 0
+func makeMessage() []byte {
+    count++
 
-	client.OnPrivateMessage(func(msg twitch.PrivateMessage) {
-		fmt.Printf("msg: %+v\n", msg)
+    size := 250
+    if count & 0x1 == 1 {
+        size = 5000
+    }
+
+    out := make([]byte, size, size)
+    out[0] = byte(count)
+
+    return out
+}
+
+var upgrader = websocket.Upgrader{} // use default options
+func main() {
+
+    upgrader.CheckOrigin = func(r *http.Request) bool {
+        return true
+    }
+
+	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+        c, err := upgrader.Upgrade(w, r, nil)
+        if err != nil {
+            log.Fatal("upgrade", err)
+        }
+
+        for {
+            <-time.After(time.Millisecond * 16)
+            c.WriteMessage(websocket.BinaryMessage, makeMessage())
+        }
 	})
 
-	client.Join("theprimeagen")
-	err := client.Connect()
-	if err != nil {
-		log.Fatal("I AM DEAD AND DYLAN RAIDED ME", err)
-	}
+	addr := fmt.Sprintf("0.0.0.0:%d", 8080)
+	slog.Warn("listening and serving http", "http", addr)
+	err := http.ListenAndServe(addr, nil)
 
-	for {
-	}
+	log.Fatal(err)
+
 }

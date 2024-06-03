@@ -145,7 +145,7 @@ func (e *Encoder) pushPrevious(data []byte) {
 }
 
 func (e *Encoder) PushFrame(data []byte) *EncodingFrame {
-	min := len(data)
+	min := len(data) + 1
 	var outFrame *EncodingFrame = nil
 
     if e.sameAsPrevious(data) {
