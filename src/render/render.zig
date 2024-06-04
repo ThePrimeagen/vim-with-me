@@ -1,35 +1,52 @@
 const std = @import("std");
+const print = std.debug.print;
 
 const assert = @import("assert").assert;
 const r = @import("renderable.zig");
 const Renderable = r.Renderable;
+const Rendered = r.Rendered;
+
+comptime {
+    _ = @import("render_test.zig");
+}
 
 const RenderList = std.ArrayList(*Renderable);
 
 pub const Renderer = struct {
     renderables: RenderList,
 
+    pub fn debug(self: *Renderer) void {
+        print("Renderer({})\n", .{self.renderables.items.len});
+        for (self.renderables.items) |renderable| {
+            print("    renderable({}, {}): __add debug method__\n", .{renderable.id(), renderable.z()});
+        }
+    }
+
     pub fn init(alloc: std.mem.Allocator) Renderer {
         return .{ .renderables = RenderList.init(alloc) };
     }
 
     pub fn deinit(self: *Renderer) void {
+        for (self.renderables.items) |renderable| {
+            renderable.deinit();
+        }
+
         self.renderables.deinit();
     }
 
-    pub fn add(self: *Renderer, renderable: *Renderable) void {
+    pub fn add(self: *Renderer, renderable: *Renderable) !void {
         var lo: usize = 0;
         var hi: usize = self.renderables.items.len;
 
         const needle = renderable.z();
-        var idx: isize = -1;
+        var idx: i32 = -1;
 
         while (lo < hi) {
             const midpoint = lo + (hi - lo) / 2;
             const value = self.renderables.items[midpoint].z();
 
             if (value == needle) {
-                idx = midpoint;
+                idx = @intCast(midpoint);
                 break;
             } else if (value > needle) {
                 hi = midpoint;
@@ -39,9 +56,9 @@ pub const Renderer = struct {
         }
 
         if (idx == -1) {
-            self.renderables.append(renderable);
+            try self.renderables.append(renderable);
         } else {
-            self.renderables.insert(idx, renderable);
+            try self.renderables.insert(@intCast(idx), renderable);
         }
     }
 
@@ -60,5 +77,4 @@ pub const Renderer = struct {
     }
 };
 
-test "adding some renderables" {
-}
+
