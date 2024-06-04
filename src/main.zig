@@ -6,7 +6,24 @@ const engine = @import("engine/engine.zig");
 const encoding = @import("encoding/encoding.zig");
 
 pub fn main() !void {
-    print("goodbye world", .{});
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer _ = gpa.deinit();
+
+    const e = engine.Engine.init(allocator);
+    // input
+    // game
+    // output
+    //
+
+    //while (!game.isDone()) {
+    while (true) {
+        // read input
+        // play input into game
+        // update game
+        e.gameLoop();
+        // output
+    }
 }
 
 test { _ = encoding; }
