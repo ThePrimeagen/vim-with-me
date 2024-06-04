@@ -57,6 +57,8 @@ test "adding some renderables" {
     var r1 = try createTestRenderable(alloc, 69, 1);
     var r2 = try createTestRenderable(alloc, 70, 2);
     var r3 = try createTestRenderable(alloc, 71, 1);
+    var r4 = try createTestRenderable(alloc, 72, 3);
+    var r5 = try createTestRenderable(alloc, 73, 1);
 
     var renderer = Renderer.init(alloc);
     defer renderer.deinit();
@@ -64,12 +66,17 @@ test "adding some renderables" {
     try renderer.add(&r1);
     try renderer.add(&r2);
     try renderer.add(&r3);
+    try renderer.add(&r4);
+    try renderer.add(&r5);
 
     try testing.expectEqualSlices(
         @TypeOf(&r1),
-        &.{&r3, &r1, &r2},
+        &.{&r3, &r5, &r1, &r2, &r4},
         renderer.renderables.items,
     );
+
+    renderer.remove(&r1);
+    r1.deinit();
 }
 
 
