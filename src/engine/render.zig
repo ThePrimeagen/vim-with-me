@@ -10,7 +10,7 @@ comptime {
     _ = @import("render_test.zig");
 }
 
-const RenderList = std.ArrayList(*Renderable);
+const RenderList = std.ArrayList(Renderable);
 
 pub const Renderer = struct {
     renderables: RenderList,
@@ -18,7 +18,7 @@ pub const Renderer = struct {
     pub fn debug(self: *Renderer) void {
         print("Renderer({})\n", .{self.renderables.items.len});
         for (self.renderables.items) |renderable| {
-            print("    renderable({}, {}): __add debug method__\n", .{renderable.id, renderable.z});
+            print("    renderable({}, {}): __add debug method__\n", .{renderable.id(), renderable.z()});
         }
     }
 
@@ -27,23 +27,19 @@ pub const Renderer = struct {
     }
 
     pub fn deinit(self: *Renderer) void {
-        for (self.renderables.items) |renderable| {
-            renderable.deinit();
-        }
-
         self.renderables.deinit();
     }
 
-    pub fn add(self: *Renderer, renderable: *Renderable) !void {
+    pub fn add(self: *Renderer, renderable: Renderable) !void {
         var lo: usize = 0;
         var hi: usize = self.renderables.items.len;
 
-        const needle = renderable.z;
+        const needle = renderable.z();
         var idx: i32 = -1;
 
         while (lo < hi) {
             const midpoint = lo + (hi - lo) / 2;
-            const value = self.renderables.items[midpoint].z;
+            const value = self.renderables.items[midpoint].z();
 
             if (value == needle) {
                 idx = @intCast(midpoint);
@@ -62,10 +58,10 @@ pub const Renderer = struct {
         }
     }
 
-    pub fn remove(self: *Renderer, renderable: *Renderable) void {
-        const id = renderable.id;
+    pub fn remove(self: *Renderer, renderable: Renderable) void {
+        const id = renderable.id();
         for (self.renderables.items, 0..) |item, idx| {
-            if (item.id == id) {
+            if (item.id() == id) {
                 _ = self.renderables.orderedRemove(idx);
                 break;
             }

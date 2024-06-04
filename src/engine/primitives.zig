@@ -2,14 +2,21 @@ const assert = @import("assert");
 
 pub const Updateable = struct {
     pub const VTable = struct {
-        update: *const fn(*Updateable, delta: u64) void,
+        update: *const fn(*anyopaque, delta: u64) void,
+        id: *const fn(*anyopaque) usize,
     };
 
+    ptr: *anyopaque,
     vtable: *const VTable,
 
-    pub fn update(self: *Updateable, delta: u64) void {
-        self.vtable.update(self, delta);
+    pub fn update(self: Updateable, delta: u64) void {
+        self.vtable.update(self.ptr, delta);
     }
+
+    pub fn id(self: Updateable) void {
+        self.vtable.id(self.ptr);
+    }
+
 };
 
 pub const Location = struct {
@@ -25,27 +32,23 @@ pub const Rendered = struct {
 
 pub const Renderable = struct {
     pub const VTable = struct {
-        render: *const fn(*Renderable) Rendered,
-        deinit: *const fn(*Renderable) void,
+        render: *const fn(*anyopaque) Rendered,
+        id: *const fn(*anyopaque) usize,
+        z: *const fn(*anyopaque) usize,
     };
 
+    ptr: *anyopaque,
     vtable: *const VTable,
-    id: usize,
-    z: usize,
 
-    pub fn init(vtable: *const VTable, id: usize, z: usize) Renderable {
-        return .{
-            .z = z,
-            .id = id,
-            .vtable = vtable,
-        };
+    pub fn render(self: Renderable) Rendered {
+        return self.vtable.render(self.ptr);
     }
 
-    pub fn render(self: *Renderable) Rendered {
-        return self.vtable.render(self);
+    pub fn id(self: Renderable) usize {
+        return self.vtable.id(self.ptr);
     }
 
-    pub fn deinit(self: *Renderable) void {
-        self.vtable.deinit(self);
+    pub fn z(self: Renderable) usize {
+        return self.vtable.z(self.ptr);
     }
 };
