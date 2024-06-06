@@ -88,20 +88,16 @@ func runChat(prog *program.Program) {
 	go ctrl.Start(ctx)
 
 	go func() {
-		<-time.After(time.Second * 1)
-		prog.SendKey("")
-		<-time.After(time.Second * 1)
-		prog.SendKey("")
-		<-time.After(time.Second * 1)
-		prog.SendKey("")
-		<-time.After(time.Second * 1)
-		prog.SendKey("c")
-		<-time.After(time.Second * 1)
-		prog.SendKey("c")
-		<-time.After(time.Second * 1)
-		prog.SendKey("")
-		<-time.After(time.Second * 1)
-		prog.SendKey("")
+		<-time.After(time.Millisecond * 500)
+		prog.SendKey("")
+		<-time.After(time.Millisecond * 500)
+		prog.SendKey("")
+		<-time.After(time.Millisecond * 500)
+		prog.SendKey("")
+		<-time.After(time.Millisecond * 500)
+		prog.SendKey("")
+		<-time.After(time.Millisecond * 500)
+		prog.SendKey("")
 
 		doomCtrl.Play()
 	}()
@@ -258,7 +254,7 @@ func main() {
 		os.Exit(1)
 	}()
 
-	for range 10000 {
+	for range rounds {
 		if encStats.Frame%250 == 0 {
 			fmt.Printf("%s\n", encStats.Stat())
 		}
