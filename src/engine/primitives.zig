@@ -1,54 +1,61 @@
 const assert = @import("assert");
 
-pub const Updateable = struct {
-    pub const VTable = struct {
-        update: *const fn(*anyopaque, delta: u64) void,
-        id: *const fn(*anyopaque) usize,
-    };
-
-    ptr: *anyopaque,
-    vtable: *const VTable,
-
-    pub fn update(self: Updateable, delta: u64) void {
-        self.vtable.update(self.ptr, delta);
-    }
-
-    pub fn id(self: Updateable) void {
-        self.vtable.id(self.ptr);
-    }
-
+pub const Color = struct {
+    r: u8,
+    g: u8,
+    b: u8,
 };
 
-pub const Location = struct {
-    row: usize,
-    col: usize,
+pub const Tower = struct {
+    id: usize,
+    team: u8,
+
+    // position
+    row: u8,
+    col: u8,
+    ammo: u16,
+    dead: bool,
+
+    // rendered
+    rRow: u8,
+    rCol: u8,
+    rAmmo: u16,
+    rColor: [9]Color,
+    rText: [9]u8,
 };
 
-pub const Rendered = struct {
-    loc: Location,
-    data: []const u8,
-    cols: usize,
+pub const Projectile = struct {
+    id: usize,
+    team: u8,
+
+    row: u8,
+    col: u8,
+    life: u16,
+    speed: f32,
+    dead: bool,
+
+    // rendered
+    rRow: u8,
+    rCol: u8,
+    rLife: u16,
+    rColor: Color,
+    rText: u8,
 };
 
-pub const Renderable = struct {
-    pub const VTable = struct {
-        render: *const fn(*anyopaque) Rendered,
-        id: *const fn(*anyopaque) usize,
-        z: *const fn(*anyopaque) usize,
-    };
+pub const Creep = struct {
+    id: usize,
+    team: u8,
 
-    ptr: *anyopaque,
-    vtable: *const VTable,
+    row: u8,
+    col: u8,
+    life: u16,
+    speed: f32,
+    dead: bool,
 
-    pub fn render(self: Renderable) Rendered {
-        return self.vtable.render(self.ptr);
-    }
-
-    pub fn id(self: Renderable) usize {
-        return self.vtable.id(self.ptr);
-    }
-
-    pub fn z(self: Renderable) usize {
-        return self.vtable.z(self.ptr);
-    }
+    // rendered
+    rRow: u8,
+    rCol: u8,
+    rLife: u16,
+    rColor: Color,
+    rText: u8,
 };
