@@ -34,6 +34,8 @@ func SetupLogger() {
 	log.SetOutput(os.Stdout)
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	switch strings.ToLower(os.Getenv("LEVEL")) {
+	case "error", "e":
+		slog.SetLogLoggerLevel(slog.LevelError)
 	case "debug", "d":
 		slog.SetLogLoggerLevel(slog.LevelDebug)
 	case "info", "i":
