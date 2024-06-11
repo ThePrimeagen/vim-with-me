@@ -6,6 +6,7 @@ const primitives = @import("primitives.zig");
 
 pub const Engine = struct {
     alloc: Allocator,
+    foo: ?*u8,
 
     pub fn init(alloc: Allocator) Engine {
         return .{
@@ -30,6 +31,31 @@ pub const Engine = struct {
 };
 
 const milliTimestamp = std.time.milliTimestamp;
+pub const Time = struct {
+    delta: i64,
+    createdAt: i64,
+
+    pub fn init(delta: i64, createdAt: i64) Time {
+        return .{
+            .createdAt = createdAt,
+            .delta = delta,
+        };
+    }
+
+    pub fn since(self: Time) i64 {
+        const now = milliTimestamp();
+        return now - self.createdAt;
+    }
+
+    pub fn sleep(self: Time, total: i64) void {
+        const delta = self.since();
+        const remaining: u64 = @intCast(total - delta);
+        if (remaining > 0) {
+            std.time.sleep(remaining * 1_000_000);
+        }
+    }
+};
+
 pub const RealTime = struct {
     lastTime: i64,
 
@@ -44,12 +70,12 @@ pub const RealTime = struct {
         self.lastTime = time;
     }
 
-    pub fn tick(self: *RealTime) i64 {
+    pub fn tick(self: *RealTime) Time {
         const time = milliTimestamp();
         const delta = time - self.lastTime;
         self.lastTime = time;
 
-        return delta;
+        return Time.init(delta, time);
     }
 
 };
