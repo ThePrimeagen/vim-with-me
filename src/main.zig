@@ -11,29 +11,45 @@ pub fn main() !void {
     const allocator = gpa.allocator();
     defer _ = gpa.deinit();
 
-    var e = engine.Engine.init(allocator);
+    //var e = engine.Engine.init(allocator);
 
     var stdin = input.StdinInputter.init();
     var stdinInputter = stdin.inputter();
     const inputter = try input.createInputRunner(allocator, &stdinInputter);
-    //var outputter = output.init(3, 3);
-    var time = engine.RealTime.init();
-    time.reset();
+    var ansi = output.AnsiFramer.init(3, 3);
+    const out = output.Stdout.output;
+    const colors: [3]output.Color = .{
+        .{ .r = 255, .g = 0, .b = 0 },
+        .{ .g = 255, .r = 0, .b = 0 },
+        .{ .b = 255, .r = 0, .g = 0 },
+    };
+
+    //var time = engine.RealTime.init();
+    //time.reset();
 
     //while (!game.isDone()) {
-    while (true) {
-        const delta = time.tick();
-        while (true) {
-            const msg = inputter.pop();
-            if (msg) |_| {
-            } else {
-                break;
+    var count: usize = 0;
+    while (true) : (count += 1) {
+        const msgInput = inputter.pop();
+        if (msgInput == null) {
+            continue;
+        }
+
+        const msg = msgInput.?;
+        var buffer = [_]u8{0} ** 100;
+        var cells = [_]output.Cell{
+            .{.text = 'a', .color = undefined},
+        } ** 9;
+        for (0..9) |i| {
+            cells[i].color = colors[count % 3];
+
+            if (i < msg.length) {
+                cells[i].text = msg.input[i];
             }
         }
 
-        e.gameLoop(delta);
-        // render
-        // outputter.frame();
+        const len = try ansi.frame(&cells, &buffer);
+        try out(buffer[0..len]);
     }
 
 }
