@@ -1,5 +1,3 @@
-const assert = @import("assert");
-
 pub const Color = struct {
     r: u8,
     g: u8,

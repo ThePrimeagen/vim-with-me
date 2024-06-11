@@ -1,7 +1,6 @@
 const std = @import("std");
 const print = std.debug.print;
 
-const render = @import("engine/render.zig");
 const engine = @import("engine/engine.zig");
 const input = @import("engine/input/input.zig");
 const output = @import("engine/output/output.zig");
@@ -40,6 +39,6 @@ pub fn main() !void {
 }
 
 test { _ = encoding; }
-test { _ = render; }
 test { _ = engine; }
+test { _ = output; }
 
