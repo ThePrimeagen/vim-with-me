@@ -128,7 +128,7 @@ func (h *Huffman) DebugDecodeTree() string {
 
 // Will i even use a decoder?  i should write this in typescript
 func (h *Huffman) Decode(data []byte, bitLength int, writer byteutils.ByteWriter) error {
-	assert.Assert(len(data) >= bitLength/8+1, "you did not provide enough data")
+	assert.Assert(len(data) >= (bitLength+7)/8, "you did not provide enough data")
 
 	idx := 0
 	decodeIdx := 0
