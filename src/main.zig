@@ -8,14 +8,14 @@ const encoding = @import("encoding/encoding.zig");
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
+    //const allocator = gpa.allocator();
     defer _ = gpa.deinit();
 
     //var e = engine.Engine.init(allocator);
 
-    var stdin = input.StdinInputter.init();
-    var stdinInputter = stdin.inputter();
-    const inputter = try input.createInputRunner(allocator, &stdinInputter);
+    //var stdin = input.StdinInputter.init();
+    //var stdinInputter = stdin.inputter();
+    //const inputter = try input.createInputRunner(allocator, &stdinInputter);
     var ansi = output.AnsiFramer.init(3, 3);
     const out = output.Stdout.output;
     const colors: [3]output.Color = .{
@@ -24,32 +24,31 @@ pub fn main() !void {
         .{ .b = 255, .r = 0, .g = 0 },
     };
 
-    //var time = engine.RealTime.init();
-    //time.reset();
+    var time = engine.RealTime.init();
+    time.reset();
 
     //while (!game.isDone()) {
     var count: usize = 0;
     while (true) : (count += 1) {
-        const msgInput = inputter.pop();
-        if (msgInput == null) {
-            continue;
-        }
+        const delta = time.tick();
 
-        const msg = msgInput.?;
+        //const msgInput = inputter.pop();
+        //if (msgInput == null) {
+        //    continue;
+        //}
+
         var buffer = [_]u8{0} ** 100;
         var cells = [_]output.Cell{
             .{.text = 'a', .color = undefined},
         } ** 9;
         for (0..9) |i| {
             cells[i].color = colors[count % 3];
-
-            if (i < msg.length) {
-                cells[i].text = msg.input[i];
-            }
         }
 
         const len = try ansi.frame(&cells, &buffer);
         try out(buffer[0..len]);
+
+        delta.sleep(33);
     }
 
 }
