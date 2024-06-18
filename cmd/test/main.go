@@ -10,6 +10,12 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type Foo struct {
+    ...
+}
+
+
+
 var count = 0
 func makeMessage() []byte {
     count++

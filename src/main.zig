@@ -17,10 +17,13 @@ pub fn main() !void {
     var stdin = input.StdinInputter.init();
     var stdinInputter = stdin.inputter();
     const inputter = try input.createInputRunner(allocator, &stdinInputter);
-    var outputter = output.init(3, 3);
+    //var outputter = output.init(3, 3);
+    var time = engine.RealTime.init();
+    time.reset();
 
     //while (!game.isDone()) {
     while (true) {
+        const delta = time.tick();
         while (true) {
             const msg = inputter.pop();
             if (msg) |_| {
@@ -29,9 +32,9 @@ pub fn main() !void {
             }
         }
 
-        e.gameLoop();
+        e.gameLoop(delta);
         // render
-        outputter.frame();
+        // outputter.frame();
     }
 
 }
