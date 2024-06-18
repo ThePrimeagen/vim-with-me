@@ -6,22 +6,26 @@ const Rendered = r.Rendered;
 const Renderer = @import("render.zig").Renderer;
 
 const TestRenderable = struct {
-    renderable: r.Renderable,
+    _id: usize,
+    _z: usize,
 
     const vtable = r.Renderable.VTable {
         .render = render,
-        .deinit = deinit,
+        .id = id,
+        .z = z,
     };
 
-    pub fn init(id: usize, z: usize) TestRenderable {
-        return .{
-            .renderable = Renderable.init(&vtable, id, z),
+    const Self = @This();
+
+    pub fn asRenderable(self: *Self) Renderable {
+        return Renderable{
+            .vtable = &vtable,
+            .ptr = self,
         };
     }
 
-    const Self = @This();
-    pub fn render(renderable: *r.Renderable) Rendered {
-        const self: *TestRenderable = @fieldParentPtr("renderable", renderable);
+    pub fn render(ptr: *anyopaque) Rendered {
+        const self: *TestRenderable = @ptrCast(@alignCast(ptr));
         _ = self;
 
         return .{
@@ -34,9 +38,19 @@ const TestRenderable = struct {
         };
     }
 
-    pub fn deinit(rend: *r.Renderable) void {
-        const self: *TestRenderable = @fieldParentPtr("renderable", rend);
+    pub fn deinit(ptr: *anyopaque) void {
+        const self: *TestRenderable = @ptrCast(@alignCast(ptr));
         _ = self;
+    }
+
+    pub fn id(ptr: *anyopaque) usize {
+        const self: *TestRenderable = @ptrCast(@alignCast(ptr));
+        return self._id;
+    }
+
+    pub fn z(ptr: *anyopaque) usize {
+        const self: *TestRenderable = @ptrCast(@alignCast(ptr));
+        return self._z;
     }
 
 };
@@ -45,33 +59,38 @@ const testing = std.testing;
 test "adding some renderables" {
     const alloc = std.testing.allocator;
 
-    var r1 = TestRenderable.init(69, 1);
-    var r2 = TestRenderable.init(70, 2);
-    var r3 = TestRenderable.init(71, 1);
-    var r4 = TestRenderable.init(72, 3);
-    var r5 = TestRenderable.init(73, 1);
+    var t1 = TestRenderable{._id = 69, ._z = 1};
+    var t2 = TestRenderable{._id = 70, ._z = 2};
+    var t3 = TestRenderable{._id = 71, ._z = 1};
+    var t4 = TestRenderable{._id = 72, ._z = 3};
+    var t5 = TestRenderable{._id = 73, ._z = 1};
+
+    const r1 = t1.asRenderable();
+    const r2 = t2.asRenderable();
+    const r3 = t3.asRenderable();
+    const r4 = t4.asRenderable();
+    const r5 = t5.asRenderable();
 
     var renderer = Renderer.init(alloc);
     defer renderer.deinit();
 
-    try renderer.add(&r1.renderable);
-    try renderer.add(&r2.renderable);
-    try renderer.add(&r3.renderable);
-    try renderer.add(&r4.renderable);
-    try renderer.add(&r5.renderable);
+    try renderer.add(r1);
+    try renderer.add(r2);
+    try renderer.add(r3);
+    try renderer.add(r4);
+    try renderer.add(r5);
 
     try testing.expectEqualSlices(
-        @TypeOf(&r1.renderable),
-        &.{&r3.renderable, &r5.renderable, &r1.renderable, &r2.renderable, &r4.renderable},
+        @TypeOf(r1),
+        &.{r3, r5, r1, r2, r4},
         renderer.renderables.items,
     );
 
-    renderer.remove(&r1.renderable);
-    defer r1.renderable.deinit();
+    renderer.remove(r1);
 
     try testing.expectEqualSlices(
-        @TypeOf(&r2.renderable),
-        &.{&r3.renderable, &r5.renderable, &r2.renderable, &r4.renderable},
+        @TypeOf(r2),
+        &.{r3, r5, r2, r4},
         renderer.renderables.items,
     );
 }
