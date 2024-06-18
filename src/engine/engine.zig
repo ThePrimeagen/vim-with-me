@@ -1,4 +1,4 @@
-const assert = @import("assert");
+const assert = @import("assert").assert;
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 
@@ -30,7 +30,7 @@ pub const Engine = struct {
     }
 };
 
-const milliTimestamp = std.time.milliTimestamp;
+const microTimestamp = std.time.microTimestamp;
 pub const Time = struct {
     delta: i64,
     createdAt: i64,
@@ -43,16 +43,8 @@ pub const Time = struct {
     }
 
     pub fn since(self: Time) i64 {
-        const now = milliTimestamp();
+        const now = microTimestamp();
         return now - self.createdAt;
-    }
-
-    pub fn sleep(self: Time, total: i64) void {
-        const delta = self.since();
-        const remaining: u64 = @intCast(total - delta);
-        if (remaining > 0) {
-            std.time.sleep(remaining * 1_000_000);
-        }
     }
 };
 
@@ -66,12 +58,12 @@ pub const RealTime = struct {
     }
 
     pub fn reset(self: *RealTime) void {
-        const time = milliTimestamp();
+        const time = microTimestamp();
         self.lastTime = time;
     }
 
     pub fn tick(self: *RealTime) Time {
-        const time = milliTimestamp();
+        const time = microTimestamp();
         const delta = time - self.lastTime;
         self.lastTime = time;
 
@@ -86,5 +78,35 @@ pub const FauxTime = struct {
     pub fn tick(self: *FauxTime) i64 {
         return self.returnDelta;
     }
+};
 
+pub const FPS = struct {
+    fps: i64,
+    time: ?Time,
+    timer: RealTime, // change this later to an enum
+
+    pub fn init(fps: i64) FPS {
+        return .{
+            .fps = fps,
+            .time = null,
+            .timer = RealTime.init(),
+        };
+    }
+
+    pub fn delta(self: *FPS) i64 {
+        const d = self.timer.tick();
+        self.time = d;
+
+        return d.delta;
+    }
+
+    pub fn sleep(self: *FPS) void {
+        assert(self.time != null, "called sleep before delta");
+        const since = self.time.?.since();
+        const remaining: u64 = @intCast(self.fps - since);
+
+        if (remaining > 0) {
+            std.time.sleep(remaining * 1_000);
+        }
+    }
 };

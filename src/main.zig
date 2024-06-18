@@ -24,13 +24,13 @@ pub fn main() !void {
         .{ .b = 255, .r = 0, .g = 0 },
     };
 
-    var time = engine.RealTime.init();
-    time.reset();
+    var fps = engine.FPS.init(166_666);
 
     //while (!game.isDone()) {
     var count: usize = 0;
     while (true) : (count += 1) {
-        const delta = time.tick();
+        const delta = fps.delta();
+        _ = delta;
 
         //const msgInput = inputter.pop();
         //if (msgInput == null) {
@@ -48,7 +48,7 @@ pub fn main() !void {
         const len = try ansi.frame(&cells, &buffer);
         try out(buffer[0..len]);
 
-        delta.sleep(33);
+        fps.sleep();
     }
 
 }
