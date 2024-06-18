@@ -74,17 +74,19 @@ pub const AnsiFramer = struct {
     rows: usize,
     cols: usize,
     previous: Color = undefined,
+    len: usize,
 
     pub fn init(rows: usize, cols: usize) AnsiFramer {
         return .{
             .firstPrint = true,
             .rows = rows,
             .cols = cols,
+            .len = rows * cols,
         };
     }
 
-    pub fn frame(self: *AnsiFramer, f: []Cell, out: []u8) !void {
-        assert(f.len == self.rows * self.cols, "you must hand in a frame that matches rows and cols");
+    pub fn frame(self: *AnsiFramer, f: []Cell, out: []u8) !usize {
+        assert(f.len == self.len, "you must hand in a frame that matches rows and cols");
 
         var offset: usize = 0;
         if (self.firstPrint) {
@@ -112,6 +114,7 @@ pub const AnsiFramer = struct {
         }
 
         assert(newLineCount == self.rows, "should have produced self.rows amount of rows, did not");
+        return offset;
     }
 };
 
@@ -135,7 +138,7 @@ test "AnsiFramer should color and newline a 3x3" {
         .{.text = 'i', .color = .{.r = 71, .g = 44, .b = 2}}
     } ** 9;
 
-    try frame.frame(&colors1, &out);
+    const len1 = try frame.frame(&colors1, &out);
 
     const expected =
         initialClear ++
@@ -146,12 +149,12 @@ test "AnsiFramer should color and newline a 3x3" {
         foregroundColor ++
         "71;44;2mi\r\n".*;
 
-    try testing.expectEqualSlices(u8, &expected, out[0..expected.len]);
+    try testing.expectEqualSlices(u8, &expected, out[0..len1]);
 
     const expected2 =
         newFrame ++
         "iii\r\niii\r\niii\r\n".*;
 
-    try frame.frame(&colors2, &out);
-    try testing.expectEqualSlices(u8, &expected2, out[0..expected2.len]);
+    const len2 = try frame.frame(&colors2, &out);
+    try testing.expectEqualSlices(u8, &expected2, out[0..len2]);
 }
