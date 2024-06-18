@@ -1,7 +1,7 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 
-const r = @import("render.zig");
+const r = @import("primitives.zig");
 const u = @import("update.zig");
 
 pub const Engine = struct {
