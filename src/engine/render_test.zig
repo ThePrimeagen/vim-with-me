@@ -76,7 +76,13 @@ test "adding some renderables" {
     );
 
     renderer.remove(&r1);
-    r1.deinit();
+    defer r1.deinit();
+
+    try testing.expectEqualSlices(
+        @TypeOf(&r2),
+        &.{&r3, &r5, &r2, &r4},
+        renderer.renderables.items,
+    );
 }
 
 
