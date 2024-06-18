@@ -64,9 +64,9 @@ pub const Renderer = struct {
 
     pub fn remove(self: *Renderer, renderable: *Renderable) void {
         const id = renderable.id();
-        for (self.renderables.items, 0..) |*item, idx| {
+        for (self.renderables.items, 0..) |item, idx| {
             if (item.id() == id) {
-                self.renderables.orderedRemove(idx);
+                _ = self.renderables.orderedRemove(idx);
                 break;
             }
         }
