@@ -131,17 +131,9 @@ test "AnsiFramer should color and newline a 3x3" {
         .{.text = 'i', .color = .{.r = 71, .g = 44, .b = 2}},
     };
 
-    var colors2 = [9]Cell{
-        .{.text = 'i', .color = .{.r = 71, .g = 44, .b = 2}},
-        .{.text = 'i', .color = .{.r = 71, .g = 44, .b = 2}},
-        .{.text = 'i', .color = .{.r = 71, .g = 44, .b = 2}},
-        .{.text = 'i', .color = .{.r = 71, .g = 44, .b = 2}},
-        .{.text = 'i', .color = .{.r = 71, .g = 44, .b = 2}},
-        .{.text = 'i', .color = .{.r = 71, .g = 44, .b = 2}},
-        .{.text = 'i', .color = .{.r = 71, .g = 44, .b = 2}},
-        .{.text = 'i', .color = .{.r = 71, .g = 44, .b = 2}},
-        .{.text = 'i', .color = .{.r = 71, .g = 44, .b = 2}},
-    };
+    var colors2 = [_]Cell{
+        .{.text = 'i', .color = .{.r = 71, .g = 44, .b = 2}}
+    } ** 9;
 
     try frame.frame(&colors1, &out);
 
