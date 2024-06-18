@@ -3,17 +3,18 @@ const std = @import("std");
 const Allocator = std.mem.Allocator;
 
 const primitives = @import("primitives.zig");
+const Renderer = @import("render.zig").Renderer;
 const UpdateableList = std.ArrayList(*primitives.Updateable);
 
 pub const Engine = struct {
-    renderer: primitives.Renderer,
+    renderer: Renderer,
     updater: UpdateableList,
     alloc: Allocator,
 
     pub fn init(alloc: Allocator) Engine {
         return .{
             .alloc = alloc,
-            .renderer = primitives.Renderer,
+            .renderer = Renderer.init(alloc),
             .updater = UpdateableList.init(alloc),
         };
     }

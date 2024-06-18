@@ -23,7 +23,7 @@ export function parseFrame(buf) {
         lastSeen = -1
     } else if (cmd === types.frame) {
         if (lastSeen !== -1) {
-            //debugAssert(seq === ((lastSeen + 1) % 256), `frame out of order: expected ${(lastSeen + 1) % 16} got ${seq}`)
+            debugAssert(seq === ((lastSeen + 1) % 256), `frame out of order: expected ${(lastSeen + 1) % 16} got ${seq}`)
         }
         lastSeen = seq
     }
