@@ -58,4 +58,8 @@ pub const Engine = struct {
             inline else => unreachable,
         }
     }
+
+    pub fn gameLoop(self: *Engine) void {
+        _ = self;
+    }
 };
