@@ -1,3 +1,4 @@
+const std = @import("std");
 const assert = @import("assert").assert;
 
 pub const Location = struct {
@@ -19,7 +20,12 @@ pub const Renderable = struct {
         render: *const fn(ptr: *anyopaque) Rendered,
         id: *const fn(ptr: *anyopaque) usize,
         z: *const fn(ptr: *anyopaque) usize,
+        deinit: *const fn(ptr: *anyopaque) void,
     };
+
+    pub fn deinit(self: Renderable) void {
+        return self.vtab.deinit(self.ptr);
+    }
 
     pub fn render(self: Renderable) Rendered {
         return self.vtab.render(self.ptr);
@@ -37,11 +43,16 @@ pub const Renderable = struct {
         const Ptr = @TypeOf(t);
         const PtrInfo = @typeInfo(Ptr);
 
-        comptime assert(Ptr == .Pointer, "you must provide a pointer");
+        comptime assert(PtrInfo == .Pointer, "you must provide a pointer");
         comptime assert(PtrInfo.Pointer.size == .One, "it must be a pointer to one element");
         comptime assert(@typeInfo(PtrInfo.Pointer.child) == .Struct, "the pointer is pointing to a struct");
 
         const impl = struct {
+            fn deinit(ptr: *anyopaque) void {
+                const self: Ptr = @ptrCast(@alignCast(ptr));
+                self.deinit();
+            }
+
             fn render(ptr: *anyopaque) Rendered {
                 const self: Ptr = @ptrCast(@alignCast(ptr));
                 return self.render();
@@ -62,6 +73,7 @@ pub const Renderable = struct {
                 .render = impl.render,
                 .id = impl.id,
                 .z = impl.z,
+                .deinit = impl.deinit,
             },
         };
     }
