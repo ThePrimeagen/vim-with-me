@@ -6,6 +6,7 @@ const std = @import("std");
 const AnsiFramer = output.AnsiFramer;
 const Allocator = std.mem.Allocator;
 const Position = types.Position;
+const Sized = types.Sized;
 
 const EMPTY_CELL = output.Cell{
     .text = ' ',
@@ -61,16 +62,19 @@ pub const Canvas = struct {
         }
     }
 
-    pub fn place(self: *Canvas, pos: Position, cells: []const []const output.Cell) void {
-        assert(cells.len > 0, "writing an empty object");
-        assert(pos.row + cells.len < self.rows, "cannot write text off the screen rows");
-        assert(pos.col + cells[0].len < self.cols, "cannot write text off screen cols");
+    // TODO: I think that position could be swapped here
+    pub fn place(self: *Canvas, sized: Sized, cells: []const output.Cell) void {
 
-        for (cells, 0..) |cellList, rowOffset| {
-            const offset = (pos.row + rowOffset) * self.cols + pos.col;
-            for (cellList, offset..) |cell, idx| {
-                self.cells[idx] = cell;
-            }
+        assert(cells.len > 0, "writing an empty object");
+        assert(cells.len % sized.cols == 0, "must provide a square");
+        assert(sized.pos.row + cells.len / sized.cols < self.rows, "cannot write text off the screen rows");
+        assert(sized.pos.col + sized.cols < self.cols, "cannot write text off screen cols");
+
+        for (cells, 0..) |cell, idx| {
+            const col = idx % sized.cols;
+            const row = idx / sized.cols;
+            const offset = (sized.pos.row + row) * self.cols + sized.pos.col + col;
+            self.cells[offset] = cell;
         }
     }
 
@@ -106,13 +110,13 @@ test "i think this test is terribly written, i need help or a doctor" {
         .{.text = 'z', .color = .{.r = 69, .g = 69, .b = 69}}
     } ** 3);
 
-    const image: []const []const output.Cell = &.{
-        x,
-        y,
-        z,
-    };
+    const image: []const output.Cell = x ++ y ++ z;
 
-    canvas.place(.{.row = 3, .col = 3}, image);
+    canvas.place(.{
+        .cols = 3,
+        .pos = .{.row = 3, .col = 3}
+    }, image);
+
     try canvas.render();
 
     var text: [200]u8 = undefined;
@@ -135,7 +139,7 @@ test "i think this test is terribly written, i need help or a doctor" {
     }
 
 
-    canvas.place(.{.row = 4, .col = 4}, &.{x});
+    canvas.place(.{.cols = 3, .pos = .{.row = 4, .col = 4}}, x);
     try canvas.render();
     {
         const len = AnsiFramer.parseText(canvas.renderBuffer, &text);

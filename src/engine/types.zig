@@ -1,4 +1,5 @@
 const std = @import("std");
+const output = @import("output/output.zig");
 
 const needle: [1]u8 = .{','};
 pub const Position = struct {
@@ -24,6 +25,11 @@ pub const Position = struct {
             .col = col,
         };
     }
+};
+
+pub const Sized = struct {
+    cols: usize,
+    pos: Position,
 };
 
 pub const Coord = struct {
@@ -81,6 +87,8 @@ pub const Color = struct {
     b: u8,
 };
 
+//pub const TowerCell
+
 pub const Tower = struct {
     id: usize,
     team: u8,
@@ -96,8 +104,8 @@ pub const Tower = struct {
     // rendered
     rPos: Position,
     rAmmo: u16,
-    rColor: [9]Color,
-    rText: [9]u8,
+    rCols: u8,
+    cells: [9]output.Cell,
 
     pub fn contains(self: *Tower, pos: Position) bool {
         if (self.dead) {
