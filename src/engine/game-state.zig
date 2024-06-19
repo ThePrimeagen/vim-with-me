@@ -67,6 +67,7 @@ pub const GameState = struct {
 
                 if (state.tower(c.pos)) |idx| {
                     state.towers.items[idx].level += 1;
+                    return;
                 }
 
                 const id = state.towers.items.len;

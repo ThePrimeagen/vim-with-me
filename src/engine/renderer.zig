@@ -22,21 +22,23 @@ pub const Renderer = struct {
         self.canvas.deinit();
     }
 
-    pub fn render(self: *Renderer, gs: *GameState) void {
+    pub fn render(self: *Renderer, gs: *GameState) !void {
         for (gs.towers.items) |*t| {
+            t.render();
             self.canvas.place(t.rSized, &t.rCells);
         }
 
-        var buff: [10]u8 = undefined;
-        try std.fmt.format("renders: {}", &buff, self.count);
+        var buff: [15]u8 = undefined;
+        _ = try std.fmt.bufPrint(&buff, "renders: {}", .{self.count});
 
         self.canvas.writeText(.{
-            .rows = 0,
-            .cols = 0,
-        }, &buff);
+            .row = 0,
+            .col = 14,
+        }, &buff, .{.r = 255, .g = 255, .b = 255});
 
-        self.canvas.render();
+        try self.canvas.render();
         self.output = self.canvas.renderBuffer;
+        self.count += 1;
     }
 };
 
