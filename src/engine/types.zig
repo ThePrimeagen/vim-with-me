@@ -99,7 +99,7 @@ pub const Tower = struct {
     rColor: [9]Color,
     rText: [9]u8,
 
-    fn contains(self: *Tower, pos: Position) bool {
+    pub fn contains(self: *Tower, pos: Position) bool {
         if (self.dead) {
             return false;
         }
@@ -114,6 +114,8 @@ pub const Tower = struct {
 pub const Projectile = struct {
     id: usize,
     createdBy: usize,
+    target: usize,
+    targetType: u8, // i have to look up creep or tower
     team: u8,
 
     pos: Position,
