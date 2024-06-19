@@ -1,5 +1,6 @@
 const std = @import("std");
-const output = @import("output/output.zig");
+
+const INITIAL_AMMO = 50;
 
 const needle: [1]u8 = .{','};
 pub const Position = struct {
@@ -85,27 +86,54 @@ pub const Color = struct {
     r: u8,
     g: u8,
     b: u8,
+
+    pub fn equal(self: Color, other: Color) bool {
+        return self.r == other.r and
+            self.g == other.g and
+            self.b == other.b;
+    }
+
 };
 
-//pub const TowerCell
+pub const Black: Color = .{.r = 0, .g = 0, .b = 0 };
+pub const Cell = struct {
+    text: u8,
+    color: Color,
+};
+
+const TowerSize = 3;
+const TowerCell: [9]Cell = .{
+    .{.text = ' ', .color = Black },
+    .{.text = '^', .color = Black },
+    .{.text = ' ', .color = Black },
+
+    .{.text = '/', .color = Black },
+    .{.text = '*', .color = Black },
+    .{.text = '\\', .color = Black },
+
+    .{.text = '<', .color = Black },
+    .{.text = '_', .color = Black },
+    .{.text = '>', .color = Black },
+};
+const ZERO_POS: Position = .{.row = 0, .col = 0};
+const ZERO_SIZED: Sized = .{.cols = 3, .pos = ZERO_POS};
 
 pub const Tower = struct {
     id: usize,
     team: u8,
 
     // position
-    pos: Position,
-    ammo: u16,
-    dead: bool,
-    level: u8,
-    radius: u8,
-    damage: u8,
+    pos: Position = ZERO_POS,
+    ammo: u16 = INITIAL_AMMO,
+    dead: bool = false,
+    level: u8 = 1,
+    radius: u8 = 1,
+    damage: u8 = 1,
 
     // rendered
-    rPos: Position,
-    rAmmo: u16,
-    rCols: u8,
-    cells: [9]output.Cell,
+    rSized: Sized = ZERO_SIZED,
+    rAmmo: u16 = INITIAL_AMMO,
+    rCells: [9]Cell = TowerCell,
 
     pub fn contains(self: *Tower, pos: Position) bool {
         if (self.dead) {
@@ -117,6 +145,23 @@ pub const Tower = struct {
         return r <= 1 and c <= 1;
     }
 
+    pub fn color(self: *Tower, c: Color) void {
+        for (self.rCells) |*cell| {
+            cell.color = c;
+        }
+    }
+
+    pub fn create(id: usize, team: u8, pos: Position) Tower {
+        return .{
+            .id = id,
+            .team = team,
+            .pos = pos,
+            .rSized = .{
+                .cols = TowerSize,
+                .pos = pos
+            },
+        };
+    }
 };
 
 pub const Projectile = struct {

@@ -1,14 +1,16 @@
 const assert = @import("assert").assert;
-const output = @import("output/output.zig");
+const framer = @import("framer.zig");
 const types = @import("types.zig");
 const std = @import("std");
 
-const AnsiFramer = output.AnsiFramer;
+const AnsiFramer = framer.AnsiFramer;
 const Allocator = std.mem.Allocator;
 const Position = types.Position;
 const Sized = types.Sized;
+const Color = types.Color;
+const Cell = types.Cell;
 
-const EMPTY_CELL = output.Cell{
+const EMPTY_CELL = Cell{
     .text = ' ',
     .color = .{
         .r = 0,
@@ -18,11 +20,11 @@ const EMPTY_CELL = output.Cell{
 };
 
 pub const Canvas = struct {
-    framer: output.AnsiFramer,
+    framer: AnsiFramer,
     renderBuffer: []u8,
     buffer: []u8,
     bufferLen: usize,
-    cells: []output.Cell,
+    cells: []Cell,
     rows: usize,
     cols: usize,
     alloc: Allocator,
@@ -33,10 +35,10 @@ pub const Canvas = struct {
             .buffer = try alloc.alloc(u8, size * 16), // no idea how big ansi encoding is
             .renderBuffer = undefined,
             .bufferLen = 0,
-            .cells = try alloc.alloc(output.Cell, size),
+            .cells = try alloc.alloc(Cell, size),
             .rows = rows,
             .cols = cols,
-            .framer = output.AnsiFramer.init(rows, cols),
+            .framer = AnsiFramer.init(rows, cols),
             .alloc = alloc,
         };
 
@@ -49,7 +51,7 @@ pub const Canvas = struct {
         self.alloc.free(self.cells);
     }
 
-    pub fn writeText(self: *Canvas, pos: Position, text: []const u8, color: output.Color) void {
+    pub fn writeText(self: *Canvas, pos: Position, text: []const u8, color: types.Color) void {
         assert(pos.row < self.rows, "cannot write text off the screen rows");
         assert(pos.col + text.len < self.cols, "cannot write text off screen cols");
 
@@ -63,7 +65,7 @@ pub const Canvas = struct {
     }
 
     // TODO: I think that position could be swapped here
-    pub fn place(self: *Canvas, sized: Sized, cells: []const output.Cell) void {
+    pub fn place(self: *Canvas, sized: Sized, cells: []const Cell) void {
 
         assert(cells.len > 0, "writing an empty object");
         assert(cells.len % sized.cols == 0, "must provide a square");
@@ -100,17 +102,17 @@ test "i think this test is terribly written, i need help or a doctor" {
 
     const newLine = "\r\n";
     const emptyLine = " " ** 10;
-    const x: []const output.Cell = &(.{
+    const x: []const Cell = &(.{
         .{.text = 'x', .color = .{.r = 69, .g = 69, .b = 69}}
     } ** 3);
-    const y: []const output.Cell = &(.{
+    const y: []const Cell = &(.{
         .{.text = 'y', .color = .{.r = 69, .g = 69, .b = 69}}
     } ** 3);
-    const z: []const output.Cell = &(.{
+    const z: []const Cell = &(.{
         .{.text = 'z', .color = .{.r = 69, .g = 69, .b = 69}}
     } ** 3);
 
-    const image: []const output.Cell = x ++ y ++ z;
+    const image: []const Cell = x ++ y ++ z;
 
     canvas.place(.{
         .cols = 3,

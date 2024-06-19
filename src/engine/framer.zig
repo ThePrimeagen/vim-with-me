@@ -1,24 +1,10 @@
+const types = @import("types.zig");
 const assert = @import("assert").assert;
 const std = @import("std");
+
 const io = std.io;
-
-pub const Color = struct {
-    r: u8,
-    g: u8,
-    b: u8,
-
-    fn equal(self: Color, other: Color) bool {
-        return self.r == other.r and
-            self.g == other.g and
-            self.b == other.b;
-    }
-};
-
-pub const Cell = struct {
-    text: u8,
-    color: Color,
-
-};
+const Color = types.Color;
+const Cell = types.Cell;
 
 const initialChar: u8 = '';
 const topLeftFull: [6]u8 = .{'', '[', '1', ';', '1', 'H'};
