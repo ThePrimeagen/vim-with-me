@@ -2,8 +2,6 @@ const std = @import("std");
 const types = @import("types.zig");
 
 // TODO: Make this adjustable
-const INITIAL_AMMO = 50;
-
 const Position = types.Position;
 const Message = types.Message;
 const Coord = types.Coord;
@@ -21,14 +19,14 @@ const CreepList = ArrayList(types.Creep);
 const ProjectileList = ArrayList(types.Projectile);
 
 pub const GameState = struct {
-    playing: bool,
-    round: i32,
-    one: i32,
-    two: i32,
+    playing: bool = true,
+    round: i32 = 1,
+    one: i32 = 0,
+    two: i32 = 0,
 
-    time: i64,
-    loopDelta: i64,
-    updates: i64,
+    time: i64 = 0,
+    loopDelta: i64 = 0,
+    updates: i64 = 0,
 
     towers: TowerList,
     creeps: CreepList,
@@ -37,13 +35,6 @@ pub const GameState = struct {
 
     pub fn init(alloc: Allocator) GameState {
         return .{
-            .playing = true,
-            .round = 1,
-            .one = 0,
-            .two = 0,
-            .time = 0,
-            .loopDelta = 0,
-
             .towers = TowerList.init(alloc),
             .creeps = CreepList.init(alloc),
             .projectile = ProjectileList.init(alloc),
@@ -51,7 +42,7 @@ pub const GameState = struct {
         };
     }
 
-    pub fn updateTime(state: *GameState, delta: u64) void {
+    pub fn updateTime(state: *GameState, delta: i64) void {
         state.updates += 1;
 
         const diff: isize = @intCast(state.one - state.two);
@@ -61,7 +52,7 @@ pub const GameState = struct {
         state.time += delta;
     }
 
-    pub fn message(state: *GameState, msg: Message) void {
+    pub fn message(state: *GameState, msg: Message) !void {
         switch (msg) {
             .coord => |c| {
 
@@ -74,31 +65,12 @@ pub const GameState = struct {
                 state.one += 1;
                 state.two += 1;
 
+                if (state.tower(c.pos)) |idx| {
+                    state.towers.items[idx].level += 1;
+                }
+
                 const id = state.towers.items.len;
-
-                state.towers.append(.{
-                    .id = id,
-                    .team = msg.team,
-
-                    // position
-                    .pos = c.pos,
-                    .ammo = INITIAL_AMMO,
-                    .dead = false,
-                    .level = 1,
-                    .radius = 1,
-                    .damage = 1,
-
-                    // rendered
-                    .rPos = c.pos,
-                    .rAmmo = INITIAL_AMMO,
-
-                    .rColor = .{
-                    },
-
-                    .rText = .{
-                    },
-
-                });
+                try state.towers.append(Tower.create(id, c.team, c.pos));
 
             },
             .round => |_| {
