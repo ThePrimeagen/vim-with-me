@@ -2,7 +2,7 @@ const assert = @import("assert").assert;
 const std = @import("std");
 const print = std.debug.print;
 
-const engine = @import("engine/engine.zig");
+const time = @import("engine/time.zig");
 const input = @import("engine/input/input.zig");
 const output = @import("engine/output/output.zig");
 const encoding = @import("encoding/encoding.zig");
@@ -29,7 +29,7 @@ pub fn main() !void {
         .{ .b = 255, .r = 0, .g = 0 },
     };
 
-    var fps = engine.FPS.init(166_666);
+    var fps = time.FPS.init(166_666);
     _ = fps.delta();
 
     //while (!game.isDone()) {
@@ -60,6 +60,6 @@ pub fn main() !void {
 }
 
 test { _ = encoding; }
-test { _ = engine; }
+test { _ = time; }
 test { _ = output; }
 

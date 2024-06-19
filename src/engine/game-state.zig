@@ -102,13 +102,16 @@ pub const GameState = struct {
 
     fn tower(self: *GameState, pos: Position) ?usize {
         for (self.towers.items, 0..) |*t, i| {
-            if (t.dead) {
-                continue;
+            if (t.contains(pos)) {
+                return i;
             }
+        }
+        return null;
+    }
 
-            const r = @abs(t.row - pos.row);
-            const c = @abs(t.col - pos.col);
-            if (r <= 1 and c <= 1) {
+    fn creep(self: *GameState, pos: Position) ?usize {
+        for (self.creeps.items, 0..) |*c, i| {
+            if (c.contains(pos)) {
                 return i;
             }
         }
