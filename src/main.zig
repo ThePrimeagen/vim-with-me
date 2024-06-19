@@ -24,8 +24,13 @@ pub fn main() !void {
     var gs = gamestate.GameState.init(allocator);
     var stdin = input.StdinInputter.init();
     var stdinInputter = stdin.inputter();
+
     const inputter = try input.createInputRunner(allocator, &stdinInputter);
+    defer inputter.deinit();
+
     var render = try renderer.Renderer.init(30, 30, allocator);
+    defer render.deinit();
+
     const out = stdout.output;
 
     var fps = time.FPS.init(166_666);
@@ -43,7 +48,7 @@ pub fn main() !void {
             }
         }
 
-        render.render(&gs);
+        try render.render(&gs);
         try out(render.output);
     }
 

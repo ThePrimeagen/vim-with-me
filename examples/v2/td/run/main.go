@@ -29,10 +29,12 @@ func main() {
 
     interval := time.NewTicker(time.Second * 3)
 
+    team := 0;
     for range interval.C {
         out := chtAgg.Reset()
         if len(out.Msg) > 0 {
-            fmt.Printf("%s\n", out.Msg)
+            fmt.Printf("%d%s\n", team % 2, out.Msg)
+            team++;
         }
     }
 }

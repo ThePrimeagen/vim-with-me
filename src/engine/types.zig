@@ -2,6 +2,13 @@ const std = @import("std");
 
 const INITIAL_AMMO = 50;
 
+fn absUsize(a: usize, b: usize) usize {
+    if (a > b) {
+        return a - b;
+    }
+    return b - a;
+}
+
 const needle: [1]u8 = .{','};
 pub const Position = struct {
     row: usize,
@@ -102,18 +109,10 @@ pub const Cell = struct {
 };
 
 const TowerSize = 3;
-const TowerCell: [9]Cell = .{
-    .{.text = ' ', .color = Black },
-    .{.text = '^', .color = Black },
-    .{.text = ' ', .color = Black },
-
+const TowerCell: [3]Cell = .{
     .{.text = '/', .color = Black },
     .{.text = '*', .color = Black },
     .{.text = '\\', .color = Black },
-
-    .{.text = '<', .color = Black },
-    .{.text = '_', .color = Black },
-    .{.text = '>', .color = Black },
 };
 const ZERO_POS: Position = .{.row = 0, .col = 0};
 const ZERO_SIZED: Sized = .{.cols = 3, .pos = ZERO_POS};
@@ -124,6 +123,7 @@ pub const Tower = struct {
 
     // position
     pos: Position = ZERO_POS,
+    maxAmmo: u16 = INITIAL_AMMO,
     ammo: u16 = INITIAL_AMMO,
     dead: bool = false,
     level: u8 = 1,
@@ -133,34 +133,57 @@ pub const Tower = struct {
     // rendered
     rSized: Sized = ZERO_SIZED,
     rAmmo: u16 = INITIAL_AMMO,
-    rCells: [9]Cell = TowerCell,
+    rCells: [3]Cell = TowerCell,
 
     pub fn contains(self: *Tower, pos: Position) bool {
         if (self.dead) {
             return false;
         }
 
-        const r = @abs(self.row - pos.row);
-        const c = @abs(self.col - pos.col);
-        return r <= 1 and c <= 1;
+        const c = absUsize(self.pos.col, pos.col);
+        return self.pos.row == pos.row and c <= 1;
     }
 
     pub fn color(self: *Tower, c: Color) void {
-        for (self.rCells) |*cell| {
-            cell.color = c;
+        for (0..self.rCells.len) |idx| {
+            self.rCells[idx].color = c;
         }
     }
 
     pub fn create(id: usize, team: u8, pos: Position) Tower {
+        var p = pos;
+        if (p.col == 0) {
+            p.col = 1;
+        }
+
         return .{
             .id = id,
             .team = team,
-            .pos = pos,
+            .pos = p,
             .rSized = .{
                 .cols = TowerSize,
-                .pos = pos
+                .pos = p
             },
         };
+    }
+
+    pub fn render(self: *Tower) void {
+
+        const life = self.getLifePercent();
+        const sqLife = life * life;
+
+        self.rCells[1].text = '0' + self.level;
+        self.color(.{
+            .r = @intFromFloat(255.0 * life),
+            .b = @intFromFloat(255.0 * sqLife),
+            .g = @intFromFloat(255.0 * sqLife),
+        });
+    }
+
+    fn getLifePercent(self: *Tower) f64 {
+        const max: f64 = @floatFromInt(self.maxAmmo);
+        const ammo: f64 = @floatFromInt(self.ammo);
+        return ammo / max;
     }
 };
 
@@ -203,8 +226,6 @@ pub const Creep = struct {
             return false;
         }
 
-        const r = @abs(self.row - pos.row);
-        const c = @abs(self.col - pos.col);
-        return r == 0 and c == 0;
+        return self.pos.row == pos.row and self.pos.col == pos.col;
     }
 };
