@@ -25,6 +25,7 @@ pub const GameState = struct {
 
     time: i64,
     loopDelta: i64,
+    updates: i64,
 
     towers: TowerList,
     creeps: CreepList,
@@ -48,6 +49,8 @@ pub const GameState = struct {
     }
 
     pub fn updateTime(state: *GameState, delta: u64) void {
+        state.updates += 1;
+
         const diff: isize = @intCast(state.one - state.two);
         assert(diff >= -1 and diff <= 1, "some how we have multiple updates to one side but not the other");
 
