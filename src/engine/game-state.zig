@@ -1,6 +1,9 @@
 const std = @import("std");
 const types = @import("types.zig");
 
+// TODO: Make this adjustable
+const INITIAL_AMMO = 50;
+
 const Position = types.Position;
 const Message = types.Message;
 const Coord = types.Coord;
@@ -61,11 +64,42 @@ pub const GameState = struct {
     pub fn message(state: *GameState, msg: Message) void {
         switch (msg) {
             .coord => |c| {
-                if (c.team == '1') {
-                    state.one += 1;
-                } else {
-                    state.two += 1;
-                }
+
+                //if (c.team == '1') {
+                //    state.one += 1;
+                //} else {
+                //    state.two += 1;
+                //}
+
+                state.one += 1;
+                state.two += 1;
+
+                const id = state.towers.items.len;
+
+                state.towers.append(.{
+                    .id = id,
+                    .team = msg.team,
+
+                    // position
+                    .pos = c.pos,
+                    .ammo = INITIAL_AMMO,
+                    .dead = false,
+                    .level = 1,
+                    .radius = 1,
+                    .damage = 1,
+
+                    // rendered
+                    .rPos = c.pos,
+                    .rAmmo = INITIAL_AMMO,
+
+                    .rColor = .{
+                    },
+
+                    .rText = .{
+                    },
+
+                });
+
             },
             .round => |_| {
                 state.nextRound();
