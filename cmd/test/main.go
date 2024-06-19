@@ -1,5 +1,61 @@
 package main
 
+
+func Backward[E any](s []E) func(func(int, E) bool) {
+	return func(yield func(int, E) bool) {
+		for i := len(s)-1; i >= 0; i-- {
+			if !yield(i, s[i]) {
+				// Where clean-up code goes
+				return
+			}
+		}
+	}
+}
+
+// Explicit struct for the state
+Backward_Iterator :: struct($E: typeid) {
+	slice: []E,
+	idx:   int,
+}
+
+// Explicit construction for the iterator
+backward_make :: proc(s: []$E) -> Backward_Iterator(E) {
+	return {slice = s, idx = len(s)-1}
+}
+
+backward_iterate :: proc(it: ^Backward_Iterator($E)) -> (elem: E, idx: int, ok: bool) {
+	if it.idx >= 0 {
+		elem, idx, ok = it.slice[it.idx], it.idx, true
+		it.idx -= 1
+	}
+	return
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import (
 	"fmt"
 	"log"

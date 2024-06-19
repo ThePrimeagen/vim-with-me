@@ -13,6 +13,9 @@ pub const Tower = struct {
     col: u8,
     ammo: u16,
     dead: bool,
+    level: u8,
+    radius: u8,
+    damage: u8,
 
     // rendered
     rRow: u8,
@@ -24,6 +27,7 @@ pub const Tower = struct {
 
 pub const Projectile = struct {
     id: usize,
+    createdBy: usize,
     team: u8,
 
     row: u8,

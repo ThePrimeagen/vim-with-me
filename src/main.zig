@@ -7,25 +7,9 @@ const input = @import("engine/input/input.zig");
 const output = @import("engine/output/output.zig");
 const encoding = @import("encoding/encoding.zig");
 
-const needle: [1]u8 = .{','};
-const Coord = struct {
-    row: usize,
-    col: usize,
-
-    pub fn init(str: []const u8) !Coord {
-        const idxMaybe = std.mem.indexOf(u8, str, ",");
-        assert(idxMaybe != null, "must find , for input");
-
-        const idx = idxMaybe.?;
-        const row = try std.fmt.parseInt(usize, str[0..idx], 10);
-        const col = try std.fmt.parseInt(usize, str[idx + 1..], 10);
-
-        return .{
-            .row = row,
-            .col = col,
-        };
-    }
-};
+const Message = input.Message;
+const Coord = input.Coord;
+const NextRound = input.NextRound;
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -61,15 +45,12 @@ pub fn main() !void {
         }
 
         const msg = msgInput.?;
-        const coord = try Coord.init(msg.input[0..msg.length]);
+        const message = Message.init(msg.input[0..msg.length]);
 
         var buffer = [_]u8{0} ** 4096;
         var cells = [_]output.Cell{
             .{.text = ' ', .color = .{.r = 0, .g = 0, .b = 0}},
         } ** 100;
-
-        cells[coord.row * 10 + coord.col].color = colors[count % 3];
-        cells[coord.row * 10 + coord.col].text = 'X';
 
         const len = try ansi.frame(&cells, &buffer);
         try out(buffer[0..len]);

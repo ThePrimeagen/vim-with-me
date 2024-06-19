@@ -2,34 +2,6 @@ const assert = @import("assert").assert;
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 
-const primitives = @import("primitives.zig");
-
-pub const Engine = struct {
-    alloc: Allocator,
-    foo: ?*u8,
-
-    pub fn init(alloc: Allocator) Engine {
-        return .{
-            .alloc = alloc,
-        };
-    }
-
-    pub fn add(self: *Engine, item: anytype) !void {
-        _ = self;
-        _ = item;
-    }
-
-    pub fn remove(self: *Engine, item: anytype) void {
-        _ = self;
-        _ = item;
-    }
-
-    pub fn gameLoop(self: *Engine, timePassed: i64) void {
-        _ = timePassed;
-        _ = self;
-    }
-};
-
 const microTimestamp = std.time.microTimestamp;
 pub const Time = struct {
     delta: i64,
