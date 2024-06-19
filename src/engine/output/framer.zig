@@ -20,22 +20,13 @@ pub const Cell = struct {
 
 };
 
-const initialClear: [14]u8 = .{
-    '', '[', '1', ';', '1', 'H', '', '[', '2', 'J', '', '[', ';', 'H'
-};
-
-const newFrame: [4]u8 = .{
-    '', '[', ';', 'H',
-};
-
-const foregroundColor: [7]u8 = .{
-    '', '[', '3', '8', ';', '2', ';',
-};
-
-
-const newline: [2]u8 = .{
-    '\r', '\n',
-};
+const initialChar: u8 = '';
+const topLeftFull: [6]u8 = .{'', '[', '1', ';', '1', 'H'};
+const clear: [4]u8 = .{'', '[', '2', 'J'};
+const newFrame: [4]u8 = .{ '', '[', ';', 'H', };
+const initialClear: [14]u8 = topLeftFull ++ clear ++ newFrame;
+const foregroundColor: [7]u8 = .{ '', '[', '3', '8', ';', '2', ';', };
+const newline: [2]u8 = .{ '\r', '\n', };
 
 fn writeAnsiColor(color: Color, out: []u8, o: usize) !usize {
     var offset = o;
@@ -67,6 +58,32 @@ fn writeByte(out: []u8, offset: usize, byte: u8) usize {
     assert(out.len > offset, "buffer overflowed");
     out[offset] = byte;
     return offset + 1;
+}
+
+fn ansiCodeLength(buffer: []const u8) usize {
+    const items: []const []const u8 = &.{
+        &topLeftFull,
+        &clear,
+        &newFrame,
+    };
+
+    for (items) |item| {
+        if (std.mem.indexOf(u8, buffer, item)) |idx| {
+            if (idx == 0) {
+                return item.len;
+            }
+        }
+    }
+
+    if (std.mem.indexOf(u8, buffer, &foregroundColor)) |idx| {
+        if (idx == 0) {
+            if (std.mem.indexOf(u8, buffer, &.{'m'})) |end| {
+                return end + 1;
+            }
+        }
+    }
+
+    return 0;
 }
 
 pub const AnsiFramer = struct {
@@ -116,6 +133,23 @@ pub const AnsiFramer = struct {
         assert(newLineCount == self.rows, "should have produced self.rows amount of rows, did not");
         return offset;
     }
+
+    pub fn parseText(buf: []const u8, out: []u8) usize {
+        var idx: usize = 0;
+        var i: usize = 0;
+
+        while (i < buf.len) {
+            if (buf[i] == initialChar) {
+                i += ansiCodeLength(buf[i..]);
+                continue;
+            }
+
+            out[idx] = buf[i];
+            idx += 1;
+            i += 1;
+        }
+        return idx;
+    }
 };
 
 const testing = std.testing;
@@ -151,10 +185,18 @@ test "AnsiFramer should color and newline a 3x3" {
 
     try testing.expectEqualSlices(u8, &expected, out[0..len1]);
 
+    var text: [9 + 6]u8 = .{' '} ** 15;
+
+    _ = AnsiFramer.parseText(out[0..len1], &text);
+    try testing.expectEqualStrings("abc\r\ndef\r\nghi\r\n", &text);
+
     const expected2 =
         newFrame ++
         "iii\r\niii\r\niii\r\n".*;
 
     const len2 = try frame.frame(&colors2, &out);
     try testing.expectEqualSlices(u8, &expected2, out[0..len2]);
+
+    _ = AnsiFramer.parseText(out[0..len2], &text);
+    try testing.expectEqualStrings("iii\r\niii\r\niii\r\n", &text);
 }
