@@ -58,4 +58,5 @@ test { _ = encoding; }
 test { _ = time; }
 test { _ = framer; }
 test { _ = canvas; }
+test { _ = types; }
 
