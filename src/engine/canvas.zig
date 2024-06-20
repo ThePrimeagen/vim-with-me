@@ -5,7 +5,7 @@ const std = @import("std");
 
 const AnsiFramer = framer.AnsiFramer;
 const Allocator = std.mem.Allocator;
-const Position = types.Position;
+const Position = types.Vec2;
 const Sized = types.Sized;
 const Color = types.Color;
 const Cell = types.Cell;
@@ -52,10 +52,10 @@ pub const Canvas = struct {
     }
 
     pub fn writeText(self: *Canvas, pos: Position, text: []const u8, color: types.Color) void {
-        assert(pos.row < self.rows, "cannot write text off the screen rows");
-        assert(pos.col + text.len < self.cols, "cannot write text off screen cols");
+        assert(pos.y < self.rows, "cannot write text off the screen rows");
+        assert(pos.x + text.len < self.cols, "cannot write text off screen cols");
 
-        const offset = pos.row * self.cols + pos.col;
+        const offset = pos.y * self.cols + pos.x;
         for (text, offset..) |txt, idx| {
             self.cells[idx] = .{
                 .text = txt,
