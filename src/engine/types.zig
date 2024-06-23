@@ -179,7 +179,7 @@ pub const Tower = struct {
     pos: Position = ZERO_POS,
     maxAmmo: u16 = INITIAL_AMMO,
     ammo: u16 = INITIAL_AMMO,
-    dead: bool = false,
+    alive: bool = true,
     level: u8 = 1,
     radius: u8 = 1,
     damage: u8 = 1,
@@ -190,7 +190,7 @@ pub const Tower = struct {
     rCells: [3]Cell = TowerCell,
 
     pub fn contains(self: *Tower, pos: Position) bool {
-        if (self.dead) {
+        if (self.alive) {
             return false;
         }
 
@@ -219,6 +219,12 @@ pub const Tower = struct {
                 .pos = p
             },
         };
+    }
+
+    pub fn update(self: *Tower) void {
+        if (!self.alive) {
+            return;
+        }
     }
 
     pub fn render(self: *Tower) void {
@@ -251,7 +257,7 @@ pub const Projectile = struct {
     pos: Position,
     life: u16,
     speed: f32,
-    dead: bool,
+    alive: bool = true,
 
     // rendered
     rPos: Position,
@@ -458,6 +464,7 @@ pub const Creep = struct {
         for (0..self.scratch.len) |idx| {
             self.scratch[idx] = -1;
         }
+
         const pos = self.pos.position().toIdx(self.cols);
 
         const last = walk(pos, pos, cols, board, self.scratch);
@@ -469,7 +476,7 @@ pub const Creep = struct {
         }
     }
 
-    pub fn complete(self: *Creep) bool {
+    pub fn completed(self: *Creep) bool {
         return self.pos.position().col == self.cols - 1;
     }
 
@@ -479,6 +486,10 @@ pub const Creep = struct {
 
     // TODO: I suck at game programming... how bad is this...?
     pub fn update(self: *Creep, delta: u64) void {
+        if (self.completed()) {
+            return;
+        }
+
         if (self.pos.position().col == self.cols - 1) {
             return;
         }

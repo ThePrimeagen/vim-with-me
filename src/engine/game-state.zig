@@ -42,7 +42,7 @@ pub const GameState = struct {
         };
     }
 
-    pub fn updateTime(state: *GameState, delta: i64) void {
+    pub fn update(state: *GameState, delta: i64) void {
         state.updates += 1;
 
         const diff: isize = @intCast(state.one - state.two);
@@ -50,6 +50,20 @@ pub const GameState = struct {
 
         state.loopDelta = delta;
         state.time += delta;
+
+        if (state.playing) {
+            state.runUpdate();
+        }
+    }
+
+    pub fn play(state: *GameState) void {
+        assert(state.one == state.two, "player one and two must have same play count");
+        state.playing = true;
+    }
+
+    pub fn pause(state: *GameState) void {
+        assert(state.one == state.two, "player one and two must have same play count");
+        state.playing = false;
     }
 
     pub fn message(state: *GameState, msg: Message) !void {
@@ -70,6 +84,8 @@ pub const GameState = struct {
                     return;
                 }
 
+                // a tower may not be able to fit between two towers...
+                // i may need to "fit" them in
                 const id = state.towers.items.len;
                 try state.towers.append(Tower.create(id, c.team, c.pos));
 
@@ -78,14 +94,6 @@ pub const GameState = struct {
                 state.nextRound();
             },
         }
-    }
-
-    pub fn nextRound(state: *GameState) void {
-        const diff: isize = @intCast(state.one - state.two);
-        assert(diff == 0, "next round can only be called once both players have played their turns.");
-
-        state.playRound();
-        state.round += 1;
     }
 
     pub fn clone(self: *GameState) GameState {
@@ -106,10 +114,6 @@ pub const GameState = struct {
         };
     }
 
-    fn playRound(self: *GameState) void {
-        assert(self.one == self.round and self.two == self.round, "one and two should be on the same round as round property");
-    }
-
     fn tower(self: *GameState, pos: Position) ?usize {
         for (self.towers.items, 0..) |*t, i| {
             if (t.contains(pos)) {
@@ -126,6 +130,18 @@ pub const GameState = struct {
             }
         }
         return null;
+    }
+
+    fn runUpdate(self: *GameState) void {
+        for (self.towers.items) |*t| {
+            t.update();
+        }
+        for (self.creeps.items) |*c| {
+            c.update();
+        }
+        for (self.projectile.items) |*p| {
+            p.update();
+        }
     }
 };
 
