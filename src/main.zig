@@ -6,6 +6,7 @@ const objects = @import("objects");
 const math = @import("math");
 
 const renderer = @import("engine/renderer.zig");
+const engine = @import("engine/engine.zig");
 const time = @import("engine/time.zig");
 const canvas = @import("engine/canvas.zig");
 const input = @import("engine/input/input.zig");
@@ -63,4 +64,5 @@ test { _ = framer; }
 test { _ = canvas; }
 test { _ = objects; }
 test { _ = math; }
+test { _ = engine; }
 
