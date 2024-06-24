@@ -176,3 +176,9 @@ pub const Vec2 = struct {
 
 };
 
+const t = std.testing;
+test "vec2 add" {
+    const a = Vec2{.x = 1, .y = 2};
+    const b = Vec2{.x = 68, .y = 418};
+    try t.expect(a.add(b).eql(Vec2{.x = 69, .y = 420}));
+}

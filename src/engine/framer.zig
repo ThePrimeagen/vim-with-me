@@ -1,10 +1,11 @@
-const types = @import("types.zig");
+const objects = @import("objects");
 const assert = @import("assert").assert;
 const std = @import("std");
 
 const io = std.io;
-const Color = types.Color;
-const Cell = types.Cell;
+const colors = objects.colors;
+const Color = colors.Color;
+const Cell = colors.Cell;
 
 const initialChar: u8 = '';
 const topLeftFull: [6]u8 = .{'', '[', '1', ';', '1', 'H'};
