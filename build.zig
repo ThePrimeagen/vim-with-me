@@ -19,6 +19,10 @@ pub fn build(b: *std.Build) void {
         .root_source_file = .{ .path = "src/assert/assert.zig" },
     });
 
+    const scratch = b.addModule("scratch", .{
+        .root_source_file = .{ .path = "src/scratch/scratch.zig" },
+    });
+
     const objects = b.addModule("objects", .{
         .root_source_file = .{ .path = "src/objects/objects.zig" },
     });
@@ -36,8 +40,17 @@ pub fn build(b: *std.Build) void {
     });
 
     exe.root_module.addImport("assert", assert);
-    exe.root_module.addImport("objects", objects);
+    exe.root_module.addImport("scratch", scratch);
+    scratch.addImport("assert", assert);
+
     exe.root_module.addImport("math", math);
+    math.addImport("assert", assert);
+    math.addImport("scratch", scratch);
+
+    exe.root_module.addImport("objects", objects);
+    objects.addImport("math", math);
+    objects.addImport("assert", assert);
+    objects.addImport("scratch", scratch);
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
@@ -76,6 +89,7 @@ pub fn build(b: *std.Build) void {
     exe_unit_tests.root_module.addImport("assert", assert);
     exe_unit_tests.root_module.addImport("objects", objects);
     exe_unit_tests.root_module.addImport("math", math);
+    exe_unit_tests.root_module.addImport("scratch", scratch);
 
     const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
     run_exe_unit_tests.has_side_effects = true;

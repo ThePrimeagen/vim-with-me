@@ -49,3 +49,7 @@ pub const GameState = struct {
     }
 };
 
+pub const Target = union(enum) {
+    creep: usize,
+    tower: usize,
+};
