@@ -4,6 +4,7 @@ const objects = @import("objects");
 const assert = @import("assert").assert;
 const scratchBuf = @import("scratch").scratchBuf;
 
+const Values = objects.Values;
 const Allocator = std.mem.Allocator;
 const Creep = objects.creep.Creep;
 const CreepSize = objects.creep.CreepSize;
@@ -16,8 +17,8 @@ pub fn distanceToExit(creep: *Creep) f64 {
 }
 
 // TODO: Params object STAT (just not now)
-pub fn create(alloc: Allocator, id: usize, team: u8, rows: usize, cols: usize, pos: math.Vec2) !Creep {
-    var creep: Creep = try Creep.init(alloc, rows, cols);
+pub fn create(alloc: Allocator, id: usize, team: u8, values: *const Values, pos: math.Vec2) !Creep {
+    var creep: Creep = try Creep.init(alloc, values);
     creep.id = id;
     creep.team = team;
 
@@ -94,24 +95,23 @@ pub fn calculatePath(self: *Creep, board: []const bool, cols: usize) void {
     assert(board.len % cols == 0, "the length is not a rectangle");
     assert(board.len == self.path.len, "the length of the board is different than what the creep was initialized with.");
 
-    const scratch = scratchBuf(board.len);
-    for (0..scratch.len) |idx| {
-        scratch[idx] = -1;
+    for (0..self.scratch.len) |idx| {
+        self.scratch[idx] = -1;
     }
 
     const pos = self.pos.position().toIdx(self.cols);
 
-    const last = walk(pos, pos, cols, board, scratch);
+    const last = walk(pos, pos, cols, board, self.scratch);
     if (last == 0) {
         // TODO: i need to just go straight forward if i can...
     } else {
-        self.pathLen = path(scratch, last, self.path);
+        self.pathLen = path(self.scratch, last, self.path);
         self.pathIdx = 0;
     }
 }
 
 pub fn completed(self: *Creep) bool {
-    return self.pos.position().col == self.cols - 1;
+    return self.pos.position().col == self.values.cols - 1;
 }
 
 pub fn dead(self: *Creep) bool {
@@ -126,7 +126,7 @@ pub fn update(self: *Creep, gs: *GS) void {
 
     const delta = gs.loopDeltaUS;
 
-    const to = math.Position.fromIdx(self.path[self.pathIdx], self.cols);
+    const to = math.Position.fromIdx(self.path[self.pathIdx], self.values.cols);
     const dist = self.pos.subP(to);
     const normDist = dist.norm();
     const len = dist.len();
@@ -153,6 +153,16 @@ const testBoard = [9]bool{
     true, false, true,
     true, true, true,
 };
+const testEmptyBoard = [9]bool{
+    true, true, true,
+    true, true, true,
+    true, true, true,
+};
+const testValues = objects.Values{
+    .rows = 3,
+    .cols = 3,
+};
+
 test "bfs" {
     var seen: [9]isize = .{-1} ** 9;
 
@@ -183,7 +193,9 @@ fn runUntil(creep: *Creep, gs: *GS, to: usize, maxRun: usize) void {
 }
 
 test "creep movement" {
-    var gs = GS.init(t.allocator);
+    var gs = try GS.init(t.allocator, &testValues);
+    defer gs.deinit();
+
     var creep = try create(t.allocator, 0, 0, 3, 3, .{.x = 0, .y = 0});
     defer creep.deinit();
     _ = calculatePath(&creep, &testBoard, testBoaordSize);
@@ -192,7 +204,6 @@ test "creep movement" {
 
     try t.expect(creep.pathIdx == 0);
     runUntil(&creep, &gs, 1, 1500);
-    std.debug.print("{s}\n", .{try creep.string()});
     try t.expect(creep.pos.x == 0.0);
     try t.expect(creep.pos.y == 1.0);
     try t.expect(creep.pathIdx == 1);
