@@ -1,3 +1,4 @@
+const assert = @import("assert").assert;
 const std = @import("std");
 const types = @import("types.zig");
 
@@ -5,7 +6,6 @@ const types = @import("types.zig");
 const Position = types.Vec2;
 const Message = types.Message;
 const Coord = types.Coord;
-const assert = @import("assert").assert;
 
 const ArrayList = std.ArrayList;
 const Allocator = std.mem.Allocator;

@@ -8,11 +8,12 @@ const canvas = @import("engine/canvas.zig");
 const input = @import("engine/input/input.zig");
 const framer = @import("engine/framer.zig");
 const stdout = @import("engine/stdout_output.zig");
-const gamestate = @import("engine/game-state.zig");
+const objects = @import("objects/objects.zig");
 const encoding = @import("encoding/encoding.zig");
-const types = @import("engine/types.zig");
 
-const Message = types.Message;
+const GameState = objects.GameState;
+const Message = objects.Message;
+
 const Coord = input.Coord;
 const NextRound = input.NextRound;
 

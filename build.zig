@@ -19,6 +19,15 @@ pub fn build(b: *std.Build) void {
         .root_source_file = .{ .path = "src/assert/assert.zig" },
     });
 
+    const objects = b.addModule("objects", .{
+        .root_source_file = .{ .path = "src/objects/objects.zig" },
+    });
+
+    const math = b.addModule("math", .{
+        .root_source_file = .{ .path = "src/math/math.zig" },
+    });
+
+
     const exe = b.addExecutable(.{
         .name = "vim-with-me",
         .root_source_file = b.path("src/main.zig"),
@@ -27,6 +36,8 @@ pub fn build(b: *std.Build) void {
     });
 
     exe.root_module.addImport("assert", assert);
+    exe.root_module.addImport("objects", objects);
+    exe.root_module.addImport("math", math);
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
@@ -63,6 +74,8 @@ pub fn build(b: *std.Build) void {
     });
 
     exe_unit_tests.root_module.addImport("assert", assert);
+    exe_unit_tests.root_module.addImport("objects", objects);
+    exe_unit_tests.root_module.addImport("math", math);
 
     const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
     run_exe_unit_tests.has_side_effects = true;

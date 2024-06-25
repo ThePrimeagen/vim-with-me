@@ -10,109 +10,6 @@ const INITIAL_CREEP_LIFE = 10;
 const INITIAL_CREEP_SPEED = 1;
 const INITIAL_CREEP_COLOR: Color = .{.r = 0, .g = 0, .b = 0};
 
-fn min(a: f64, b: f64) f64 {
-    return if (a > b) b else a;
-}
-
-fn usizeToIsizeSub(a: usize, b: usize) isize {
-    const ai: isize = @intCast(a);
-    const bi: isize = @intCast(b);
-    return ai - bi;
-}
-
-fn absUsize(a: usize, b: usize) usize {
-    if (a > b) {
-        return a - b;
-    }
-    return b - a;
-}
-
-const needle: [1]u8 = .{','};
-
-pub const Position = struct {
-    row: usize,
-    col: usize,
-
-    pub fn vec2(self: Position) Vec2 {
-        return .{
-            .x = @floatFromInt(self.col),
-            .y = @floatFromInt(self.row),
-        };
-    }
-
-    pub fn toIdx(self: Position, cols: usize) usize {
-        return self.row * cols + self.col;
-    }
-
-    pub fn fromIdx(idx: usize, cols: usize) Position {
-        return .{
-            .row = idx / cols,
-            .col = idx % cols,
-        };
-    }
-
-    pub fn init(str: []const u8) ?Position {
-        const idxMaybe = std.mem.indexOf(u8, str, ",");
-        if (idxMaybe == null) {
-            return null;
-        }
-
-        const idx = idxMaybe.?;
-        const row = std.fmt.parseInt(usize, str[0..idx], 10) catch {
-            return null;
-        };
-        const col = std.fmt.parseInt(usize, str[idx + 1..], 10) catch {
-            return null;
-        };
-
-        return .{
-            .row = row,
-            .col = col,
-        };
-    }
-
-    pub fn string(self: Position, buf: []u8) !usize {
-        const out = try std.fmt.bufPrint(buf, "vec(r = {}, c = {})", self.row, self.col);
-        return out.len;
-    }
-};
-
-pub const Sized = struct {
-    cols: usize,
-    pos: Position,
-};
-
-pub const Coord = struct {
-    pos: Position,
-    team: u8,
-
-    pub fn string(self: Coord, buf: []u8) !usize {
-        assert(buf.len < 30, "needed buf with at least 20 characters");
-        var out = try std.fmt.bufPrint(buf, "choord(team = {} pos", .{self.team, self.pos});
-        var len = out.len;
-        len += try self.pos.string(buf[len..]);
-        out = try std.fmt.bufPrint(buf[len..], ")", .{});
-
-        return len + out.len;
-    }
-
-    pub fn init(msg: []const u8) ?Coord {
-        const teamNumber = msg[0];
-        if (teamNumber != '1' and teamNumber != '2') {
-            return null;
-        }
-        const pos = Position.init(msg[1..]);
-        if (pos == null) {
-            return null;
-        }
-
-        return .{
-            .pos = pos.?,
-            .team = teamNumber,
-        };
-    }
-};
-
 pub const NextRound = struct {
     pub fn init(msg: []const u8) ?NextRound {
         if (msg.len == 1 and msg.ptr[0] == 'n') {
@@ -167,9 +64,6 @@ const TowerCell: [3]Cell = .{
     .{.text = '*', .color = Black },
     .{.text = '\\', .color = Black },
 };
-const ZERO_POS: Position = .{.row = 0, .col = 0};
-const ZERO_POS_F: Vec2 = .{.x = 0.0, .y = 0.0};
-const ZERO_SIZED: Sized = .{.cols = 3, .pos = ZERO_POS};
 
 pub const Tower = struct {
     id: usize,
@@ -264,74 +158,6 @@ pub const Projectile = struct {
     rLife: u16,
     rColor: Color,
     rText: u8,
-};
-
-pub const Vec2 = struct {
-    x: f64,
-    y: f64,
-
-    pub fn eql(self: Vec2, b: Vec2) bool {
-        return self.x == b.x and self.y == b.y;
-    }
-
-    pub fn norm(self: Vec2) Vec2 {
-        const l = self.len();
-        return .{
-            .x = self.x / l,
-            .y = self.y / l,
-        };
-    }
-
-    pub fn subP(self: Vec2, b: Position) Vec2 {
-        const rf: f64 = @floatFromInt(b.row);
-        const cf: f64 = @floatFromInt(b.col);
-
-        return .{
-            .x = self.x - cf,
-            .y = self.y - rf,
-        };
-    }
-
-    pub fn len(self: Vec2) f64 {
-        return std.math.sqrt(self.x * self.x + self.y * self.y);
-    }
-
-    pub fn add(self: Vec2, b: Vec2) Vec2 {
-        return .{
-            .x = self.x + b.x,
-            .y = self.y + b.y,
-        };
-    }
-
-    pub fn scale(self: Vec2, s: f64) Vec2 {
-        return .{
-            .x = self.x * s,
-            .y = self.y * s,
-        };
-    }
-
-    pub fn position(self: *Vec2) Position {
-        assert(self.x >= 0, "x cannot be negative");
-        assert(self.y >= 0, "y cannot be negative");
-
-        return .{
-            .row = @intFromFloat(self.y),
-            .col = @intFromFloat(self.x),
-        };
-    }
-
-    pub fn fromPosition(pos: Position) Vec2 {
-        return .{
-            .y = @floatFromInt(pos.row),
-            .x = @floatFromInt(pos.col),
-        };
-    }
-
-    pub fn string(self: Vec2, buf: []u8) !usize {
-        const out = try std.fmt.bufPrint(buf, "x = {}, y = {}", .{self.x, self.y});
-        return out.len;
-    }
-
 };
 
 fn path(seen: []const isize, pos: usize, out: []usize) usize {
