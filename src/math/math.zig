@@ -74,13 +74,20 @@ pub const Position = struct {
 
     pub fn string(self: Position) ![]u8 {
         const tmp = scratchBuf(50);
-        return try std.fmt.bufPrint(tmp, "vec(r = {}, c = {})", self.row, self.col);
+        return try std.fmt.bufPrint(tmp, "vec(r = {}, c = {})", .{self.row, self.col});
     }
 };
 
 pub const Sized = struct {
     cols: usize,
     pos: Position,
+
+    pub fn string(self: Sized) ![]u8 {
+        return std.fmt.bufPrint(scratchBuf(50), "Sized(cols={}, pos={s})", .{
+            self.cols,
+            try self.pos.string(),
+        });
+    }
 };
 
 pub const Coord = struct {
