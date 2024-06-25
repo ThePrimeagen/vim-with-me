@@ -1,22 +1,22 @@
 const assert = @import("assert").assert;
 const std = @import("std");
-const types = @import("types.zig");
+const objects = @import("objects");
 
 // TODO: Make this adjustable
-const Position = types.Vec2;
-const Message = types.Message;
-const Coord = types.Coord;
+const Position = objects.Vec2;
+const Message = objects.Message;
+const Coord = objects.Coord;
 
 const ArrayList = std.ArrayList;
 const Allocator = std.mem.Allocator;
 
-const Tower = types.Tower;
-const Creep = types.Creep;
-const Projectile = types.Projectile;
+const Tower = objects.Tower;
+const Creep = objects.Creep;
+const Projectile = objects.Projectile;
 
-const TowerList = ArrayList(types.Tower);
-const CreepList = ArrayList(types.Creep);
-const ProjectileList = ArrayList(types.Projectile);
+const TowerList = ArrayList(objects.Tower);
+const CreepList = ArrayList(objects.Creep);
+const ProjectileList = ArrayList(objects.Projectile);
 
 pub const GameState = struct {
     playing: bool = true,

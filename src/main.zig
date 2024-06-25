@@ -2,17 +2,19 @@ const assert = @import("assert").assert;
 const std = @import("std");
 const print = std.debug.print;
 
+const objects = @import("objects");
+const math = @import("math");
+
 const renderer = @import("engine/renderer.zig");
 const time = @import("engine/time.zig");
 const canvas = @import("engine/canvas.zig");
 const input = @import("engine/input/input.zig");
 const framer = @import("engine/framer.zig");
 const stdout = @import("engine/stdout_output.zig");
-const objects = @import("objects/objects.zig");
 const encoding = @import("encoding/encoding.zig");
 
-const GameState = objects.GameState;
-const Message = objects.Message;
+const GameState = objects.gamestate.GameState;
+const Message = objects.message.Message;
 
 const Coord = input.Coord;
 const NextRound = input.NextRound;
@@ -22,7 +24,7 @@ pub fn main() !void {
     const allocator = gpa.allocator();
     defer _ = gpa.deinit();
 
-    var gs = gamestate.GameState.init(allocator);
+    var gs = GameState.init(allocator);
     var stdin = input.StdinInputter.init();
     var stdinInputter = stdin.inputter();
 
@@ -59,5 +61,6 @@ test { _ = encoding; }
 test { _ = time; }
 test { _ = framer; }
 test { _ = canvas; }
-test { _ = types; }
+test { _ = objects; }
+test { _ = math; }
 

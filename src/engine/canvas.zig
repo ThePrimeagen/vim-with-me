@@ -1,14 +1,15 @@
 const assert = @import("assert").assert;
 const framer = @import("framer.zig");
-const types = @import("types.zig");
+const math = @import("math");
+const colors = @import("objects").colors;
 const std = @import("std");
 
 const AnsiFramer = framer.AnsiFramer;
 const Allocator = std.mem.Allocator;
-const Position = types.Vec2;
-const Sized = types.Sized;
-const Color = types.Color;
-const Cell = types.Cell;
+const Position = math.Vec2;
+const Sized = math.Sized;
+const Color = colors.Color;
+const Cell = colors.Cell;
 
 const EMPTY_CELL = Cell{
     .text = ' ',
@@ -51,7 +52,7 @@ pub const Canvas = struct {
         self.alloc.free(self.cells);
     }
 
-    pub fn writeText(self: *Canvas, pos: Position, text: []const u8, color: types.Color) void {
+    pub fn writeText(self: *Canvas, pos: Position, text: []const u8, color: colors.Color) void {
         assert(pos.y < self.rows, "cannot write text off the screen rows");
         assert(pos.x + text.len < self.cols, "cannot write text off screen cols");
 

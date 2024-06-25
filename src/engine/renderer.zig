@@ -1,5 +1,5 @@
 const std = @import("std");
-const gamestate = @import("game-state.zig");
+const gamestate = @import("objects").gamestate;
 const canvas = @import("canvas.zig");
 
 const Allocator = std.mem.Allocator;

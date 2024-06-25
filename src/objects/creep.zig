@@ -1,164 +1,14 @@
-const assert = @import("assert").assert;
 const std = @import("std");
 
+const assert = @import("assert").assert;
+const math = @import("math");
+
+const colors = @import("colors.zig");
+
+const Color = colors.Color;
+const Cell = colors.Cell;
+const Red = colors.Red;
 const Allocator = std.mem.Allocator;
-const math = std.math;
-var scratchBuf: [8196]u8 = undefined;
-
-const INITIAL_AMMO = 50;
-const INITIAL_CREEP_LIFE = 10;
-const INITIAL_CREEP_SPEED = 1;
-const INITIAL_CREEP_COLOR: Color = .{.r = 0, .g = 0, .b = 0};
-
-pub const NextRound = struct {
-    pub fn init(msg: []const u8) ?NextRound {
-        if (msg.len == 1 and msg.ptr[0] == 'n') {
-            return .{ };
-        }
-        return null;
-    }
-};
-
-pub const Message = union(enum) {
-    round: NextRound,
-    coord: Coord,
-
-    pub fn init(msg: []const u8) ?Message {
-        const coord = Coord.init(msg);
-        if (coord) |c| {
-            return .{.coord = c};
-        }
-
-        const next = NextRound.init(msg);
-        if (next) |n| {
-            return .{.round = n};
-        }
-
-        return null;
-    }
-};
-
-pub const Color = struct {
-    r: u8,
-    g: u8,
-    b: u8,
-
-    pub fn equal(self: Color, other: Color) bool {
-        return self.r == other.r and
-            self.g == other.g and
-            self.b == other.b;
-    }
-
-};
-
-pub const Black: Color = .{.r = 0, .g = 0, .b = 0 };
-pub const Red: Color = .{.r = 255, .g = 0, .b = 0 };
-pub const Cell = struct {
-    text: u8,
-    color: Color,
-};
-
-const TowerSize = 3;
-const TowerCell: [3]Cell = .{
-    .{.text = '/', .color = Black },
-    .{.text = '*', .color = Black },
-    .{.text = '\\', .color = Black },
-};
-
-pub const Tower = struct {
-    id: usize,
-    team: u8,
-
-    // position
-    pos: Position = ZERO_POS,
-    maxAmmo: u16 = INITIAL_AMMO,
-    ammo: u16 = INITIAL_AMMO,
-    alive: bool = true,
-    level: u8 = 1,
-    radius: u8 = 1,
-    damage: u8 = 1,
-
-    // rendered
-    rSized: Sized = ZERO_SIZED,
-    rAmmo: u16 = INITIAL_AMMO,
-    rCells: [3]Cell = TowerCell,
-
-    pub fn contains(self: *Tower, pos: Position) bool {
-        if (self.alive) {
-            return false;
-        }
-
-        const c = absUsize(self.pos.col, pos.col);
-        return self.pos.row == pos.row and c <= 1;
-    }
-
-    pub fn color(self: *Tower, c: Color) void {
-        for (0..self.rCells.len) |idx| {
-            self.rCells[idx].color = c;
-        }
-    }
-
-    pub fn create(id: usize, team: u8, pos: Position) Tower {
-        var p = pos;
-        if (p.col == 0) {
-            p.col = 1;
-        }
-
-        return .{
-            .id = id,
-            .team = team,
-            .pos = p,
-            .rSized = .{
-                .cols = TowerSize,
-                .pos = p
-            },
-        };
-    }
-
-    pub fn update(self: *Tower) void {
-        if (!self.alive) {
-            return;
-        }
-    }
-
-    pub fn render(self: *Tower) void {
-
-        const life = self.getLifePercent();
-        const sqLife = life * life;
-
-        self.rCells[1].text = '0' + self.level;
-        self.color(.{
-            .r = @intFromFloat(255.0 * life),
-            .b = @intFromFloat(255.0 * sqLife),
-            .g = @intFromFloat(255.0 * sqLife),
-        });
-    }
-
-    fn getLifePercent(self: *Tower) f64 {
-        const max: f64 = @floatFromInt(self.maxAmmo);
-        const ammo: f64 = @floatFromInt(self.ammo);
-        return ammo / max;
-    }
-};
-
-pub const Projectile = struct {
-    id: usize,
-    createdBy: usize,
-    target: usize,
-    targetType: u8, // i have to look up creep or tower
-    team: u8,
-
-    pos: Position,
-    life: u16,
-    speed: f32,
-    alive: bool = true,
-
-    // rendered
-    rPos: Position,
-    rLife: u16,
-    rColor: Color,
-    rText: u8,
-};
 
 fn path(seen: []const isize, pos: usize, out: []usize) usize {
     var idx: usize = 0;
@@ -208,6 +58,10 @@ fn walk(from: usize, pos: usize, cols: usize, board: []const bool, seen: []isize
 }
 
 
+const INITIAL_CREEP_LIFE = 10;
+const INITIAL_CREEP_SPEED = 1;
+const INITIAL_CREEP_COLOR: Color = .{.r = 0, .g = 0, .b = 0};
+
 const CreepSize = 1;
 const CreepCell: [1]Cell = .{
     .{.text = '*', .color = Red },
@@ -218,17 +72,17 @@ pub const Creep = struct {
     team: u8,
     cols: usize,
 
-    pos: Vec2 = ZERO_POS_F,
+    pos: math.Vec2 = math.ZERO_POS_F,
     life: u16 = INITIAL_CREEP_LIFE,
     speed: f32 = INITIAL_CREEP_SPEED,
     alive: bool = true,
 
     // rendered
-    rPos: Position = ZERO_POS,
+    rPos: math.Position = math.ZERO_POS,
     rLife: u16 = INITIAL_CREEP_LIFE,
     rColor: Color = INITIAL_CREEP_COLOR,
     rCells: [1]Cell = CreepCell,
-    rSized: Sized = ZERO_SIZED,
+    rSized: math.Sized = math.ZERO_SIZED,
 
     scratch: []isize,
     path: []usize,
@@ -263,8 +117,8 @@ pub const Creep = struct {
         self.alloc.free(self.scratch);
     }
 
-    pub fn initialPosition(creep: *Creep, pos: Position) *Creep {
-        creep.pos = Vec2.fromPosition(pos);
+    pub fn initialPosition(creep: *Creep, pos: math.Position) *Creep {
+        creep.pos = math.Vec2.fromPosition(pos);
         creep.rPos = creep.pos.position();
         creep.rSized = .{
             .cols = CreepSize,
@@ -274,7 +128,7 @@ pub const Creep = struct {
         return creep;
     }
 
-    pub fn contains(self: *Creep, pos: Position) bool {
+    pub fn contains(self: *Creep, pos: math.Position) bool {
         if (self.dead) {
             return false;
         }
@@ -320,13 +174,13 @@ pub const Creep = struct {
             return;
         }
 
-        const to = Position.fromIdx(self.path[self.pathIdx], self.cols);
+        const to = math.Position.fromIdx(self.path[self.pathIdx], self.cols);
         const dist = self.pos.subP(to);
         const normDist = dist.norm();
         const len = dist.len();
 
         const deltaF: f64 = @floatFromInt(delta);
-        const deltaP: f64 = min(deltaF / 1000.0 * self.speed, len);
+        const deltaP: f64 = math.min(deltaF / 1000.0 * self.speed, len);
         const change = normDist.scale(-deltaP);
         self.pos = self.pos.add(change);
 
@@ -401,3 +255,4 @@ test "creep movement" {
     try t.expect(creep.pos.x == 2.0);
     try t.expect(creep.pos.y == 2.0);
 }
+
