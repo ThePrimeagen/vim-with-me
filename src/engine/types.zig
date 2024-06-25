@@ -2,16 +2,22 @@ const assert = @import("assert").assert;
 const std = @import("std");
 
 const Allocator = std.mem.Allocator;
+const math = std.math;
+var scratchBuf: [8196]u8 = undefined;
 
 const INITIAL_AMMO = 50;
 const INITIAL_CREEP_LIFE = 10;
 const INITIAL_CREEP_SPEED = 1;
 const INITIAL_CREEP_COLOR: Color = .{.r = 0, .g = 0, .b = 0};
 
+fn min(a: f64, b: f64) f64 {
+    return if (a > b) b else a;
+}
+
 fn usizeToIsizeSub(a: usize, b: usize) isize {
     const ai: isize = @intCast(a);
     const bi: isize = @intCast(b);
-    return a - b;
+    return ai - bi;
 }
 
 fn absUsize(a: usize, b: usize) usize {
@@ -27,7 +33,14 @@ pub const Position = struct {
     row: usize,
     col: usize,
 
-    pub fn toIdx(self: *Position, cols: usize) usize {
+    pub fn vec2(self: Position) Vec2 {
+        return .{
+            .x = @floatFromInt(self.col),
+            .y = @floatFromInt(self.row),
+        };
+    }
+
+    pub fn toIdx(self: Position, cols: usize) usize {
         return self.row * cols + self.col;
     }
 
@@ -57,6 +70,11 @@ pub const Position = struct {
             .col = col,
         };
     }
+
+    pub fn string(self: Position, buf: []u8) !usize {
+        const out = try std.fmt.bufPrint(buf, "vec(r = {}, c = {})", self.row, self.col);
+        return out.len;
+    }
 };
 
 pub const Sized = struct {
@@ -67,6 +85,16 @@ pub const Sized = struct {
 pub const Coord = struct {
     pos: Position,
     team: u8,
+
+    pub fn string(self: Coord, buf: []u8) !usize {
+        assert(buf.len < 30, "needed buf with at least 20 characters");
+        var out = try std.fmt.bufPrint(buf, "choord(team = {} pos", .{self.team, self.pos});
+        var len = out.len;
+        len += try self.pos.string(buf[len..]);
+        out = try std.fmt.bufPrint(buf[len..], ")", .{});
+
+        return len + out.len;
+    }
 
     pub fn init(msg: []const u8) ?Coord {
         const teamNumber = msg[0];
@@ -140,7 +168,7 @@ const TowerCell: [3]Cell = .{
     .{.text = '\\', .color = Black },
 };
 const ZERO_POS: Position = .{.row = 0, .col = 0};
-const ZERO_POS_F: Vec2 = .{.row = 0.0, .col = 0.0};
+const ZERO_POS_F: Vec2 = .{.x = 0.0, .y = 0.0};
 const ZERO_SIZED: Sized = .{.cols = 3, .pos = ZERO_POS};
 
 pub const Tower = struct {
@@ -236,14 +264,30 @@ pub const Vec2 = struct {
     x: f64,
     y: f64,
 
+    pub fn eql(self: Vec2, b: Vec2) bool {
+        return self.x == b.x and self.y == b.y;
+    }
+
+    pub fn norm(self: Vec2) Vec2 {
+        const l = self.len();
+        return .{
+            .x = self.x / l,
+            .y = self.y / l,
+        };
+    }
+
     pub fn subP(self: Vec2, b: Position) Vec2 {
-        const rf = @floatFromInt(b.row);
-        const cf = @floatFromInt(b.col);
+        const rf: f64 = @floatFromInt(b.row);
+        const cf: f64 = @floatFromInt(b.col);
 
         return .{
             .x = self.x - cf,
             .y = self.y - rf,
         };
+    }
+
+    pub fn len(self: Vec2) f64 {
+        return std.math.sqrt(self.x * self.x + self.y * self.y);
     }
 
     pub fn add(self: Vec2, b: Vec2) Vec2 {
@@ -272,10 +316,16 @@ pub const Vec2 = struct {
 
     pub fn fromPosition(pos: Position) Vec2 {
         return .{
-            .row = @floatFromInt(pos.row),
-            .col = @floatFromInt(pos.col),
+            .y = @floatFromInt(pos.row),
+            .x = @floatFromInt(pos.col),
         };
     }
+
+    pub fn string(self: Vec2, buf: []u8) !usize {
+        const out = try std.fmt.bufPrint(buf, "x = {}, y = {}", .{self.x, self.y});
+        return out.len;
+    }
+
 };
 
 fn path(seen: []const isize, pos: usize, out: []usize) usize {
@@ -348,15 +398,37 @@ pub const Creep = struct {
     rCells: [1]Cell = CreepCell,
     rSized: Sized = ZERO_SIZED,
 
+    scratch: []isize,
     path: []usize,
     pathIdx: usize = 0,
     pathLen: usize = 0,
+    alloc: Allocator,
+
+    pub fn string(self: *Creep, buf: []u8) !usize {
+        var out = try std.fmt.bufPrint(buf, "creep({}, {})\r\n", .{self.id, self.team});
+        var len = out.len;
+
+        out = try std.fmt.bufPrint(buf[len..], "  pos = ", .{});
+        len += out.len;
+        len += try self.pos.string(buf[len..]);
+        out = try std.fmt.bufPrint(buf[len..], "  pathIdx = {}\r\nlife = {}\r\n  speed = {}\r\n  alive = {}\n\n)", .{self.pathIdx, self.life, self.speed, self.alive});
+        return len + out.len;
+    }
 
     pub fn init(alloc: Allocator, rows: usize, cols: usize) !Creep {
         return .{
-            .path = try alloc.alloc(u8, rows * cols),
+            .path = try alloc.alloc(usize, rows * cols),
+            .scratch = try alloc.alloc(isize, rows * cols),
             .cols = cols,
+            .alloc = alloc,
+            .id = 0,
+            .team = 0,
         };
+    }
+
+    pub fn deinit(self: *Creep) void {
+        self.alloc.free(self.path);
+        self.alloc.free(self.scratch);
     }
 
     pub fn initialPosition(creep: *Creep, pos: Position) *Creep {
@@ -370,7 +442,7 @@ pub const Creep = struct {
         return creep;
     }
 
-    fn contains(self: *Creep, pos: Position) bool {
+    pub fn contains(self: *Creep, pos: Position) bool {
         if (self.dead) {
             return false;
         }
@@ -379,31 +451,51 @@ pub const Creep = struct {
         return myPosition.row == pos.row and myPosition.col == pos.col;
     }
 
-    fn calculatePath(self: *Creep, board: []bool, cols: usize) *Creep {
+    pub fn calculatePath(self: *Creep, board: []const bool, cols: usize) void {
         assert(board.len % cols == 0, "the length is not a rectangle");
+        assert(board.len == self.path.len, "the length of the board is different than what the creep was initialized with.");
 
-        var seen: []isize = .{-1} ** board.len;
-        const pos = self.pos.position();
+        for (0..self.scratch.len) |idx| {
+            self.scratch[idx] = -1;
+        }
+        const pos = self.pos.position().toIdx(self.cols);
 
-
-        const last = walk(pos, pos, cols, board, &seen);
+        const last = walk(pos, pos, cols, board, self.scratch);
         if (last == 0) {
             // TODO: i need to just go straight forward if i can...
         } else {
-            self.pathLen = path(&seen, last, self.path);
+            self.pathLen = path(self.scratch, last, self.path);
             self.pathIdx = 0;
         }
-
-        return self;
     }
 
-    fn update(self: *Creep, delta: u64) void {
-        const deltaF: f64 = @floatFromInt(delta);
-        const deltaP: f64 = deltaF / 1000.0;
+    pub fn complete(self: *Creep) bool {
+        return self.pos.position().col == self.cols - 1;
+    }
+
+    pub fn dead(self: *Creep) bool {
+        return !self.alive;
+    }
+
+    // TODO: I suck at game programming... how bad is this...?
+    pub fn update(self: *Creep, delta: u64) void {
+        if (self.pos.position().col == self.cols - 1) {
+            return;
+        }
 
         const to = Position.fromIdx(self.path[self.pathIdx], self.cols);
+        const dist = self.pos.subP(to);
+        const normDist = dist.norm();
+        const len = dist.len();
 
-        self.pos = self.pos.subP(to).scale(-deltaP).add(self.pos);
+        const deltaF: f64 = @floatFromInt(delta);
+        const deltaP: f64 = min(deltaF / 1000.0 * self.speed, len);
+        const change = normDist.scale(-deltaP);
+        self.pos = self.pos.add(change);
+
+        if (self.pos.eql(to.vec2())) {
+            self.pathIdx += 1;
+        }
     }
 
     fn render(self: *Creep) void {
@@ -412,15 +504,16 @@ pub const Creep = struct {
 };
 
 const t = std.testing;
+const testBoaordSize = 3;
+const testBoard = [9]bool{
+    true, false, true,
+    true, false, true,
+    true, true, true,
+};
 test "bfs" {
-    const board = [9]bool{
-        true, false, true,
-        true, false, true,
-        true, true, true,
-    };
     var seen: [9]isize = .{-1} ** 9;
 
-    const out = walk(0, 0, 3, &board, &seen);
+    const out = walk(0, 0, 3, &testBoard, &seen);
     try t.expect(out == 8);
 
     var expected: [9]isize = .{
@@ -437,4 +530,37 @@ test "bfs" {
 
     try t.expect(len == 4);
     try t.expectEqualSlices(usize, &pExpect, p[0..len]);
+}
+
+fn runUntil(creep: *Creep, to: usize, maxRun: usize) void {
+    var elapsed: usize = 0;
+    while (elapsed < maxRun and creep.pathIdx != to) : (elapsed += 16) {
+        creep.update(16);
+    }
+}
+
+test "creep movement" {
+    var creep = try Creep.init(t.allocator, 3, 3);
+    defer creep.deinit();
+    _ = creep.
+        initialPosition(.{.row = 0, .col = 0}).
+        calculatePath(&testBoard, testBoaordSize);
+
+    try t.expect(creep.pathIdx == 0);
+    runUntil(&creep, 1, 1500);
+    try t.expect(creep.pos.x == 0.0);
+    try t.expect(creep.pos.y == 1.0);
+    try t.expect(creep.pathIdx == 1);
+    runUntil(&creep, 2, 1500);
+    try t.expect(creep.pathIdx == 2);
+    try t.expect(creep.pos.x == 0.0);
+    try t.expect(creep.pos.y == 2.0);
+    runUntil(&creep, 3, 1500);
+    try t.expect(creep.pathIdx == 3);
+    try t.expect(creep.pos.x == 1.0);
+    try t.expect(creep.pos.y == 2.0);
+    runUntil(&creep, 4, 1500);
+    try t.expect(creep.pathIdx == 4);
+    try t.expect(creep.pos.x == 2.0);
+    try t.expect(creep.pos.y == 2.0);
 }
