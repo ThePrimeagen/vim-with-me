@@ -52,14 +52,20 @@ pub const GameState = struct {
     }
 
     pub fn init(alloc: Allocator, values: *const Values) !GameState {
-        return .{
+        var gs = .{
             .towers = TowerList.init(alloc),
             .creeps = CreepList.init(alloc),
             .projectile = ProjectileList.init(alloc),
-            .board = try alloc.alloc(bool, values.rows * values.cols),
+            .board = try alloc.alloc(bool, values.size),
             .alloc = alloc,
             .values = values,
         };
+
+        for (0..values.size) |i| {
+            gs.board[i] = true;
+        }
+
+        return gs;
     }
 
     pub fn deinit(gs: *GameState) void {
