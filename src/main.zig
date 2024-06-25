@@ -7,18 +7,18 @@ const math = @import("math");
 
 const renderer = @import("engine/renderer.zig");
 const engine = @import("engine/engine.zig");
-const time = @import("engine/time.zig");
-const canvas = @import("engine/canvas.zig");
-const input = @import("engine/input/input.zig");
-const framer = @import("engine/framer.zig");
-const stdout = @import("engine/stdout_output.zig");
+
+// TODO: Remove encoding
 const encoding = @import("encoding/encoding.zig");
 
 const GameState = objects.gamestate.GameState;
 const Message = objects.message.Message;
 
-const Coord = input.Coord;
-const NextRound = input.NextRound;
+const Coord = engine.input.Coord;
+const NextRound = engine.input.NextRound;
+
+const ROWS = 30;
+const COLS = 30;
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -26,31 +26,43 @@ pub fn main() !void {
     defer _ = gpa.deinit();
 
     var gs = GameState.init(allocator);
-    var stdin = input.StdinInputter.init();
+    defer gs.deinit();
+
+    var stdin = engine.input.StdinInputter.init();
     var stdinInputter = stdin.inputter();
 
-    const inputter = try input.createInputRunner(allocator, &stdinInputter);
+    const inputter = try engine.input.createInputRunner(allocator, &stdinInputter);
     defer inputter.deinit();
 
-    var render = try renderer.Renderer.init(30, 30, allocator);
+    var render = try engine.renderer.Renderer.init(ROWS, COLS, allocator);
+    gs.rows = ROWS;
+    gs.cols = COLS;
+
     defer render.deinit();
 
-    const out = stdout.output;
+    const out = engine.stdout.output;
 
-    var fps = time.FPS.init(166_666);
+    var fps = engine.time.FPS.init(166_666);
     _ = fps.delta();
 
-    while (true) {
+    try engine.gamestate.placeCreep(&gs, .{
+        .row = 0,
+        .col = 0,
+    });
+
+    var count: usize = 0;
+    while (count < 1000) : (count += 1) {
         fps.sleep();
         const delta = fps.delta();
-        gs.updateTime(delta);
 
         const msgInput = inputter.pop();
         if (msgInput) |msg| {
             if (Message.init(msg.input[0..msg.length])) |p| {
-                try gs.message(p);
+                try engine.gamestate.message(&gs, p);
             }
         }
+
+        engine.gamestate.update(&gs, delta);
 
         try render.render(&gs);
         try out(render.output);
@@ -59,9 +71,6 @@ pub fn main() !void {
 }
 
 test { _ = encoding; }
-test { _ = time; }
-test { _ = framer; }
-test { _ = canvas; }
 test { _ = objects; }
 test { _ = math; }
 test { _ = engine; }

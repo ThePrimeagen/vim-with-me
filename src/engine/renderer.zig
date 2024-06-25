@@ -2,6 +2,9 @@ const std = @import("std");
 const gamestate = @import("objects").gamestate;
 const canvas = @import("canvas.zig");
 
+const towers = @import("tower.zig");
+const creeps = @import("creep.zig");
+
 const Allocator = std.mem.Allocator;
 const GameState = gamestate.GameState;
 
@@ -24,12 +27,12 @@ pub const Renderer = struct {
 
     pub fn render(self: *Renderer, gs: *GameState) !void {
         for (gs.towers.items) |*t| {
-            t.render();
+            towers.render(t, gs);
             self.canvas.place(t.rSized, &t.rCells);
         }
 
         for (gs.creeps.items) |*c| {
-            c.render();
+            creeps.render(c, gs);
             self.canvas.place(c.rSized, &c.rCells);
         }
 

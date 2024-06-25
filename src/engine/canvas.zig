@@ -1,4 +1,5 @@
-const assert = @import("assert").assert;
+const a = @import("assert");
+const assert = a.assert;
 const framer = @import("framer.zig");
 const math = @import("math");
 const colors = @import("objects").colors;
@@ -52,11 +53,11 @@ pub const Canvas = struct {
         self.alloc.free(self.cells);
     }
 
-    pub fn writeText(self: *Canvas, pos: Position, text: []const u8, color: colors.Color) void {
-        assert(pos.y < self.rows, "cannot write text off the screen rows");
-        assert(pos.x + text.len < self.cols, "cannot write text off screen cols");
+    pub fn writeText(self: *Canvas, pos: math.Position, text: []const u8, color: colors.Color) void {
+        assert(pos.row < self.rows, "cannot write text off the screen rows");
+        assert(pos.col + text.len < self.cols, "cannot write text off screen cols");
 
-        const offset = pos.y * self.cols + pos.x;
+        const offset = pos.row * self.cols + pos.col;
         for (text, offset..) |txt, idx| {
             self.cells[idx] = .{
                 .text = txt,
@@ -68,10 +69,16 @@ pub const Canvas = struct {
     // TODO: I think that position could be swapped here
     pub fn place(self: *Canvas, sized: Sized, cells: []const Cell) void {
 
+        std.debug.print("{s}\n", .{a.u(sized.string())});
+
+        assert(sized.cols != 0, "cannot render a 0 sized object");
         assert(cells.len > 0, "writing an empty object");
         assert(cells.len % sized.cols == 0, "must provide a square");
+
+        // TODO: rethink these?  Just have the canvas draw what it can?
+        std.debug.print("here we are: {} + {} / {} < {}\n", .{sized.pos.row, cells.len, sized.cols, self.rows});
         assert(sized.pos.row + cells.len / sized.cols < self.rows, "cannot write text off the screen rows");
-        assert(sized.pos.col + sized.cols < self.cols, "cannot write text off screen cols");
+        assert(sized.pos.col + sized.cols < self.cols, "cannot paint object off screen cols");
 
         for (cells, 0..) |cell, idx| {
             const col = idx % sized.cols;

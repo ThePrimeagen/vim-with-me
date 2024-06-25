@@ -3,10 +3,6 @@ const objects = @import("objects");
 const std = @import("std");
 const unwrap = @import("assert").unwrap;
 
-fn u(v: anyerror![]u8) []u8 {
-    return unwrap([]u8, v);
-}
-
 const Tower = objects.tower.Tower;
 const colors = objects.colors;
 const Color = colors.Color;
@@ -61,18 +57,20 @@ pub const TowerBuilder = struct {
 
     pub fn start() TowerBuilder {
         return .{
-            .id = nextTowerId(),
+            ._id = nextTowerId(),
         };
     }
 
     pub fn team(t: TowerBuilder, myTeam: u8) TowerBuilder {
-        t.team = myTeam;
-        return t;
+        var tow = t;
+        tow._team = myTeam;
+        return tow;
     }
 
     pub fn pos(t: TowerBuilder, p: math.Position) TowerBuilder {
-        t.pos = p;
-        return t;
+        var tow = t;
+        tow._pos = p.vec2();
+        return tow;
     }
 
     pub fn tower(t: TowerBuilder) Tower {
@@ -104,11 +102,11 @@ pub fn update(self: *Tower, gs: *GS) void {
 
 pub fn render(self: *Tower, gs: *GS) void {
 
-    const life = self.getLifePercent();
+    const life = getLifePercent(self);
     const sqLife = life * life;
 
     self.rCells[1].text = '0' + self.level;
-    self.color(.{
+    color(self, .{
         .r = @intFromFloat(255.0 * life),
         .b = @intFromFloat(255.0 * sqLife),
         .g = @intFromFloat(255.0 * sqLife),

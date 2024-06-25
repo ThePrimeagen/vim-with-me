@@ -14,7 +14,6 @@ pub const Projectile = struct {
     alive: bool = true,
 
     // rendered
-    rPos: math.Position,
     rLife: u16,
     rColor: colors.Color,
     rText: u8,

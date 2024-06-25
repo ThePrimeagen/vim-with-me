@@ -2,6 +2,7 @@ const std = @import("std");
 
 const assert = @import("assert").assert;
 const math = @import("math");
+const scratchBuf = @import("scratch").scratchBuf;
 
 const colors = @import("colors.zig");
 
@@ -30,33 +31,28 @@ pub const Creep = struct {
     alive: bool = true,
 
     // rendered
-    rPos: math.Position = math.ZERO_POS,
     rLife: u16 = INITIAL_CREEP_LIFE,
     rColor: Color = INITIAL_CREEP_COLOR,
     rCells: [1]Cell = CreepCell,
     rSized: math.Sized = math.ZERO_SIZED,
 
-    scratch: []isize,
     path: []usize,
     pathIdx: usize = 0,
     pathLen: usize = 0,
     alloc: Allocator,
 
-    pub fn string(self: *Creep, buf: []u8) !usize {
-        var out = try std.fmt.bufPrint(buf, "creep({}, {})\r\n", .{self.id, self.team});
-        var len = out.len;
-
-        out = try std.fmt.bufPrint(buf[len..], "  pos = ", .{});
-        len += out.len;
-        len += try self.pos.string(buf[len..]);
-        out = try std.fmt.bufPrint(buf[len..], "  pathIdx = {}\r\nlife = {}\r\n  speed = {}\r\n  alive = {}\n\n)", .{self.pathIdx, self.life, self.speed, self.alive});
-        return len + out.len;
+    pub fn string(self: *Creep) ![]u8 {
+        const buf = scratchBuf(150);
+        return std.fmt.bufPrint(buf, "creep({}, {}, {})\r\n  pos = {s}\r\n  pathIdx = {}, life = {}, speed = {}\r\n", .{
+            self.alive, self.id, self.team,
+            try self.pos.string(),
+            self.pathIdx, self.life, self.speed,
+        });
     }
 
     pub fn init(alloc: Allocator, rows: usize, cols: usize) !Creep {
         return .{
             .path = try alloc.alloc(usize, rows * cols),
-            .scratch = try alloc.alloc(isize, rows * cols),
             .cols = cols,
             .alloc = alloc,
             .id = 0,
@@ -66,7 +62,6 @@ pub const Creep = struct {
 
     pub fn deinit(self: *Creep) void {
         self.alloc.free(self.path);
-        self.alloc.free(self.scratch);
     }
 };
 
