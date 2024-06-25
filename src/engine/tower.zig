@@ -1,5 +1,6 @@
 const math = @import("math");
 const objects = @import("objects");
+const std = @import("std");
 
 const Tower = objects.tower.Tower;
 const colors = objects.colors;
@@ -22,13 +23,15 @@ fn nextTowerId() usize {
     return out;
 }
 
-pub fn contains(self: *Tower, pos: math.Position) bool {
+pub fn contains(self: *Tower, pos: math.Vec2) bool {
     if (self.alive) {
         return false;
     }
+    const pPos = pos.position();
+    const tPos = self.pos.position();
 
-    const c = math.absUsize(self.pos.col, pos.col);
-    return self.pos.row == pos.row and c <= 1;
+    const c = math.absUsize(pPos.col, tPos.col);
+    return tPos.row == pPos.row and c <= 1;
 }
 
 pub fn color(self: *Tower, c: Color) void {
@@ -49,8 +52,8 @@ pub const TowerBuilder = struct {
         };
     }
 
-    pub fn team(t: TowerBuilder, te: u8) TowerBuilder {
-        t.team = te;
+    pub fn team(t: TowerBuilder, myTeam: u8) TowerBuilder {
+        t.team = myTeam;
         return t;
     }
 
@@ -100,3 +103,27 @@ fn getLifePercent(self: *Tower) f64 {
     const ammo: f64 = @floatFromInt(self.ammo);
     return ammo / max;
 }
+
+fn createTestTower() Tower {
+    return .{
+        .id = nextTowerId(),
+        .pos = math.ZERO_POS,
+        .team = 0,
+        .rSized = .{
+            .pos = math.ZERO_POS,
+            .cols = TowerSize,
+        },
+        .rCells = TowerCell,
+    };
+}
+
+const testing = std.testing;
+test "tower contains" {
+    var t = createTestTower();
+    try testing.expect(contains(&t, .{.x = -0.9999, .y = 0}));
+    try testing.expect(contains(&t, .{.x = 0.9999, .y = 0}));
+    try testing.expect(contains(&t, .{.x = 0, .y = 0}));
+    try testing.expect(!contains(&t, .{.x = 1, .y = 0}));
+    try testing.expect(!contains(&t, .{.x = -1, .y = 0}));
+}
+
