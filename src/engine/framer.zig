@@ -138,7 +138,10 @@ pub const AnsiFramer = struct {
 
 const testing = std.testing;
 test "AnsiFramer should color and newline a 3x3" {
-    var frame = AnsiFramer.init(3, 3);
+    var values = Values{.rows = 3, .cols = 3};
+    values.init();
+
+    var frame = AnsiFramer.init(&values);
     var out = [1]u8{0} ** 100;
     var colors1 = [9]Cell{
         .{.text = 'a', .color = .{.r = 69, .g = 42, .b = 0}},

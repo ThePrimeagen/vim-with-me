@@ -102,7 +102,10 @@ pub const Canvas = struct {
 
 const t = std.testing;
 test "i think this test is terribly written, i need help or a doctor" {
-    var canvas = try Canvas.init(10, 10, t.allocator);
+    var values = Values{.rows = 10, .cols = 10};
+    values.init();
+
+    var canvas = try Canvas.init(t.allocator, &values);
     defer canvas.deinit();
 
     const newLine = "\r\n";

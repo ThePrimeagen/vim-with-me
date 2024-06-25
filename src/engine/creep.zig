@@ -91,7 +91,8 @@ pub fn contains(self: *Creep, pos: math.Vec2) bool {
     return myPosition.row == inPos.row and myPosition.col == inPos.col;
 }
 
-pub fn calculatePath(self: *Creep, board: []const bool, cols: usize) void {
+pub fn calculatePath(self: *Creep, board: []const bool) void {
+    const cols = self.values.cols;
     assert(board.len % cols == 0, "the length is not a rectangle");
     assert(board.len == self.path.len, "the length of the board is different than what the creep was initialized with.");
 
@@ -99,7 +100,7 @@ pub fn calculatePath(self: *Creep, board: []const bool, cols: usize) void {
         self.scratch[idx] = -1;
     }
 
-    const pos = self.pos.position().toIdx(self.cols);
+    const pos = self.pos.position().toIdx(cols);
 
     const last = walk(pos, pos, cols, board, self.scratch);
     if (last == 0) {
@@ -158,12 +159,17 @@ const testEmptyBoard = [9]bool{
     true, true, true,
     true, true, true,
 };
-const testValues = objects.Values{
-    .rows = 3,
-    .cols = 3,
+var testValues = blk: {
+    var values = objects.Values{
+        .rows = 3,
+        .cols = 3,
+    };
+    values.init();
+    break :blk values;
 };
 
 test "bfs" {
+    testValues.init();
     var seen: [9]isize = .{-1} ** 9;
 
     const out = walk(0, 0, 3, &testBoard, &seen);
@@ -196,9 +202,9 @@ test "creep movement" {
     var gs = try GS.init(t.allocator, &testValues);
     defer gs.deinit();
 
-    var creep = try create(t.allocator, 0, 0, 3, 3, .{.x = 0, .y = 0});
+    var creep = try create(t.allocator, 0, 0, &testValues, .{.x = 0, .y = 0});
     defer creep.deinit();
-    _ = calculatePath(&creep, &testBoard, testBoaordSize);
+    _ = calculatePath(&creep, &testBoard);
 
     gs.loopDeltaUS = 16_000;
 
@@ -222,7 +228,7 @@ test "creep movement" {
 }
 
 test "creep contains" {
-    var creep = try create(t.allocator, 0, 0, 3, 3, .{.y = 1, .x = 1});
+    var creep = try create(t.allocator, 0, 0, &testValues, .{.y = 1, .x = 1});
     defer creep.deinit();
 
     try t.expect(!contains(&creep, .{.x = 0.9999, .y = 0}));
