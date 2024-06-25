@@ -1,6 +1,12 @@
+const assert = @import("assert").assert;
 const std = @import("std");
 
+const Allocator = std.mem.Allocator;
+
 const INITIAL_AMMO = 50;
+const INITIAL_CREEP_LIFE = 10;
+const INITIAL_CREEP_SPEED = 1;
+const INITIAL_CREEP_COLOR: Color = .{.r = 0, .g = 0, .b = 0};
 
 fn absUsize(a: usize, b: usize) usize {
     if (a > b) {
@@ -13,6 +19,10 @@ const needle: [1]u8 = .{','};
 pub const Position = struct {
     row: usize,
     col: usize,
+
+    pub fn toIdx(self: *Position, cols: usize) usize {
+        return self.row * cols + self.col;
+    }
 
     pub fn init(str: []const u8) ?Position {
         const idxMaybe = std.mem.indexOf(u8, str, ",");
@@ -115,6 +125,7 @@ const TowerCell: [3]Cell = .{
     .{.text = '\\', .color = Black },
 };
 const ZERO_POS: Position = .{.row = 0, .col = 0};
+const ZERO_POS_F: PositionF = .{.row = 0.0, .col = 0.0};
 const ZERO_SIZED: Sized = .{.cols = 3, .pos = ZERO_POS};
 
 pub const Tower = struct {
@@ -206,26 +217,165 @@ pub const Projectile = struct {
     rText: u8,
 };
 
+pub const PositionF = struct {
+    row: f64,
+    col: f64,
+
+    pub fn position(self: *PositionF) Position {
+        return .{
+            .row = @intFromFloat(self.row),
+            .col = @intFromFloat(self.col),
+        };
+    }
+
+    pub fn fromPosition(pos: Position) PositionF {
+        return .{
+            .row = @floatFromInt(pos.row),
+            .col = @floatFromInt(pos.col),
+        };
+    }
+};
+
+fn path(seen: []const isize, pos: usize, out: []usize) usize {
+    var idx: usize = 0;
+
+    var p = pos;
+    while (seen[p] != p) {
+        out[idx] = p;
+        p = @intCast(seen[p]);
+
+        idx += 1;
+    }
+
+    std.mem.reverse(usize, out[0..idx]);
+    return idx;
+}
+
+fn walk(from: usize, pos: usize, cols: usize, board: []const bool, seen: []isize) usize {
+    assert(board.len % cols == 0, "board is not a rectangle");
+    assert(board.len == seen.len, "board and seen should have the same size");
+
+    if (pos >= seen.len or seen[pos] != -1 or board[pos] == false) {
+        return 0;
+    }
+
+    seen[pos] = @intCast(from);
+
+    // I am at the end
+    if (pos % cols == cols - 1) {
+        return pos;
+    }
+
+    const iCols: isize = @intCast(cols);
+    const directions: [4]isize = .{1, -iCols, iCols, -1};
+    for (directions) |d| {
+        const iPos: isize = @intCast(pos);
+        if (iPos + d < 0) {
+            continue;
+        }
+
+        const out = walk(pos, @intCast(iPos + d), cols, board, seen);
+        if (out != 0) {
+            return out;
+        }
+    }
+
+    return 0;
+}
+
+
 pub const Creep = struct {
     id: usize,
     team: u8,
 
-    pos: Position,
-    life: u16,
-    speed: f32,
-    dead: bool,
+    pos: PositionF = ZERO_POS_F,
+    life: u16 = INITIAL_CREEP_LIFE,
+    speed: f32 = INITIAL_CREEP_SPEED,
+    alive: bool = true,
 
     // rendered
-    rPos: Position,
-    rLife: u16,
-    rColor: Color,
-    rText: u8,
+    rPos: Position = ZERO_POS,
+    rLife: u16 = INITIAL_CREEP_LIFE,
+    rColor: Color = INITIAL_CREEP_COLOR,
+    rText: u8 = 'c',
+
+    path: []usize,
+    pathIdx: usize = 0,
+    pathLen: usize = 0,
+
+    pub fn init(alloc: Allocator, rows: usize, cols: usize) !Creep {
+        return .{
+            .path = try alloc.alloc(u8, rows * cols),
+        };
+    }
+
+    pub fn initialPosition(creep: *Creep, pos: Position) *Creep {
+        creep.pos = PositionF.fromPosition(pos);
+
+        return creep;
+    }
 
     fn contains(self: *Creep, pos: Position) bool {
         if (self.dead) {
             return false;
         }
 
-        return self.pos.row == pos.row and self.pos.col == pos.col;
+        const myPosition = self.pos.position();
+        return myPosition.row == pos.row and myPosition.col == pos.col;
+    }
+
+    fn calculatePath(self: *Creep, board: []bool, cols: usize) *Creep {
+        assert(board.len % cols == 0, "the length is not a rectangle");
+
+        var seen: []isize = .{-1} ** board.len;
+        const pos = self.pos.position();
+
+
+        const last = walk(pos, pos, cols, board, &seen);
+        if (last == 0) {
+            // TODO: i need to just go straight forward if i can...
+        } else {
+            self.pathLen = path(&seen, last, self.path);
+            self.pathIdx = 0;
+        }
+
+        return self;
+    }
+
+    fn update(self: *Creep, delta: u64) void {
+        const deltaF: f64 = @floatFromInt(delta);
+        const deltaP: f64 = deltaF / 1000.0;
+    }
+
+    fn render(self: *Creep) void {
+        _ = self;
     }
 };
+
+const t = std.testing;
+test "bfs" {
+    const board = [9]bool{
+        true, false, true,
+        true, false, true,
+        true, true, true,
+    };
+    var seen: [9]isize = .{-1} ** 9;
+
+    const out = walk(0, 0, 3, &board, &seen);
+    try t.expect(out == 8);
+
+    var expected: [9]isize = .{
+        0, -1, -1,
+        0, -1, -1,
+        3, 6, 7,
+    };
+
+    try t.expectEqualSlices(isize, &expected, &seen);
+
+    var p: [9]usize = .{0} ** 9;
+    const len = path(&seen, out, &p);
+    var pExpect = [_]usize{ 3, 6, 7, 8 };
+
+    try t.expect(len == 4);
+    try t.expectEqualSlices(usize, &pExpect, p[0..len]);
+}
