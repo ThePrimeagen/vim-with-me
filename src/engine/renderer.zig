@@ -28,6 +28,11 @@ pub const Renderer = struct {
             self.canvas.place(t.rSized, &t.rCells);
         }
 
+        for (gs.creeps.items) |*c| {
+            c.render();
+            self.canvas.place(c.rSized, &c.rCells);
+        }
+
         var buff: [15]u8 = undefined;
         _ = try std.fmt.bufPrint(&buff, "renders: {}", .{self.count});
 
@@ -41,4 +46,3 @@ pub const Renderer = struct {
         self.count += 1;
     }
 };
-

@@ -8,6 +8,12 @@ const INITIAL_CREEP_LIFE = 10;
 const INITIAL_CREEP_SPEED = 1;
 const INITIAL_CREEP_COLOR: Color = .{.r = 0, .g = 0, .b = 0};
 
+fn usizeToIsizeSub(a: usize, b: usize) isize {
+    const ai: isize = @intCast(a);
+    const bi: isize = @intCast(b);
+    return a - b;
+}
+
 fn absUsize(a: usize, b: usize) usize {
     if (a > b) {
         return a - b;
@@ -16,12 +22,20 @@ fn absUsize(a: usize, b: usize) usize {
 }
 
 const needle: [1]u8 = .{','};
+
 pub const Position = struct {
     row: usize,
     col: usize,
 
     pub fn toIdx(self: *Position, cols: usize) usize {
         return self.row * cols + self.col;
+    }
+
+    pub fn fromIdx(idx: usize, cols: usize) Position {
+        return .{
+            .row = idx / cols,
+            .col = idx % cols,
+        };
     }
 
     pub fn init(str: []const u8) ?Position {
@@ -113,6 +127,7 @@ pub const Color = struct {
 };
 
 pub const Black: Color = .{.r = 0, .g = 0, .b = 0 };
+pub const Red: Color = .{.r = 255, .g = 0, .b = 0 };
 pub const Cell = struct {
     text: u8,
     color: Color,
@@ -125,7 +140,7 @@ const TowerCell: [3]Cell = .{
     .{.text = '\\', .color = Black },
 };
 const ZERO_POS: Position = .{.row = 0, .col = 0};
-const ZERO_POS_F: PositionF = .{.row = 0.0, .col = 0.0};
+const ZERO_POS_F: Vec2 = .{.row = 0.0, .col = 0.0};
 const ZERO_SIZED: Sized = .{.cols = 3, .pos = ZERO_POS};
 
 pub const Tower = struct {
@@ -217,18 +232,45 @@ pub const Projectile = struct {
     rText: u8,
 };
 
-pub const PositionF = struct {
-    row: f64,
-    col: f64,
+pub const Vec2 = struct {
+    x: f64,
+    y: f64,
 
-    pub fn position(self: *PositionF) Position {
+    pub fn subP(self: Vec2, b: Position) Vec2 {
+        const rf = @floatFromInt(b.row);
+        const cf = @floatFromInt(b.col);
+
         return .{
-            .row = @intFromFloat(self.row),
-            .col = @intFromFloat(self.col),
+            .x = self.x - cf,
+            .y = self.y - rf,
         };
     }
 
-    pub fn fromPosition(pos: Position) PositionF {
+    pub fn add(self: Vec2, b: Vec2) Vec2 {
+        return .{
+            .x = self.x + b.x,
+            .y = self.y + b.y,
+        };
+    }
+
+    pub fn scale(self: Vec2, s: f64) Vec2 {
+        return .{
+            .x = self.x * s,
+            .y = self.y * s,
+        };
+    }
+
+    pub fn position(self: *Vec2) Position {
+        assert(self.x >= 0, "x cannot be negative");
+        assert(self.y >= 0, "y cannot be negative");
+
+        return .{
+            .row = @intFromFloat(self.y),
+            .col = @intFromFloat(self.x),
+        };
+    }
+
+    pub fn fromPosition(pos: Position) Vec2 {
         return .{
             .row = @floatFromInt(pos.row),
             .col = @floatFromInt(pos.col),
@@ -284,11 +326,17 @@ fn walk(from: usize, pos: usize, cols: usize, board: []const bool, seen: []isize
 }
 
 
+const CreepSize = 1;
+const CreepCell: [1]Cell = .{
+    .{.text = '*', .color = Red },
+};
+
 pub const Creep = struct {
     id: usize,
     team: u8,
+    cols: usize,
 
-    pos: PositionF = ZERO_POS_F,
+    pos: Vec2 = ZERO_POS_F,
     life: u16 = INITIAL_CREEP_LIFE,
     speed: f32 = INITIAL_CREEP_SPEED,
     alive: bool = true,
@@ -297,7 +345,8 @@ pub const Creep = struct {
     rPos: Position = ZERO_POS,
     rLife: u16 = INITIAL_CREEP_LIFE,
     rColor: Color = INITIAL_CREEP_COLOR,
-    rText: u8 = 'c',
+    rCells: [1]Cell = CreepCell,
+    rSized: Sized = ZERO_SIZED,
 
     path: []usize,
     pathIdx: usize = 0,
@@ -306,11 +355,17 @@ pub const Creep = struct {
     pub fn init(alloc: Allocator, rows: usize, cols: usize) !Creep {
         return .{
             .path = try alloc.alloc(u8, rows * cols),
+            .cols = cols,
         };
     }
 
     pub fn initialPosition(creep: *Creep, pos: Position) *Creep {
-        creep.pos = PositionF.fromPosition(pos);
+        creep.pos = Vec2.fromPosition(pos);
+        creep.rPos = creep.pos.position();
+        creep.rSized = .{
+            .cols = CreepSize,
+            .pos = creep.rPos,
+        };
 
         return creep;
     }
@@ -345,10 +400,14 @@ pub const Creep = struct {
     fn update(self: *Creep, delta: u64) void {
         const deltaF: f64 = @floatFromInt(delta);
         const deltaP: f64 = deltaF / 1000.0;
+
+        const to = Position.fromIdx(self.path[self.pathIdx], self.cols);
+
+        self.pos = self.pos.subP(to).scale(-deltaP).add(self.pos);
     }
 
     fn render(self: *Creep) void {
-        _ = self;
+        self.rPos = self.pos.position();
     }
 };
 

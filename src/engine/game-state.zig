@@ -2,7 +2,7 @@ const std = @import("std");
 const types = @import("types.zig");
 
 // TODO: Make this adjustable
-const Position = types.Position;
+const Position = types.Vec2;
 const Message = types.Message;
 const Coord = types.Coord;
 const assert = @import("assert").assert;
