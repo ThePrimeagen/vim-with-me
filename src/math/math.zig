@@ -1,9 +1,15 @@
 const std = @import("std");
-const assert = @import("assert");
+const assert = @import("assert").assert;
+const scratchBuf = @import("scratch").scratchBuf;
 
 pub const ZERO_POS: Position = .{.row = 0, .col = 0};
-pub const ZERO_POS_F: Vec2 = .{.x = 0.0, .y = 0.0};
+pub const ZERO_VEC2: Vec2 = .{.x = 0.0, .y = 0.0};
 pub const ZERO_SIZED: Sized = .{.cols = 3, .pos = ZERO_POS};
+
+pub fn floor(a: f64, precision: u8) f64 {
+    const p: f64 = @floatFromInt(precision);
+    return std.math.floor(a * p) / p;
+}
 
 pub fn min(a: f64, b: f64) f64 {
     return if (a > b) b else a;
@@ -66,9 +72,9 @@ pub const Position = struct {
         };
     }
 
-    pub fn string(self: Position, buf: []u8) !usize {
-        const out = try std.fmt.bufPrint(buf, "vec(r = {}, c = {})", self.row, self.col);
-        return out.len;
+    pub fn string(self: Position) ![]u8 {
+        const tmp = scratchBuf(50);
+        return try std.fmt.bufPrint(tmp, "vec(r = {}, c = {})", self.row, self.col);
     }
 };
 
@@ -81,14 +87,8 @@ pub const Coord = struct {
     pos: Position,
     team: u8,
 
-    pub fn string(self: Coord, buf: []u8) !usize {
-        assert(buf.len < 30, "needed buf with at least 20 characters");
-        var out = try std.fmt.bufPrint(buf, "choord(team = {} pos", .{self.team, self.pos});
-        var len = out.len;
-        len += try self.pos.string(buf[len..]);
-        out = try std.fmt.bufPrint(buf[len..], ")", .{});
-
-        return len + out.len;
+    pub fn string(self: Coord) ![]u8 {
+        return try std.fmt.bufPrint(scratchBuf(120), "choord(team = {} pos = {})", .{self.team, self.pos.string()});
     }
 
     pub fn init(msg: []const u8) ?Coord {
@@ -134,8 +134,23 @@ pub const Vec2 = struct {
         };
     }
 
+    pub fn row(self: Vec2) isize {
+        return @intFromFloat(self.y);
+    }
+
+    pub fn sub(self: Vec2, b: Vec2) Vec2 {
+        return .{
+            .x = self.x - b.x,
+            .y = self.y - b.y,
+        };
+    }
+
     pub fn len(self: Vec2) f64 {
         return std.math.sqrt(self.x * self.x + self.y * self.y);
+    }
+
+    pub fn lenSqrt(self: Vec2) f64 {
+        return self.x * self.x + self.y * self.y;
     }
 
     pub fn add(self: Vec2, b: Vec2) Vec2 {
@@ -152,7 +167,7 @@ pub const Vec2 = struct {
         };
     }
 
-    pub fn position(self: *Vec2) Position {
+    pub fn position(self: *const Vec2) Position {
         assert(self.x >= 0, "x cannot be negative");
         assert(self.y >= 0, "y cannot be negative");
 
@@ -169,9 +184,8 @@ pub const Vec2 = struct {
         };
     }
 
-    pub fn string(self: Vec2, buf: []u8) !usize {
-        const out = try std.fmt.bufPrint(buf, "x = {}, y = {}", .{self.x, self.y});
-        return out.len;
+    pub fn string(self: Vec2) ![]u8 {
+        return try std.fmt.bufPrint(scratchBuf(25), "x = {}, y = {}", .{floor(self.x, 10), floor(self.y, 10)});
     }
 
 };

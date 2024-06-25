@@ -1,6 +1,11 @@
 const math = @import("math");
 const objects = @import("objects");
 const std = @import("std");
+const unwrap = @import("assert").unwrap;
+
+fn u(v: anyerror![]u8) []u8 {
+    return unwrap([]u8, v);
+}
 
 const Tower = objects.tower.Tower;
 const colors = objects.colors;
@@ -8,6 +13,7 @@ const Color = colors.Color;
 const Cell = colors.Cell;
 const Black = colors.Black;
 const GS = objects.gamestate.GameState;
+const Target = objects.gamestate.Target;
 
 const TowerSize = 3;
 const TowerCell: [TowerSize]Cell = .{
@@ -24,14 +30,21 @@ fn nextTowerId() usize {
 }
 
 pub fn contains(self: *Tower, pos: math.Vec2) bool {
-    if (self.alive) {
+    if (!self.alive) {
         return false;
     }
-    const pPos = pos.position();
-    const tPos = self.pos.position();
 
-    const c = math.absUsize(pPos.col, tPos.col);
-    return tPos.row == pPos.row and c <= 1;
+    if (pos.row() != self.pos.row()) {
+        return false;
+    }
+
+    return pos.sub(self.pos).lenSqrt() <= 1;
+
+}
+
+pub fn find(self: *Tower, gs: *GS) void {
+    _ = self;
+    _ = gs;
 }
 
 pub fn color(self: *Tower, c: Color) void {
@@ -43,7 +56,7 @@ pub fn color(self: *Tower, c: Color) void {
 pub const TowerBuilder = struct {
     _id: usize = 0,
     _team: u8 = 0,
-    _pos: math.Vec2 = math.ZERO_POS_F,
+    _pos: math.Vec2 = math.ZERO_VEC2,
     _rSized: math.Sized = math.ZERO_SIZED,
 
     pub fn start() TowerBuilder {
@@ -76,6 +89,12 @@ pub const TowerBuilder = struct {
     }
 };
 
+pub fn projectile(self: *Tower, gs: *GS, target: Target) void {
+    _ = self;
+    _ = gs;
+    _ = target;
+}
+
 pub fn update(self: *Tower, gs: *GS) void {
     if (!self.alive) {
         return;
@@ -107,7 +126,7 @@ fn getLifePercent(self: *Tower) f64 {
 fn createTestTower() Tower {
     return .{
         .id = nextTowerId(),
-        .pos = math.ZERO_POS,
+        .pos = math.ZERO_VEC2,
         .team = 0,
         .rSized = .{
             .pos = math.ZERO_POS,
@@ -123,7 +142,13 @@ test "tower contains" {
     try testing.expect(contains(&t, .{.x = -0.9999, .y = 0}));
     try testing.expect(contains(&t, .{.x = 0.9999, .y = 0}));
     try testing.expect(contains(&t, .{.x = 0, .y = 0}));
-    try testing.expect(!contains(&t, .{.x = 1, .y = 0}));
-    try testing.expect(!contains(&t, .{.x = -1, .y = 0}));
+
+    // col
+    try testing.expect(!contains(&t, .{.x = 1.1, .y = 0}));
+    try testing.expect(!contains(&t, .{.x = -1.1, .y = 0}));
+
+    // row
+    try testing.expect(!contains(&t, .{.x = 0, .y = 1}));
+    try testing.expect(!contains(&t, .{.x = 0, .y = -1}));
 }
 

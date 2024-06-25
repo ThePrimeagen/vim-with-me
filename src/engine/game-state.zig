@@ -82,7 +82,7 @@ pub fn clone(self: *GS) GS {
 
 fn tower(self: *GS, pos: Vec2) ?usize {
     for (self.towers.items, 0..) |*t, i| {
-        if () {
+        if (towers.contains(t, ) {
             return i;
         }
     }
