@@ -1,3 +1,5 @@
+const std = @import("std");
+
 const objects = @import("objects");
 const math = @import("math");
 const assert = @import("assert").assert;
@@ -110,8 +112,45 @@ fn creep(self: *GS, pos: Vec2) ?usize {
     return null;
 }
 
+pub fn calculateBoard(self: *GS) void {
+    for (self.board, 0..) |_, idx| {
+        self.board[idx] = true;
+    }
+
+    for (self.towers.items) |*t| {
+        const cells = t.rCells;
+        const sized = t.rSized;
+
+        for (cells, 0..) |_, idx| {
+            const col = idx % sized.cols;
+            const row = idx / sized.cols;
+            const offset = (sized.pos.row + row) * self.values.cols + sized.pos.col + col;
+            self.board[offset] = true;
+        }
+    }
+}
+
 // TODO: vec and position?
 pub fn placeCreep(self: *GS, pos: math.Position) !void {
-    const c = try creeps.create(self.alloc, self.creeps.items.len, 0, self.values, pos.vec2());
+    var c = try creeps.create(self.alloc, self.creeps.items.len, 0, self.values, pos.vec2());
     try self.creeps.append(c);
+
+    creeps.calculatePath(&c, self.board);
+}
+
+const testing = std.testing;
+test "calculate the board" {
+    var values = objects.Values{.rows = 3, .cols = 3};
+    values.init();
+
+    var gs = try GS.init(testing.allocator, &values);
+    defer gs.deinit();
+
+    calculateBoard(&gs);
+
+    try testing.expectEqualSlices(bool, &.{
+        true, true, true,
+        true, true, true,
+        true, true, true,
+    }, gs.board);
 }
