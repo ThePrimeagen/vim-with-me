@@ -10,9 +10,6 @@ const Tower = objects.tower.Tower;
 const Vec2 = math.Vec2;
 
 pub fn update(state: *GS, delta: i64) void {
-    assert(state.rows != 0, "must have set rows");
-    assert(state.cols != 0, "must have set rows");
-
     state.updates += 1;
 
     const diff: isize = @intCast(state.one - state.two);
@@ -115,6 +112,6 @@ fn creep(self: *GS, pos: Vec2) ?usize {
 
 // TODO: vec and position?
 pub fn placeCreep(self: *GS, pos: math.Position) !void {
-    const c = try creeps.create(self.alloc, self.creeps.items.len, 0, self.rows, self.cols, pos.vec2());
+    const c = try creeps.create(self.alloc, self.creeps.items.len, 0, self.values, pos.vec2());
     try self.creeps.append(c);
 }

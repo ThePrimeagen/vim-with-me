@@ -1,6 +1,7 @@
 const std = @import("std");
 
 const assert = @import("assert").assert;
+const Values = @import("values.zig");
 const math = @import("math");
 const scratchBuf = @import("scratch").scratchBuf;
 
@@ -23,7 +24,7 @@ pub const CreepCell: [1]Cell = .{
 pub const Creep = struct {
     id: usize,
     team: u8,
-    cols: usize,
+    values: *const Values,
 
     pos: math.Vec2 = math.ZERO_VEC2,
     life: u16 = INITIAL_CREEP_LIFE,
@@ -36,6 +37,7 @@ pub const Creep = struct {
     rCells: [1]Cell = CreepCell,
     rSized: math.Sized = math.ZERO_SIZED,
 
+    scratch: []isize,
     path: []usize,
     pathIdx: usize = 0,
     pathLen: usize = 0,
@@ -50,10 +52,11 @@ pub const Creep = struct {
         });
     }
 
-    pub fn init(alloc: Allocator, rows: usize, cols: usize) !Creep {
+    pub fn init(alloc: Allocator, values: *const Values) !Creep {
         return .{
-            .path = try alloc.alloc(usize, rows * cols),
-            .cols = cols,
+            .values = values,
+            .path = try alloc.alloc(usize, values.size),
+            .scratch = try alloc.alloc(isize, values.size),
             .alloc = alloc,
             .id = 0,
             .team = 0,
@@ -62,6 +65,7 @@ pub const Creep = struct {
 
     pub fn deinit(self: *Creep) void {
         self.alloc.free(self.path);
+        self.alloc.free(self.scratch);
     }
 };
 

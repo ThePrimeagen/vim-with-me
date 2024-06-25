@@ -1,9 +1,12 @@
 const a = @import("assert");
+const std = @import("std");
+
 const assert = a.assert;
 const framer = @import("framer.zig");
 const math = @import("math");
-const colors = @import("objects").colors;
-const std = @import("std");
+const objects = @import("objects");
+const colors = objects.colors;
+const Values = objects.Values;
 
 const AnsiFramer = framer.AnsiFramer;
 const Allocator = std.mem.Allocator;
@@ -27,21 +30,18 @@ pub const Canvas = struct {
     buffer: []u8,
     bufferLen: usize,
     cells: []Cell,
-    rows: usize,
-    cols: usize,
     alloc: Allocator,
+    values: *const Values,
 
-    pub fn init(rows: usize, cols: usize, alloc: Allocator) !Canvas {
-        const size = rows * cols;
+    pub fn init(alloc: Allocator, values: *const Values) !Canvas {
         var canvas: Canvas = .{
-            .buffer = try alloc.alloc(u8, size * 16), // no idea how big ansi encoding is
+            .buffer = try alloc.alloc(u8, values.size * 16), // no idea how big ansi encoding is
             .renderBuffer = undefined,
             .bufferLen = 0,
-            .cells = try alloc.alloc(Cell, size),
-            .rows = rows,
-            .cols = cols,
-            .framer = AnsiFramer.init(rows, cols),
+            .cells = try alloc.alloc(Cell, values.size),
+            .framer = AnsiFramer.init(values),
             .alloc = alloc,
+            .values = values,
         };
 
         canvas.reset();
@@ -54,10 +54,10 @@ pub const Canvas = struct {
     }
 
     pub fn writeText(self: *Canvas, pos: math.Position, text: []const u8, color: colors.Color) void {
-        assert(pos.row < self.rows, "cannot write text off the screen rows");
-        assert(pos.col + text.len < self.cols, "cannot write text off screen cols");
+        assert(pos.row < self.values.rows, "cannot write text off the screen rows");
+        assert(pos.col + text.len < self.values.cols, "cannot write text off screen cols");
 
-        const offset = pos.row * self.cols + pos.col;
+        const offset = pos.row * self.values.cols + pos.col;
         for (text, offset..) |txt, idx| {
             self.cells[idx] = .{
                 .text = txt,
@@ -69,21 +69,18 @@ pub const Canvas = struct {
     // TODO: I think that position could be swapped here
     pub fn place(self: *Canvas, sized: Sized, cells: []const Cell) void {
 
-        std.debug.print("{s}\n", .{a.u(sized.string())});
-
         assert(sized.cols != 0, "cannot render a 0 sized object");
         assert(cells.len > 0, "writing an empty object");
         assert(cells.len % sized.cols == 0, "must provide a square");
 
         // TODO: rethink these?  Just have the canvas draw what it can?
-        std.debug.print("here we are: {} + {} / {} < {}\n", .{sized.pos.row, cells.len, sized.cols, self.rows});
-        assert(sized.pos.row + cells.len / sized.cols < self.rows, "cannot write text off the screen rows");
-        assert(sized.pos.col + sized.cols < self.cols, "cannot paint object off screen cols");
+        assert(sized.pos.row + cells.len / sized.cols < self.values.rows, "cannot write text off the screen rows");
+        assert(sized.pos.col + sized.cols < self.values.cols, "cannot paint object off screen cols");
 
         for (cells, 0..) |cell, idx| {
             const col = idx % sized.cols;
             const row = idx / sized.cols;
-            const offset = (sized.pos.row + row) * self.cols + sized.pos.col + col;
+            const offset = (sized.pos.row + row) * self.values.cols + sized.pos.col + col;
             self.cells[offset] = cell;
         }
     }

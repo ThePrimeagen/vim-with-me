@@ -21,11 +21,16 @@ const ROWS = 30;
 const COLS = 30;
 
 pub fn main() !void {
+    var values = objects.Values{};
+    values.rows = 30;
+    values.cols = 30;
+    values.init();
+
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     defer _ = gpa.deinit();
 
-    var gs = GameState.init(allocator);
+    var gs = try GameState.init(allocator, &values);
     defer gs.deinit();
 
     var stdin = engine.input.StdinInputter.init();
@@ -34,9 +39,7 @@ pub fn main() !void {
     const inputter = try engine.input.createInputRunner(allocator, &stdinInputter);
     defer inputter.deinit();
 
-    var render = try engine.renderer.Renderer.init(ROWS, COLS, allocator);
-    gs.rows = ROWS;
-    gs.cols = COLS;
+    var render = try engine.renderer.Renderer.init(allocator, &values);
 
     defer render.deinit();
 
@@ -50,8 +53,7 @@ pub fn main() !void {
         .col = 0,
     });
 
-    var count: usize = 0;
-    while (count < 1000) : (count += 1) {
+    while (true) {
         fps.sleep();
         const delta = fps.delta();
 

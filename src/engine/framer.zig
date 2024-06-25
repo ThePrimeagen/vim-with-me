@@ -6,6 +6,7 @@ const io = std.io;
 const colors = objects.colors;
 const Color = colors.Color;
 const Cell = colors.Cell;
+const Values = objects.Values;
 
 const initialChar: u8 = '';
 const topLeftFull: [6]u8 = .{'', '[', '1', ';', '1', 'H'};
@@ -75,22 +76,18 @@ fn ansiCodeLength(buffer: []const u8) usize {
 
 pub const AnsiFramer = struct {
     firstPrint: bool,
-    rows: usize,
-    cols: usize,
     previous: Color = undefined,
-    len: usize,
+    values: *const Values,
 
-    pub fn init(rows: usize, cols: usize) AnsiFramer {
+    pub fn init(values: *const Values) AnsiFramer {
         return .{
             .firstPrint = true,
-            .rows = rows,
-            .cols = cols,
-            .len = rows * cols,
+            .values = values,
         };
     }
 
     pub fn frame(self: *AnsiFramer, f: []Cell, out: []u8) !usize {
-        assert(f.len == self.len, "you must hand in a frame that matches rows and cols");
+        assert(f.len == self.values.size, "you must hand in a frame that matches rows and cols");
 
         var offset: usize = 0;
         if (self.firstPrint) {
@@ -111,13 +108,13 @@ pub const AnsiFramer = struct {
 
             offset = writeByte(out, offset, text);
 
-            if (idx % self.cols == 0) {
+            if (idx % self.values.cols == 0) {
                 offset = write(out, offset, &newline);
                 newLineCount += 1;
             }
         }
 
-        assert(newLineCount == self.rows, "should have produced self.rows amount of rows, did not");
+        assert(newLineCount == self.values.rows, "should have produced self.rows amount of rows, did not");
         return offset;
     }
 

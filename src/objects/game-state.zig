@@ -7,6 +7,7 @@ const tower = @import("tower.zig");
 const creep = @import("creep.zig");
 const colors = @import("colors.zig");
 const messages = @import("messages.zig");
+const Values = @import("values.zig");
 
 // TODO: Make this adjustable
 const Position = math.Vec2;
@@ -40,19 +41,24 @@ pub const GameState = struct {
     towers: TowerList,
     creeps: CreepList,
     projectile: ProjectileList,
+    board: []bool,
     alloc: Allocator,
+
+    values: *const Values,
 
     pub fn string(gs: *GameState) ![]u8 {
         _ = gs;
         unreachable;
     }
 
-    pub fn init(alloc: Allocator) GameState {
+    pub fn init(alloc: Allocator, values: *const Values) !GameState {
         return .{
             .towers = TowerList.init(alloc),
             .creeps = CreepList.init(alloc),
             .projectile = ProjectileList.init(alloc),
+            .board = try alloc.alloc(bool, values.rows * values.cols),
             .alloc = alloc,
+            .values = values,
         };
     }
 
@@ -64,6 +70,7 @@ pub const GameState = struct {
 
         gs.creeps.deinit();
         gs.projectile.deinit();
+        gs.alloc.free(gs.board);
     }
 };
 
