@@ -27,7 +27,7 @@ pub fn contains(self: *Tower, pos: math.Vec2) bool {
         return false;
     }
 
-    return pos.sub(self.pos).lenSqrt() <= 1;
+    return pos.sub(self.pos.add(.{.x = 1, .y = 0})).lenSq() <= 1;
 
 }
 

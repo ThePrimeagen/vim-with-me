@@ -1,5 +1,8 @@
-const assert = @import("assert").assert;
+const a = @import("assert");
 const std = @import("std");
+
+const assert = a.assert;
+const Dump = a.Dump;
 
 const math = @import("math");
 const projectile = @import("projectile.zig");
@@ -34,9 +37,6 @@ pub const GameState = struct {
 
     two: i32 = 0,
     twoCoords: [3]?Coord,
-
-    rows: usize = 0,
-    cols: usize = 0,
 
     time: i64 = 0,
     loopDeltaUS: i64 = 0,
@@ -83,6 +83,61 @@ pub const GameState = struct {
         gs.creeps.deinit();
         gs.projectile.deinit();
         gs.alloc.free(gs.board);
+    }
+
+    pub fn dumper(self: *GameState) Dump {
+        return Dump.init(self);
+    }
+
+    pub fn dump(self: *GameState) void {
+        std.debug.print("------ GameState ------\n", .{});
+        std.debug.print("values: {s}\n", .{a.u(self.values.string())});
+        std.debug.print("round = {}, one = {}, two = {}\n", .{self.round, self.one, self.two});
+        std.debug.print("time = {}, loopDeltaUS = {}\n", .{self.time, self.loopDeltaUS});
+
+        std.debug.print("one coords:\n", .{});
+        for (&self.oneCoords) |c| {
+            if (c) |coord| {
+                std.debug.print("  {s}\n", .{a.u(coord.string())});
+            }
+        }
+        std.debug.print("\n", .{});
+
+        std.debug.print("two coords:\n", .{});
+        for (&self.twoCoords) |c| {
+            if (c) |coord| {
+                std.debug.print("  {s}\n", .{a.u(coord.string())});
+            }
+        }
+
+        self.debugBoard();
+
+        std.debug.print("Towers:\n", .{});
+        for (self.towers.items) |*t| {
+            std.debug.print("  {s}\n", .{a.u(t.pos.position().string())});
+        }
+        std.debug.print("\nCreeps:\n", .{});
+        for (self.creeps.items) |*c| {
+            std.debug.print("  {s}\n", .{a.u(c.pos.position().string())});
+        }
+        std.debug.print("\nProjectiles\n", .{});
+        for (self.projectile.items) |*p| {
+            std.debug.print("  {s}\n", .{a.u(p.pos.position().string())});
+        }
+        std.debug.print("\n", .{});
+
+    }
+
+    pub fn debugBoard(self: *GameState) void {
+        std.debug.print("\nBoard:\n", .{});
+        for (self.board, 0..) |b, idx| {
+            if (idx > 0 and idx % self.values.cols == 0) {
+                std.debug.print("\n", .{});
+            }
+            const v: usize = if (b) 1 else 0;
+            std.debug.print("{} ", .{v});
+        }
+        std.debug.print("\n", .{});
     }
 };
 

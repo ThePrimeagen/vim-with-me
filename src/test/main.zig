@@ -2,6 +2,8 @@ const std = @import("std");
 const testing = @import("testing");
 const objects = @import("objects");
 const engine = @import("vengine");
+const assert = @import("assert");
+const math = @import("math");
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -13,6 +15,10 @@ pub fn main() !void {
 
     var gs = try objects.gamestate.GameState.init(alloc, &values);
     defer gs.deinit();
+
+    const gsDump = gs.dumper();
+    assert.addDump(&gsDump);
+
     const out = engine.stdout.output;
 
     var fps: ?engine.time.FPS = null;
@@ -30,7 +36,7 @@ pub fn main() !void {
         while (true) {
             const row = args.rand(usize) % args.rows;
             const col = args.rand(usize) % args.cols;
-            const pos = .{.row = row, .col = col};
+            const pos = math.Position{.row = row, .col = col};
             if (engine.gamestate.canPlaceTower(&gs, pos)) {
                 try engine.gamestate.placeTower(&gs, pos, 0);
                 break;
@@ -39,7 +45,8 @@ pub fn main() !void {
 
     }
 
-    while (true) {
+    var count: usize = 0;
+    while (args.runCount > count) : (count += 1) {
         var delta = args.fps;
         if (fps) |*f| {
             f.sleep();
@@ -53,5 +60,8 @@ pub fn main() !void {
             try render.render(&gs);
             try out(render.output);
         }
+
+        engine.gamestate.validateState(&gs);
+
     }
 }

@@ -4,6 +4,7 @@
     "creepRate": 1666660,
     "towerCount": 20,
     "fps": 33333,
-    "realtime": true,
-    "viz": true
+    "runCount": 100000,
+    "realtime": false,
+    "viz": false
 }

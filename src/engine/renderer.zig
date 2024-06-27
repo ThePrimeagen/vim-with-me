@@ -54,6 +54,10 @@ pub const Renderer = struct {
         }
 
         for (gs.creeps.items) |*c| {
+            if (creeps.completed(c) or !c.alive) {
+                continue;
+            }
+
             creeps.render(c, gs);
             self.canvas.place(c.rSized, &c.rCells);
         }
