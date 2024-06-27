@@ -31,6 +31,9 @@ pub fn build(b: *std.Build) void {
         .root_source_file = .{ .path = "src/math/math.zig" },
     });
 
+    const testing = b.addModule("test", .{
+        .root_source_file = .{ .path = "src/test/test.zig" },
+    });
 
     const exe = b.addExecutable(.{
         .name = "vim-with-me",
@@ -39,6 +42,14 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    const testExe = b.addExecutable(.{
+        .name = "test_to",
+        .root_source_file = b.path("src/test/main.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    exe.root_module.addImport("testing", testing);
     exe.root_module.addImport("assert", assert);
     exe.root_module.addImport("scratch", scratch);
     scratch.addImport("assert", assert);
@@ -51,6 +62,12 @@ pub fn build(b: *std.Build) void {
     objects.addImport("math", math);
     objects.addImport("assert", assert);
     objects.addImport("scratch", scratch);
+
+    testExe.root_module.addImport("testing", testing);
+    testExe.root_module.addImport("assert", assert);
+    testExe.root_module.addImport("scratch", scratch);
+    testExe.root_module.addImport("math", math);
+    testExe.root_module.addImport("objects", objects);
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
@@ -90,13 +107,32 @@ pub fn build(b: *std.Build) void {
     exe_unit_tests.root_module.addImport("objects", objects);
     exe_unit_tests.root_module.addImport("math", math);
     exe_unit_tests.root_module.addImport("scratch", scratch);
+    exe_unit_tests.root_module.addImport("testing", testing);
+
+    const test_exe_unit_tests = b.addTest(.{
+        .root_source_file = b.path("src/test/main.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    test_exe_unit_tests.root_module.addImport("assert", assert);
+    test_exe_unit_tests.root_module.addImport("objects", objects);
+    test_exe_unit_tests.root_module.addImport("math", math);
+    test_exe_unit_tests.root_module.addImport("scratch", scratch);
+    test_exe_unit_tests.root_module.addImport("testing", testing);
 
     const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
     run_exe_unit_tests.has_side_effects = true;
+
+    const test_run_exe_unit_tests = b.addRunArtifact(test_exe_unit_tests);
+    test_run_exe_unit_tests.has_side_effects = true;
 
     // Similar to creating the run step earlier, this exposes a `test` step to
     // the `zig build --help` menu, providing a way for the user to request
     // running the unit tests.
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_exe_unit_tests.step);
+
+    const test_test_step = b.step("simulation", "Run simulations");
+    test_test_step.dependOn(&test_run_exe_unit_tests.step);
 }

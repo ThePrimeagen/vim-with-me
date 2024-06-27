@@ -77,3 +77,6 @@ test { _ = objects; }
 test { _ = math; }
 test { _ = engine; }
 
+const _test = @import("testing");
+test { _ = _test; }
+
