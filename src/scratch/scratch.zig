@@ -1,6 +1,6 @@
 const assert = @import("assert").assert;
 
-var scratch: [8192]u8 = [_]u8{0} ** 8192;
+var scratch: [65536]u8 = [_]u8{0} ** 65536;
 var idx: usize = 0;
 
 pub fn scratchBuf(size: usize) []u8 {

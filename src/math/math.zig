@@ -95,7 +95,10 @@ pub const Coord = struct {
     team: u8,
 
     pub fn string(self: Coord) ![]u8 {
-        return try std.fmt.bufPrint(scratchBuf(120), "choord(team = {} pos = {})", .{self.team, self.pos.string()});
+        return try std.fmt.bufPrint(scratchBuf(120), "choord(team = {} pos = {s})", .{
+            self.team,
+            try self.pos.string(),
+        });
     }
 
     pub fn init(msg: []const u8) ?Coord {
