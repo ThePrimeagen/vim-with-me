@@ -31,12 +31,12 @@ pub fn build(b: *std.Build) void {
         .root_source_file = .{ .path = "src/math/math.zig" },
     });
 
-    const testing = b.addModule("test", .{
+    const testing = b.addModule("testing", .{
         .root_source_file = .{ .path = "src/test/test.zig" },
     });
 
     const exe = b.addExecutable(.{
-        .name = "vim-with-me",
+        .name = "to",
         .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
@@ -49,10 +49,16 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    exe.root_module.addImport("testing", testing);
+
     exe.root_module.addImport("assert", assert);
     exe.root_module.addImport("scratch", scratch);
     scratch.addImport("assert", assert);
+
+    exe.root_module.addImport("testing", testing);
+    testing.addImport("assert", assert);
+    testing.addImport("scratch", scratch);
+    testing.addImport("math", math);
+    testing.addImport("objects", objects);
 
     exe.root_module.addImport("math", math);
     math.addImport("assert", assert);
@@ -69,33 +75,65 @@ pub fn build(b: *std.Build) void {
     testExe.root_module.addImport("math", math);
     testExe.root_module.addImport("objects", objects);
 
-    // This declares intent for the executable to be installed into the
-    // standard location when the user invokes the "install" step (the default
-    // step when running `zig build`).
-    b.installArtifact(exe);
+    {
+        // This declares intent for the executable to be installed into the
+        // standard location when the user invokes the "install" step (the default
+        // step when running `zig build`).
+        b.installArtifact(exe);
 
-    // This *creates* a Run step in the build graph, to be executed when another
-    // step is evaluated that depends on it. The next line below will establish
-    // such a dependency.
-    const run_cmd = b.addRunArtifact(exe);
+        // This *creates* a Run step in the build graph, to be executed when another
+        // step is evaluated that depends on it. The next line below will establish
+        // such a dependency.
+        const run_cmd = b.addRunArtifact(exe);
 
-    // By making the run step depend on the install step, it will be run from the
-    // installation directory rather than directly from within the cache directory.
-    // This is not necessary, however, if the application depends on other installed
-    // files, this ensures they will be present and in the expected location.
-    run_cmd.step.dependOn(b.getInstallStep());
+        // By making the run step depend on the install step, it will be run from the
+        // installation directory rather than directly from within the cache directory.
+        // This is not necessary, however, if the application depends on other installed
+        // files, this ensures they will be present and in the expected location.
+        run_cmd.step.dependOn(b.getInstallStep());
 
-    // This allows the user to pass arguments to the application in the build
-    // command itself, like this: `zig build run -- arg1 arg2 etc`
-    if (b.args) |args| {
-        run_cmd.addArgs(args);
+        // This allows the user to pass arguments to the application in the build
+        // command itself, like this: `zig build run -- arg1 arg2 etc`
+        if (b.args) |args| {
+            run_cmd.addArgs(args);
+        }
+
+        // This creates a build step. It will be visible in the `zig build --help` menu,
+        // and can be selected like this: `zig build run`
+        // This will evaluate the `run` step rather than the default, which is "install".
+        const run_step = b.step("run", "Run the app");
+        run_step.dependOn(&run_cmd.step);
     }
 
-    // This creates a build step. It will be visible in the `zig build --help` menu,
-    // and can be selected like this: `zig build run`
-    // This will evaluate the `run` step rather than the default, which is "install".
-    const run_step = b.step("run", "Run the app");
-    run_step.dependOn(&run_cmd.step);
+    {
+        // This declares intent for the executable to be installed into the
+        // standard location when the user invokes the "install" step (the default
+        // step when running `zig build`).
+        b.installArtifact(testExe);
+
+        // This *creates* a Run step in the build graph, to be executed when another
+        // step is evaluated that depends on it. The next line below will establish
+        // such a dependency.
+        const run_cmd = b.addRunArtifact(testExe);
+
+        // By making the run step depend on the install step, it will be run from the
+        // installation directory rather than directly from within the cache directory.
+        // This is not necessary, however, if the application depends on other installed
+        // files, this ensures they will be present and in the expected location.
+        run_cmd.step.dependOn(b.getInstallStep());
+
+        // This allows the user to pass arguments to the application in the build
+        // command itself, like this: `zig build run -- arg1 arg2 etc`
+        if (b.args) |args| {
+            run_cmd.addArgs(args);
+        }
+
+        // This creates a build step. It will be visible in the `zig build --help` menu,
+        // and can be selected like this: `zig build run`
+        // This will evaluate the `run` step rather than the default, which is "install".
+        const run_step = b.step("simulate", "runs the simulation (which we are in)");
+        run_step.dependOn(&run_cmd.step);
+    }
 
     const exe_unit_tests = b.addTest(.{
         .root_source_file = b.path("src/main.zig"),
@@ -133,6 +171,6 @@ pub fn build(b: *std.Build) void {
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_exe_unit_tests.step);
 
-    const test_test_step = b.step("simulation", "Run simulations");
+    const test_test_step = b.step("test-sim", "Run simulations");
     test_test_step.dependOn(&test_run_exe_unit_tests.step);
 }
