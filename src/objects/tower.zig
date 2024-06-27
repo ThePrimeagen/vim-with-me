@@ -19,6 +19,9 @@ pub const Tower = struct {
     lastFiredMS: u64 = 0,
     fired: bool = false,
 
+    rows: usize = 1,
+    cols: usize = 3,
+
     // rendered
     rSized: math.Sized = math.ZERO_SIZED,
     rAmmo: u16 = INITIAL_AMMO,

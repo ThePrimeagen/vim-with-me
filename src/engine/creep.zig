@@ -14,6 +14,7 @@ const GS = objects.gamestate.GameState;
 pub fn distanceToExit(creep: *Creep) f64 {
     assert(creep.alive, "you cannot call distance to exit if the creep is dead");
     assert(!completed(creep), "expected the creep to be still within the maze");
+    unreachable;
 }
 
 // TODO: Params object STAT (just not now)
