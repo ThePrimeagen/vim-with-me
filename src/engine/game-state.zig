@@ -76,21 +76,31 @@ pub fn message(state: *GS, msg: Message) !void {
     }
 }
 
-pub fn clone(self: *GS) GS {
+pub fn clone(self: *GS) !GS {
     const diff: isize = @intCast(self.one - self.two);
     assert(diff == 0, "next round can only be called once both players have played their turns.");
 
+    var board = try self.alloc.alloc(bool, self.board.len);
+    std.mem.copyForwards(bool, board[0..], self.board);
+
     return .{
         .round = self.round,
+        .values = self.values,
+
         .one = self.one,
+        .oneCoords = self.oneCoords,
+
         .two = self.two,
+        .twoCoords = self.twoCoords,
+
         .time = self.time,
         .loopDeltaUS = self.time,
 
-        .towers = self.towers.clone(),
-        .creeps = self.creeps.clone(),
-        .projectile = self.projectile.clone(),
-        .allocator = self.allocator,
+        .towers = try self.towers.clone(),
+        .creeps = try self.creeps.clone(),
+        .projectile = try self.projectile.clone(),
+        .board = board,
+        .alloc = self.alloc,
     };
 }
 
@@ -139,6 +149,50 @@ pub fn placeCreep(self: *GS, pos: math.Position) !void {
     try self.creeps.append(c);
 
     creeps.calculatePath(&c, self.board);
+}
+
+pub fn updateBoard(self: *GS) void {
+    for (0..self.board.len) |i| {
+        self.board[i] = true;
+    }
+
+    for (self.towers.items) |*t| {
+        const start = t.rSized.pos.row * self.values.cols + t.rSized.cols;
+
+        for (0..t.rows) |r| {
+            const rowStart = start + r * self.values.cols;
+            for (0..t.cols) |c| {
+                self.board[rowStart + c] = false;
+            }
+        }
+    }
+}
+
+pub fn canPlaceTower(self: *GS, pos: math.Position) bool {
+    if (pos.col == 0 or pos.col == self.values.cols - 1) {
+        return false;
+    }
+
+    if (tower(self, pos.vec2())) |_| {
+        return false;
+    }
+
+    return true;
+}
+
+// TODO: vec and position?
+pub fn placeTower(self: *GS, pos: math.Position, team: u8) !void {
+    const t = towers.TowerBuilder.start()
+        .pos(pos)
+        .team(team)
+        .id(self.towers.items.len)
+        .tower();
+
+    try self.towers.append(t);
+
+    for (self.creeps.items) |*c| {
+        creeps.calculatePath(c, self.board);
+    }
 }
 
 const testing = std.testing;

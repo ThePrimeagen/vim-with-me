@@ -5,7 +5,8 @@ const print = std.debug.print;
 const objects = @import("objects");
 const math = @import("math");
 
-const engine = @import("engine/engine.zig");
+//const engine = @import("engine/engine.zig");
+const engine = @import("vengine");
 const testing = @import("testing");
 
 const GameState = objects.gamestate.GameState;
@@ -68,6 +69,6 @@ pub fn main() !void {
 
 test { _ = objects; }
 test { _ = math; }
-test { _ = engine; }
 test { _ = testing; }
+test { std.testing.refAllDecls(@import("vengine")); }
 
