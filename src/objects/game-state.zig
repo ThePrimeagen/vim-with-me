@@ -10,7 +10,7 @@ const messages = @import("messages.zig");
 const Values = @import("values.zig");
 
 // TODO: Make this adjustable
-const Position = math.Vec2;
+const Vec2 = math.Vec2;
 const Coord = math.Coord;
 
 const Message = messages.Message;
@@ -30,7 +30,11 @@ pub const GameState = struct {
     playing: bool = true,
     round: i32 = 1,
     one: i32 = 0,
+    oneCoords: [3]?Coord,
+
     two: i32 = 0,
+    twoCoords: [3]?Coord,
+
     rows: usize = 0,
     cols: usize = 0,
 
@@ -59,6 +63,8 @@ pub const GameState = struct {
             .board = try alloc.alloc(bool, values.size),
             .alloc = alloc,
             .values = values,
+            .oneCoords = .{null, null, null},
+            .twoCoords = .{null, null, null},
         };
 
         for (0..values.size) |i| {
@@ -83,4 +89,8 @@ pub const GameState = struct {
 pub const Target = union(enum) {
     creep: usize,
     tower: usize,
+};
+
+pub const GameStateFunctions = struct {
+    placeProjectile: fn(gs: *GameState, team: u8, t: Target, pos: Vec2) void,
 };

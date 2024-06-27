@@ -23,7 +23,7 @@ const COLS = 30;
 pub fn main() !void {
     var values = objects.Values{};
     values.rows = 30;
-    values.cols = 30;
+    values.cols = 80;
     values.init();
 
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
