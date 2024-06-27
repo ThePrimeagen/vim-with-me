@@ -11,6 +11,7 @@ cols: usize,
 creepRate: usize,
 towerCount: usize,
 fps: isize,
+runCount: usize = 10000,
 
 seed: ?usize = 0,
 viz: ?bool = true,

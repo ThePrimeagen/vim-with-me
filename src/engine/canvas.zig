@@ -74,7 +74,7 @@ pub const Canvas = struct {
         assert(cells.len % sized.cols == 0, "must provide a square");
 
         // TODO: rethink these?  Just have the canvas draw what it can?
-        assert(sized.pos.row + cells.len / sized.cols < self.values.rows, "cannot write text off the screen rows");
+        assert(sized.pos.row + (cells.len / sized.cols - 1) < self.values.rows, "cannot write text off the screen rows");
         assert(sized.pos.col + sized.cols < self.values.cols, "cannot paint object off screen cols");
 
         for (cells, 0..) |cell, idx| {
