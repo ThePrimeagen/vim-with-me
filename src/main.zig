@@ -5,20 +5,14 @@ const print = std.debug.print;
 const objects = @import("objects");
 const math = @import("math");
 
-const renderer = @import("engine/renderer.zig");
 const engine = @import("engine/engine.zig");
-
-// TODO: Remove encoding
-const encoding = @import("encoding/encoding.zig");
+const testing = @import("testing");
 
 const GameState = objects.gamestate.GameState;
 const Message = objects.message.Message;
 
 const Coord = engine.input.Coord;
 const NextRound = engine.input.NextRound;
-
-const ROWS = 30;
-const COLS = 30;
 
 pub fn main() !void {
     var values = objects.Values{};
@@ -72,11 +66,8 @@ pub fn main() !void {
 
 }
 
-test { _ = encoding; }
 test { _ = objects; }
 test { _ = math; }
 test { _ = engine; }
-
-const _test = @import("testing");
-test { _ = _test; }
+test { _ = testing; }
 
