@@ -159,7 +159,7 @@ pub const Vec2 = struct {
         return std.math.sqrt(self.x * self.x + self.y * self.y);
     }
 
-    pub fn lenSqrt(self: Vec2) f64 {
+    pub fn lenSq(self: Vec2) f64 {
         return self.x * self.x + self.y * self.y;
     }
 

@@ -122,7 +122,7 @@ pub fn dead(self: *Creep) bool {
 
 // TODO: I suck at game programming... how bad is this...?
 pub fn update(self: *Creep, gs: *GS) void {
-    if (completed(self)) {
+    if (completed(self) or !self.alive) {
         return;
     }
 

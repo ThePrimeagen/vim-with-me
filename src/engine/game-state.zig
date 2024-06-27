@@ -2,7 +2,8 @@ const std = @import("std");
 
 const objects = @import("objects");
 const math = @import("math");
-const assert = @import("assert").assert;
+const a = @import("assert");
+const assert = a.assert;
 const towers = @import("tower.zig");
 const creeps = @import("creep.zig");
 
@@ -31,7 +32,6 @@ pub fn update(state: *GS, delta: i64) void {
     for (state.creeps.items) |*c| {
         creeps.update(c, state);
     }
-
 }
 
 pub fn play(state: *GS) void {
@@ -157,7 +157,7 @@ pub fn updateBoard(self: *GS) void {
     }
 
     for (self.towers.items) |*t| {
-        const start = t.rSized.pos.row * self.values.cols + t.rSized.cols;
+        const start = t.rSized.pos.row * self.values.cols + t.rSized.pos.col;
 
         for (0..t.rows) |r| {
             const rowStart = start + r * self.values.cols;
@@ -190,8 +190,20 @@ pub fn placeTower(self: *GS, pos: math.Position, team: u8) !void {
 
     try self.towers.append(t);
 
+    updateBoard(self);
+
     for (self.creeps.items) |*c| {
         creeps.calculatePath(c, self.board);
+    }
+
+}
+
+pub fn validateState(self: *GS) void {
+    for (self.creeps.items) |*c| {
+        if (tower(self, c.pos)) |t| {
+            std.debug.print("tower: {s} collided with creep {s}\n", .{a.u(self.towers.items[t].pos.string()), a.u(c.string())});
+            assert(false, "a creep is within a tower");
+        }
     }
 }
 
