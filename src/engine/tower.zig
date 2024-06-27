@@ -18,13 +18,6 @@ const TowerCell: [TowerSize]Cell = .{
     .{.text = '\\', .color = Black },
 };
 
-var id: usize = 0;
-fn nextTowerId() usize {
-    const out = id;
-    id += 1;
-    return out;
-}
-
 pub fn contains(self: *Tower, pos: math.Vec2) bool {
     if (!self.alive) {
         return false;
@@ -56,9 +49,13 @@ pub const TowerBuilder = struct {
     _rSized: math.Sized = math.ZERO_SIZED,
 
     pub fn start() TowerBuilder {
-        return .{
-            ._id = nextTowerId(),
-        };
+        return .{ };
+    }
+
+    pub fn id(t: TowerBuilder, _id: usize) TowerBuilder {
+        var tow = t;
+        tow._id = _id;
+        return tow;
     }
 
     pub fn team(t: TowerBuilder, myTeam: u8) TowerBuilder {
@@ -121,9 +118,16 @@ fn getLifePercent(self: *Tower) f64 {
     return ammo / max;
 }
 
+var testId: usize = 0;
+fn getTestId() usize {
+    const out = testId;
+    out += 1;
+    return out;
+}
+
 fn createTestTower() Tower {
     return .{
-        .id = nextTowerId(),
+        .id = getTestId(),
         .pos = math.ZERO_VEC2,
         .team = 0,
         .rSized = .{

@@ -4,11 +4,11 @@ const Allocator = std.mem.Allocator;
 
 // ASSUMPTION: no input should be bigger than 256 characters
 pub const InputSize = 4096;
-pub const InputList = std.ArrayList(Input);
 pub const Input = struct {
     input: [InputSize]u8,
     length: usize,
 };
+pub const InputList = std.ArrayList(Input);
 
 pub const BufferedInputter = struct {
     lines: [][]const u8,
