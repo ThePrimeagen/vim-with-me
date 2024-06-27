@@ -1,4 +1,6 @@
+const std = @import("std");
 const assert = @import("assert").assert;
+const scratchBuf = @import("scratch").scratchBuf;
 
 rows: usize = 0,
 cols: usize = 0,
@@ -11,4 +13,14 @@ pub fn init(v: *Self) void {
     assert(v.cols > 0, "must set cols");
 
     v.size = v.rows * v.cols;
+}
+
+pub fn copyInto(v: *const Self, other: *Self) void {
+    other.rows = v.rows;
+    other.cols = v.cols;
+    other.size = v.size;
+}
+
+pub fn string(v: *const Self) ![]u8 {
+    return std.fmt.bufPrint(scratchBuf(75), "rows = {}, cols = {}, size = {}", .{v.rows, v.cols, v.size});
 }

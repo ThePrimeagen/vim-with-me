@@ -132,7 +132,10 @@ pub fn calculateBoard(self: *GS) void {
 
 // TODO: vec and position?
 pub fn placeCreep(self: *GS, pos: math.Position) !void {
-    var c = try creeps.create(self.alloc, self.creeps.items.len, 0, self.values, pos.vec2());
+    var c = try creeps.create(
+        self.alloc, self.creeps.items.len, 0, self.values, pos.vec2()
+    );
+    errdefer c.deinit();
     try self.creeps.append(c);
 
     creeps.calculatePath(&c, self.board);
@@ -154,3 +157,4 @@ test "calculate the board" {
         true, true, true,
     }, gs.board);
 }
+
