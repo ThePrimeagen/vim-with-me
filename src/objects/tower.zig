@@ -16,7 +16,8 @@ pub const Tower = struct {
     radius: u8 = 1,
     damage: u8 = 1,
     fireRateMS: u64 = INITIAL_FIRERATE_MS,
-    lastFiredMS: u64 = 0,
+    lastFiringUS: u64 = 0,
+    firing: bool = false,
     fired: bool = false,
 
     rows: usize = 1,
