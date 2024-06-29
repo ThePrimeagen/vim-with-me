@@ -32,7 +32,6 @@ pub fn main() !void {
     var creeper = testing.gamestate.Spawner.init(&args, &gs);
 
     for (0..args.towerCount) |_| {
-
         while (true) {
             const row = args.rand(usize) % args.rows;
             const col = args.rand(usize) % args.cols;
@@ -42,7 +41,6 @@ pub fn main() !void {
                 break;
             }
         }
-
     }
 
     var count: usize = 0;
@@ -62,6 +60,6 @@ pub fn main() !void {
         }
 
         engine.gamestate.validateState(&gs);
-
     }
+
 }
