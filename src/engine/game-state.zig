@@ -58,14 +58,22 @@ pub fn message(state: *GS, msg: Message) !void {
             state.two += 1;
 
             if (tower(state, c.pos.vec2())) |idx| {
-                state.towers.items[idx].level += 1;
+                towers.upgrade(&state.towers.items[idx]);
                 return;
             }
 
-            // a tower may not be able to fit between two towers...
-            // i may need to "fit" them in
-            const tt = towers.TowerBuilder.start().team(c.team).pos(c.pos).tower();
-            try state.towers.append(tt);
+            if (canPlaceTower(state, c.pos.vec2())) {
+                const tt = towers.TowerBuilder.start().
+                    team(c.team).
+                    pos(c.pos).
+                    id(state.towers.items.len).
+                    tower();
+
+                try state.towers.append(tt);
+            } else {
+                // TODO: randomly place tower
+                unreachable;
+            }
 
         },
         .round => |_| {
@@ -174,6 +182,10 @@ pub fn canPlaceTower(self: *GS, pos: math.Position) bool {
     }
 
     if (tower(self, pos.vec2())) |_| {
+        return false;
+    }
+
+    if (creep(self, pos.vec2())) |_| {
         return false;
     }
 

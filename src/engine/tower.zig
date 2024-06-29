@@ -84,6 +84,12 @@ pub const TowerBuilder = struct {
     }
 };
 
+pub fn upgrade(self: *Tower) void {
+    if (self.level < 9) {
+        self.level += 1;
+    }
+}
+
 pub fn projectile(self: *Tower, gs: *GS, target: Target) void {
     _ = self;
     _ = gs;
