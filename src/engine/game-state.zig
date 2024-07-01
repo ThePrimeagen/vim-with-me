@@ -62,7 +62,7 @@ pub fn message(state: *GS, msg: Message) !void {
                 return;
             }
 
-            if (canPlaceTower(state, c.pos.vec2())) {
+            if (canPlaceTower(state, c.pos)) {
                 const tt = towers.TowerBuilder.start().
                     team(c.team).
                     pos(c.pos).
