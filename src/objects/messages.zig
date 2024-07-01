@@ -22,7 +22,6 @@ pub const PossibleCoord = struct {
 pub const Message = union(enum) {
     round: NextRound,
     coord: Coord,
-    possibleCoord: PossibleCoord,
 
     pub fn init(msg: []const u8) ?Message {
         const coord = Coord.init(msg);
