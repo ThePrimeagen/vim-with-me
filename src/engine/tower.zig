@@ -100,7 +100,7 @@ pub fn update(self: *Tower, gs: *GS) void {
     if (!self.alive) {
         return;
     }
-    _ = gs;
+
 }
 
 pub fn render(self: *Tower, gs: *GS) void {
