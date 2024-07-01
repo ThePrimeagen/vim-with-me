@@ -1,6 +1,6 @@
 const std = @import("std");
-const objects = @import("objects");
-const engine = @import("vengine");
+const objects = @import("../objects/objects.zig");
+const engine = @import("../engine/engine.zig");
 const Params = @import("params.zig");
 
 const GS = objects.gamestate.GameState;

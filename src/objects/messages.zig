@@ -1,6 +1,6 @@
-const assert = @import("assert").assert;
+const assert = @import("../assert/assert.zig").assert;
 const std = @import("std");
-const math = @import("math");
+const math = @import("../math/math.zig");
 
 const Coord = math.Coord;
 const Allocator = std.mem.Allocator;

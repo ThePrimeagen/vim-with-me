@@ -1,16 +1,16 @@
 const std = @import("std");
-const testing = @import("testing");
-const objects = @import("objects");
-const engine = @import("vengine");
-const assert = @import("assert");
-const math = @import("math");
+const testing = @import("test/test.zig");
+const objects = @import("objects/objects.zig");
+const engine = @import("engine/engine.zig");
+const assert = @import("assert/assert.zig");
+const math = @import("math/math.zig");
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
 
     const alloc = gpa.allocator();
-    var args = try testing.params.readFromArgs(alloc);
+    var args = try testing.Params.readFromArgs(alloc);
     const values = args.values();
 
     var gs = try objects.gamestate.GameState.init(alloc, &values);

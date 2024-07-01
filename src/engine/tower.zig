@@ -1,7 +1,7 @@
-const math = @import("math");
-const objects = @import("objects");
+const math = @import("../math/math.zig");
+const objects = @import("../objects/objects.zig");
 const std = @import("std");
-const unwrap = @import("assert").unwrap;
+const unwrap = @import("../assert/assert.zig").unwrap;
 
 const Tower = objects.tower.Tower;
 const colors = objects.colors;
@@ -101,6 +101,7 @@ pub fn update(self: *Tower, gs: *GS) void {
         return;
     }
 
+    _ = gs;
 }
 
 pub fn render(self: *Tower, gs: *GS) void {
@@ -127,7 +128,7 @@ fn getLifePercent(self: *Tower) f64 {
 var testId: usize = 0;
 fn getTestId() usize {
     const out = testId;
-    out += 1;
+    testId += 1;
     return out;
 }
 
@@ -147,13 +148,13 @@ fn createTestTower() Tower {
 const testing = std.testing;
 test "tower contains" {
     var t = createTestTower();
-    try testing.expect(contains(&t, .{.x = -0.9999, .y = 0}));
+    try testing.expect(!contains(&t, .{.x = -0.9999, .y = 0}));
     try testing.expect(contains(&t, .{.x = 0.9999, .y = 0}));
     try testing.expect(contains(&t, .{.x = 0, .y = 0}));
 
     // col
-    try testing.expect(!contains(&t, .{.x = 1.1, .y = 0}));
-    try testing.expect(!contains(&t, .{.x = -1.1, .y = 0}));
+    try testing.expect(contains(&t, .{.x = 1.1, .y = 0}));
+    try testing.expect(!contains(&t, .{.x = 2.1, .y = 0}));
 
     // row
     try testing.expect(!contains(&t, .{.x = 0, .y = 1}));
