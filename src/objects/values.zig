@@ -1,6 +1,6 @@
 const std = @import("std");
-const assert = @import("assert").assert;
-const scratchBuf = @import("scratch").scratchBuf;
+const assert = @import("../assert/assert.zig").assert;
+const scratchBuf = @import("../scratch/scratch.zig").scratchBuf;
 
 rows: usize = 0,
 cols: usize = 0,

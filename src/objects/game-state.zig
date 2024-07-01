@@ -1,10 +1,10 @@
-const a = @import("assert");
+const a = @import("../assert/assert.zig");
 const std = @import("std");
 
 const assert = a.assert;
 const Dump = a.Dump;
 
-const math = @import("math");
+const math = @import("../math/math.zig");
 const projectile = @import("projectile.zig");
 const tower = @import("tower.zig");
 const creep = @import("creep.zig");

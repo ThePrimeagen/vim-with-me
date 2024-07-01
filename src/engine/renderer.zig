@@ -1,7 +1,7 @@
-const assert = @import("assert").assert;
+const assert = @import("../assert/assert.zig").assert;
 const std = @import("std");
-const objects = @import("objects");
-const scratchBuf = @import("scratch").scratchBuf;
+const objects = @import("../objects/objects.zig");
+const scratchBuf = @import("../scratch/scratch.zig").scratchBuf;
 
 const gamestate = objects.gamestate;
 const Values = objects.Values;

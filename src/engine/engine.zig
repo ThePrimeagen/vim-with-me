@@ -1,3 +1,4 @@
+const std = @import("std");
 pub const tower = @import("tower.zig");
 pub const creep = @import("creep.zig");
 pub const renderer = @import("renderer.zig");
@@ -9,7 +10,10 @@ pub const stdout = @import("stdout_output.zig");
 pub const input = @import("input.zig");
 pub const time = @import("time.zig");
 
-test { _ = tower; }
+test {
+    std.debug.print("hello world\n", .{});
+    _ = tower;
+}
 test { _ = creep; }
 test { _ = renderer; }
 test { _ = gamestate; }
