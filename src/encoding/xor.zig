@@ -1,4 +1,4 @@
-const assert = @import("assert").assert;
+const assert = @import("../assert/assert.zig").assert;
 const print = @import("std").debug.print;
 
 pub fn xor(a: []const u8, b: []const u8, out: []u8) void {

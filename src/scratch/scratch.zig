@@ -1,4 +1,4 @@
-const assert = @import("assert").assert;
+const assert = @import("../assert/assert.zig").assert;
 
 var scratch: [65536]u8 = [_]u8{0} ** 65536;
 var idx: usize = 0;

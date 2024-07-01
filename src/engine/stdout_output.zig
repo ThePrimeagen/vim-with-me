@@ -1,4 +1,4 @@
-const assert = @import("assert").assert;
+const assert = @import("../assert/assert.zig").assert;
 
 const std = @import("std");
 const io = std.io;

@@ -1,8 +1,8 @@
 const std = @import("std");
-const math = @import("math");
-const objects = @import("objects");
-const assert = @import("assert").assert;
-const scratchBuf = @import("scratch").scratchBuf;
+const math = @import("../math/math.zig");
+const objects = @import("../objects/objects.zig");
+const assert = @import("../assert/assert.zig").assert;
+const scratchBuf = @import("../scratch/scratch.zig").scratchBuf;
 
 const Values = objects.Values;
 const Allocator = std.mem.Allocator;
@@ -21,7 +21,7 @@ pub fn distanceToExit(creep: *Creep, gs: *GS) f64 {
 
     // distance from where we are to the _NEXT_ path and add that
     const dist = Position.fromIdx(creep.pathIdx, gs.values.cols).
-        vec2().sub(creep.pos).lenSqrt();
+        vec2().sub(creep.pos).lenSq();
 
     return diff + dist;
 }
@@ -249,7 +249,7 @@ test "creep contains" {
 }
 
 test "creep distance to exit" {
-    var gs = GS.init(t.allocator, &testValues);
+    var gs = try GS.init(t.allocator, &testValues);
     defer gs.deinit();
 
     var creep = try create(t.allocator, 0, 0, &testValues, .{.y = 0.5, .x = 1});
@@ -257,8 +257,7 @@ test "creep distance to exit" {
 
     creep.pathIdx = 2;
     creep.pathLen = 4;
-
-    creep.path = &[_]usize{0, 0, 1, 0};
+    creep.path[2] = 0;
 
     // 2 for the path remaining
     try t.expect(distanceToExit(&creep, &gs) == 2 + 0.5 * 0.5 + 1 * 1);

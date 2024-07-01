@@ -1,13 +1,13 @@
-const assert = @import("assert").assert;
+const assert = @import("assert/assert.zig").assert;
 const std = @import("std");
 const print = std.debug.print;
 
-const objects = @import("objects");
-const math = @import("math");
+const objects = @import("objects/objects.zig");
+const math = @import("math/math.zig");
 
 //const engine = @import("engine/engine.zig");
-const engine = @import("vengine");
-const testing = @import("testing");
+const engine = @import("engine/engine.zig");
+const testing = @import("test/test.zig");
 
 const GameState = objects.gamestate.GameState;
 const Message = objects.message.Message;
@@ -70,5 +70,8 @@ pub fn main() !void {
 test { _ = objects; }
 test { _ = math; }
 test { _ = testing; }
-test { std.testing.refAllDecls(@import("vengine")); }
+test {
+    std.debug.print("hello world\n", .{});
+    _ = engine;
+}
 
