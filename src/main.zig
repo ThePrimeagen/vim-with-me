@@ -43,10 +43,10 @@ pub fn main() !void {
     var fps = engine.time.FPS.init(166_666);
     _ = fps.delta();
 
-    try engine.gamestate.placeCreep(&gs, .{
+    _ = try engine.gamestate.placeCreep(&gs, .{
         .row = 0,
         .col = 0,
-    });
+    }, 0);
 
     while (true) {
         fps.sleep();
@@ -70,8 +70,5 @@ pub fn main() !void {
 test { _ = objects; }
 test { _ = math; }
 test { _ = testing; }
-test {
-    std.debug.print("hello world\n", .{});
-    _ = engine;
-}
+test { _ = engine; }
 

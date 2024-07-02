@@ -38,13 +38,27 @@ pub const Dump = struct {
     }
 };
 
-var dumps: [10]?*const Dump = .{null} ** 10;
-var dumpsIdx: usize = 0;
+const dumpLen = 10;
+var dumps: [dumpLen]?*const Dump = .{null} ** dumpLen;
 
 pub fn addDump(dump: *const Dump) void {
-    assert(dumpsIdx < dumps.len, "you have added too many dumps, please readjust the hard coded size");
-    dumps[dumpsIdx] = dump;
-    dumpsIdx += 1;
+    for (0..dumpLen) |idx| {
+        if (dumps[idx] == null) {
+            dumps[idx] = dump;
+            return;
+        }
+    }
+    assert(false, "could not add dumps, you have exceeded the hardcoded size");
+}
+
+pub fn removeDump(dump: *const Dump) void {
+    for (0..dumpLen) |idx| {
+        if (dumps[idx] == dump) {
+            dumps[idx] = null;
+            return;
+        }
+    }
+    assert(false, "could not find dump");
 }
 
 pub fn unwrap(comptime T: type, val: anyerror!T) T {
@@ -60,18 +74,22 @@ pub fn u(v: anyerror![]u8) []u8 {
 }
 
 pub fn assert(truthy: bool, msg: []const u8) void {
-    if (!truthy) {
-        std.debug.print("\x1b[0m", .{});
-        _ = std.io.getStdOut().write("\x1b[0m") catch |e| {
-            std.debug.print("error while clearing stdout: {}\n", .{e});
-        };
-
-        for (0..dumpsIdx) |d| {
-            dumps[d].?.dump();
-        }
-
-        @panic(msg);
+    if (truthy) {
+        return;
     }
+
+    std.debug.print("\x1b[0m", .{});
+    _ = std.io.getStdOut().write("\x1b[0m") catch |e| {
+        std.debug.print("error while clearing stdout: {}\n", .{e});
+    };
+
+    for (0..dumpLen) |dump| {
+        if (dumps[dump]) |d| {
+            d.dump();
+        }
+    }
+
+    @panic(msg);
 }
 
 // TODO: DO SOMETHING WITH THIS...

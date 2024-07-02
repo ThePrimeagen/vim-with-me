@@ -37,7 +37,7 @@ pub fn main() !void {
             const col = args.rand(usize) % args.cols;
             const pos = math.Position{.row = row, .col = col};
             if (engine.gamestate.canPlaceTower(&gs, pos)) {
-                try engine.gamestate.placeTower(&gs, pos, 0);
+                _ = try engine.gamestate.placeTower(&gs, pos, 0);
                 break;
             }
         }
