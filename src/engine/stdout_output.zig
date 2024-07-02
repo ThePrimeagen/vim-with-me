@@ -9,3 +9,10 @@ pub fn output(out: []const u8) !void {
     _ = try io.getStdOut().write(out);
 }
 
+pub fn resetColor() void {
+    std.debug.print("\x1b[0m", .{});
+    _ = std.io.getStdOut().write("\x1b[0m") catch |e| {
+        std.debug.print("error while clearing stdout: {}\n", .{e});
+    };
+}
+

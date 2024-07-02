@@ -9,7 +9,7 @@ const gamestate = engine.gamestate;
 pub const Spawner = struct {
     gs: *GS,
     lastSpawn: isize = 0,
-    currentTime: isize = 0,
+    currentTime: isize = 100_000_000,
     spawnRate: isize,
     params: *Params,
 

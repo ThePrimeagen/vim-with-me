@@ -5,6 +5,7 @@ const scratchBuf = @import("../scratch/scratch.zig").scratchBuf;
 rows: usize = 0,
 cols: usize = 0,
 size: usize = 0,
+debug: bool = false,
 
 const Self = @This();
 
