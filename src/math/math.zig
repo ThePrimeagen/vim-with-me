@@ -130,6 +130,11 @@ pub const AABB = struct {
             pos.y >= self.min.y and pos.y < self.max.y;
     }
 
+    pub fn overlaps(self: AABB, other: AABB) bool {
+        _ = self;
+        _ = other;
+    }
+
     pub fn string(self: AABB) ![]u8 {
         return std.fmt.bufPrint(scratchBuf(100), "AABB({s}, {s})", .{try self.min.string(), try self.max.string()});
     }
@@ -237,15 +242,17 @@ test "vec2 add" {
 }
 
 test "aabb contains" {
-    const a = Vec2{.x = 1, .y = 2};
-    const box = a.sub(.{.x = 1, .y = 1}).aabb(.{.x = 3, .y = 3});
+    const a = Vec2{.x = 1, .y = 1};
+    const box = a.aabb(.{.x = 3, .y = 3});
 
-    try t.expect(!box.contains(.{.x = 0, .y = 0.9999}));
-    try t.expect(box.contains(.{.x = 0, .y = 1}));
-    try t.expect(!box.contains(.{.x = 3, .y = 1}));
-    try t.expect(box.contains(.{.x = 2.9999, .y = 1}));
-    try t.expect(!box.contains(.{.x = 2.9999, .y = 3}));
-    try t.expect(box.contains(.{.x = 2.9999, .y = 2.9999}));
+    try t.expect(!box.contains(.{.x = 1, .y = 0.9999}));
+    try t.expect(!box.contains(.{.x = 0.9999, .y = 1}));
+    try t.expect(box.contains(.{.x = 1, .y = 1}));
+    try t.expect(box.contains(.{.x = 3.9999, .y = 1}));
+    try t.expect(box.contains(.{.x = 1, .y = 3.9999}));
+
+    try t.expect(!box.contains(.{.x = 3.9999, .y = 4}));
+    try t.expect(!box.contains(.{.x = 4, .y = 3.9999}));
 
 }
 

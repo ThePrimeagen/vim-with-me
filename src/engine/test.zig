@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const assert = @import("../assert/assert.zig");
+const a = @import("../assert/assert.zig");
 const gamestate = @import("game-state.zig");
 const towers = @import("tower.zig");
 const creeps = @import("creep.zig");
@@ -9,13 +9,16 @@ const objects = @import("../objects/objects.zig");
 const testing = std.testing;
 test "find nearest creep" {
     var values = objects.Values{.rows = 5, .cols = 6};
+    values.tower.fireRateUS = 10_000_000; // ensures we don't fire
     objects.Values.init(&values);
     var gs = try objects.gamestate.GameState.init(testing.allocator, &values);
     defer gs.deinit();
 
+    gamestate.init(&gs);
+
     var gsDump = gs.dumper();
-    assert.addDump(&gsDump);
-    defer assert.removeDump(&gsDump);
+    a.addDump(&gsDump);
+    defer a.removeDump(&gsDump);
 
     const tId = try gamestate.placeTower(&gs, .{.row = 2, .col = 2}, 0);
     const tower = gamestate.towerById(&gs, tId);
@@ -33,13 +36,13 @@ test "find nearest creep" {
     try testing.expect(creep != null);
     try testing.expect(creep.?.id == three);
 
-    gamestate.update(&gs, 2_990_000);
+    try gamestate.update(&gs, 2_990_000);
 
     creep = towers.creepWithinRange(tower, &gs);
-    try testing.expect(creep != null);
+    a.assert(creep != null, "expected to find the creep");
     try testing.expect(creep.?.id == three);
 
-    gamestate.update(&gs, 16_000);
+    try gamestate.update(&gs, 16_000);
 
     creep = towers.creepWithinRange(tower, &gs);
     try testing.expect(creep != null);
@@ -53,8 +56,8 @@ test "creep distance" {
     defer gs.deinit();
 
     var gsDump = gs.dumper();
-    assert.addDump(&gsDump);
-    defer assert.removeDump(&gsDump);
+    a.addDump(&gsDump);
+    defer a.removeDump(&gsDump);
 
     const one = try gamestate.placeCreep(&gs, .{.row = 1, .col = 0}, 0);
     const two = try gamestate.placeCreep(&gs, .{.row = 1, .col = 1}, 0);

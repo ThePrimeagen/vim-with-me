@@ -16,6 +16,8 @@ pub fn main() !void {
     var gs = try objects.gamestate.GameState.init(alloc, &values);
     defer gs.deinit();
 
+    engine.gamestate.init(&gs);
+
     const gsDump = gs.dumper();
     assert.addDump(&gsDump);
 
@@ -54,7 +56,7 @@ pub fn main() !void {
         try creeper.tick(delta);
 
         engine.stdout.resetColor();
-        engine.gamestate.update(&gs, delta);
+        try engine.gamestate.update(&gs, delta);
 
         if (args.viz.?) {
             try render.render(&gs);

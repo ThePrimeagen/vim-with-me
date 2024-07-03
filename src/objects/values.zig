@@ -2,10 +2,23 @@ const std = @import("std");
 const assert = @import("../assert/assert.zig").assert;
 const scratchBuf = @import("../scratch/scratch.zig").scratchBuf;
 
+pub const TowerValues = struct {
+    ammo: usize = 50,
+    fireRateUS: i64 = 1_000_000,
+    firingDurationUS: i64 = 200_000,
+};
+
+pub const CreepValues = struct {
+    life: usize = 10,
+    speed: f64 = 1,
+};
+
 rows: usize = 0,
 cols: usize = 0,
 size: usize = 0,
 debug: bool = false,
+tower: TowerValues = .{},
+creep: CreepValues = .{},
 
 const Self = @This();
 

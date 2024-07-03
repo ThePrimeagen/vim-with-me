@@ -11,22 +11,24 @@ const GS = objects.gamestate.GameState;
 const Message = objects.message.Message;
 const Tower = objects.tower.Tower;
 const Vec2 = math.Vec2;
+const Allocator = std.mem.Allocator;
 
-pub fn update(state: *GS, delta: i64) void {
+pub fn update(state: *GS, delta: i64) !void {
     state.updates += 1;
 
     const diff: isize = @intCast(state.one - state.two);
     assert(diff >= -1 and diff <= 1, "some how we have multiple updates to one side but not the other");
 
     state.loopDeltaUS = delta;
-    state.time += delta;
 
     if (!state.playing) {
         return;
     }
 
+    state.time += delta;
+
     for (state.towers.items) |*t| {
-        towers.update(t, state);
+        try towers.update(t, state);
     }
 
     for (state.creeps.items) |*c| {
@@ -49,6 +51,12 @@ pub fn update(state: *GS, delta: i64) void {
         a.u(c.pos.string()),
         a.u(one.pos.string()),
     });
+}
+
+pub fn init(self: *GS) void {
+    self.fns = &.{
+        .placeProjectile = placeProjectile,
+    };
 }
 
 pub fn play(state: *GS) void {
@@ -84,7 +92,7 @@ pub fn message(state: *GS, msg: Message) !void {
                     team(c.team).
                     pos(c.pos).
                     id(state.towers.items.len).
-                    tower();
+                    tower(state);
 
                 try state.towers.append(tt);
             } else {
@@ -218,7 +226,7 @@ pub fn placeTower(self: *GS, pos: math.Position, team: u8) !usize {
         .pos(pos)
         .team(team)
         .id(id)
-        .tower();
+        .tower(self);
 
     try self.towers.append(t);
 
@@ -228,6 +236,18 @@ pub fn placeTower(self: *GS, pos: math.Position, team: u8) !usize {
         creeps.calculatePath(c, self.board);
     }
 
+    return id;
+}
+
+pub fn placeProjectile(self: *GS, pos: math.Position, target: objects.Target) Allocator.Error!usize {
+    const id = self.projectile.items.len;
+    const projectile = objects.projectile.Projectile {
+        .pos = pos.vec2(),
+        .target = target,
+        .id = id,
+    };
+
+    try self.projectile.append(projectile);
     return id;
 }
 

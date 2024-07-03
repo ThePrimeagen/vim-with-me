@@ -5,6 +5,7 @@ pub const message = @import("messages.zig");
 pub const colors = @import("colors.zig");
 pub const gamestate = @import("game-state.zig");
 pub const Values = @import("values.zig");
+pub const Target = @import("target.zig").Target;
 
 
 
