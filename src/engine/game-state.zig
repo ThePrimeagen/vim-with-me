@@ -6,6 +6,7 @@ const a = @import("../assert/assert.zig");
 const assert = a.assert;
 const towers = @import("tower.zig");
 const creeps = @import("creep.zig");
+const projectiles = @import("projectile.zig");
 
 const GS = objects.gamestate.GameState;
 const Message = objects.message.Message;
@@ -15,6 +16,8 @@ const Allocator = std.mem.Allocator;
 
 pub fn update(state: *GS, delta: i64) !void {
     state.updates += 1;
+
+    const towersDestroyed = state.towersDestroyed;
 
     const diff: isize = @intCast(state.one - state.two);
     assert(diff >= -1 and diff <= 1, "some how we have multiple updates to one side but not the other");
@@ -33,6 +36,17 @@ pub fn update(state: *GS, delta: i64) !void {
 
     for (state.creeps.items) |*c| {
         creeps.update(c, state);
+    }
+
+    for (state.projectile.items) |*p| {
+        try projectiles.update(p, state);
+    }
+
+    if (state.towersDestroyed > towersDestroyed) {
+        updateBoard(state);
+        for (state.creeps.items) |*c| {
+            creeps.calculatePath(c, state.board);
+        }
     }
 
     if (!state.values.debug) {
@@ -56,7 +70,12 @@ pub fn update(state: *GS, delta: i64) !void {
 pub fn init(self: *GS) void {
     self.fns = &.{
         .placeProjectile = placeProjectile,
+        .towerDied = towerDied,
     };
+}
+
+pub fn towerDied(self: *GS) void {
+    self.towersDestroyed += 1;
 }
 
 pub fn play(state: *GS) void {
@@ -192,6 +211,10 @@ pub fn updateBoard(self: *GS) void {
     }
 
     for (self.towers.items) |*t| {
+        if (!t.alive) {
+            continue;
+        }
+
         const start = t.rSized.pos.row * self.values.cols + t.rSized.pos.col;
 
         for (0..t.rows) |r| {
@@ -239,12 +262,14 @@ pub fn placeTower(self: *GS, pos: math.Position, team: u8) !usize {
     return id;
 }
 
-pub fn placeProjectile(self: *GS, pos: math.Position, target: objects.Target) Allocator.Error!usize {
+pub fn placeProjectile(self: *GS, pos: math.Position, target: objects.Target, damage: usize) Allocator.Error!usize {
     const id = self.projectile.items.len;
     const projectile = objects.projectile.Projectile {
         .pos = pos.vec2(),
         .target = target,
         .id = id,
+        .damage = damage,
+        .speed = self.values.projectile.speed,
     };
 
     try self.projectile.append(projectile);

@@ -3,7 +3,7 @@ const objects = @import("../objects/objects.zig");
 const std = @import("std");
 const a = @import("../assert/assert.zig");
 const unwrap = a.unwrap;
-const assert = a.unwrap;
+const assert = a.assert;
 const creeps = @import("creep.zig");
 
 const Tower = objects.tower.Tower;
@@ -110,6 +110,9 @@ pub fn projectile(self: *Tower, gs: *GS, target: Target) void {
 }
 
 pub fn update(self: *Tower, gs: *GS) !void {
+
+    assert(gs.fns != null, "fns must be defined to use this function");
+
     if (!self.alive) {
         return;
     }
@@ -117,6 +120,13 @@ pub fn update(self: *Tower, gs: *GS) !void {
     if (self.fired) {
         self.fired = false;
         self.firing = false;
+    }
+
+    if (self.ammo == 0) {
+        self.alive = false;
+        self.deadTimeUS = gs.time;
+        gs.fns.?.towerDied(gs);
+        return;
     }
 
     const creepMaybe = creepWithinRange(self, gs);
@@ -129,7 +139,8 @@ pub fn update(self: *Tower, gs: *GS) !void {
     const creep = creepMaybe.?;
 
     if (self.firing and self.lastFiringUS + self.firingDurationUS < gs.time) {
-        _ = try gs.fns.?.placeProjectile(gs, self.pos.position(), .{.creep = creep.id});
+        _ = try gs.fns.?.placeProjectile(gs, self.pos.position(), .{.creep = creep.id}, self.damage);
+        self.ammo -= 1;
         self.fired = true;
     }
 

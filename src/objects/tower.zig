@@ -12,11 +12,10 @@ pub const Tower = struct {
     ammo: usize = 0,
 
     alive: bool = true,
-    deadTimeUS: u64 = 0,
+    deadTimeUS: i64 = 0,
 
     level: u8 = 1,
-    radius: u8 = 1,
-    damage: u8 = 1,
+    damage: usize = 1,
 
     fireRateUS: i64 = 0,
     lastFiringUS: i64 = 0,

@@ -236,8 +236,8 @@ test "creep movement" {
     // Note: with how update works we can "bleed" a bit over
     // I find that this amount captures any oopsy amount of movement.
     const closeEnough = 0.05;
-
     try t.expect(creep.pathIdx == 0);
+
     runUntil(&creep, &gs, 1, 1500);
     try t.expect(creep.pos.closeEnough(.{.x = 0, .y = 1}, closeEnough));
     try t.expect(creep.pathIdx == 1);
@@ -245,13 +245,15 @@ test "creep movement" {
     runUntil(&creep, &gs, 2, 1500);
     try t.expect(creep.pathIdx == 2);
     try t.expect(creep.pos.closeEnough(.{.x = 0, .y = 2}, closeEnough));
+
     runUntil(&creep, &gs, 3, 1500);
     try t.expect(creep.pathIdx == 3);
-    std.debug.print("{s}\n", .{try creep.pos.string()});
     try t.expect(creep.pos.closeEnough(.{.x = 1, .y = 2}, closeEnough));
+
     runUntil(&creep, &gs, 4, 1500);
     try t.expect(creep.pathIdx == 4);
     try t.expect(creep.pos.closeEnough(.{.x = 2, .y = 2}, closeEnough));
+
 }
 
 test "creep contains" {
