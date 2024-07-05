@@ -10,11 +10,20 @@ const Creep = objects.creep.Creep;
 const CreepSize = objects.creep.CreepSize;
 const colors = objects.colors;
 const GS = objects.gamestate.GameState;
+const Position = math.Position;
 
-pub fn distanceToExit(creep: *Creep) f64 {
+pub fn distanceToExit(creep: *Creep, gs: *GS) f64 {
     assert(creep.alive, "you cannot call distance to exit if the creep is dead");
     assert(!completed(creep), "expected the creep to be still within the maze");
-    unreachable;
+
+    // 1 or larger
+    const diff: f64 = @floatFromInt(creep.pathLen - creep.pathIdx);
+
+    // distance from where we are to the _NEXT_ path and add that
+    const dist = Position.fromIdx(creep.pathIdx, gs.values.cols).
+        vec2().sub(creep.pos).lenSqrt();
+
+    return diff + dist;
 }
 
 // TODO: Params object STAT (just not now)
@@ -237,4 +246,20 @@ test "creep contains" {
     try t.expect(!contains(&creep, .{.x = 0, .y = 1.5}));
     try t.expect(contains(&creep, .{.x = 1, .y = 1.5}));
 
+}
+
+test "creep distance to exit" {
+    var gs = GS.init(t.allocator, &testValues);
+    defer gs.deinit();
+
+    var creep = try create(t.allocator, 0, 0, &testValues, .{.y = 0.5, .x = 1});
+    defer creep.deinit();
+
+    creep.pathIdx = 2;
+    creep.pathLen = 4;
+
+    creep.path = &[_]usize{0, 0, 1, 0};
+
+    // 2 for the path remaining
+    try t.expect(distanceToExit(&creep, &gs) == 2 + 0.5 * 0.5 + 1 * 1);
 }
