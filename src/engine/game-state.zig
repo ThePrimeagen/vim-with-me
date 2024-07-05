@@ -77,6 +77,17 @@ pub fn init(self: *GS) void {
         .shot = shot,
         .strike = strike,
     };
+
+    const rows = self.values.rows;
+    const teamSpace = rows / 3;
+
+    self.oneRange.endRow = teamSpace;
+
+    self.twoRange.startRow = rows - teamSpace;
+    self.twoRange.endRow = rows;
+
+    self.noBuildRange.startRow = self.oneRange.endRow;
+    self.noBuildRange.endRow = self.twoRange.startRow;
 }
 
 pub fn towerDied(self: *GS, t: *Tower) void {
