@@ -74,6 +74,33 @@ pub const Position = struct {
     }
 };
 
+pub const Range = struct {
+    startRow: usize = 0,
+    endRow: usize = 0,
+
+    pub fn position(self: Range) Position {
+        return .{
+            .row = self.startRow,
+            .col = 0,
+        };
+    }
+
+    pub fn sized(self: Range, cols: usize) Sized {
+        return .{
+            .pos = self.position(),
+            .cols = cols,
+        };
+    }
+
+    pub fn invalid(self: Range) bool {
+        return self.startRow >= self.endRow;
+    }
+
+    pub fn contains(self: Range, pos: Position) bool {
+        return self.startRow <= pos.row and self.endRow > pos.row;
+    }
+};
+
 pub const Sized = struct {
     cols: usize,
     pos: Position,

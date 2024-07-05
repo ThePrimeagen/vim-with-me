@@ -2,6 +2,9 @@ const std = @import("std");
 const assert = @import("../assert/assert.zig").assert;
 const scratchBuf = @import("../scratch/scratch.zig").scratchBuf;
 
+pub const TEAM_ONE = '1';
+pub const TEAM_TWO = '2';
+
 pub const TowerValues = struct {
     ammo: usize = 50,
     fireRateUS: i64 = 1_000_000,

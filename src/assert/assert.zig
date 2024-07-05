@@ -69,15 +69,7 @@ pub fn unwrap(comptime T: type, val: anyerror!T) T {
     }
 }
 
-pub fn u(v: anyerror![]u8) []u8 {
-    return unwrap([]u8, v);
-}
-
-pub fn assert(truthy: bool, msg: []const u8) void {
-    if (truthy) {
-        return;
-    }
-
+pub fn never(msg: []const u8) void {
     std.debug.print("\x1b[0m", .{});
     _ = std.io.getStdOut().write("\x1b[0m") catch |e| {
         std.debug.print("error while clearing stdout: {}\n", .{e});
@@ -90,6 +82,27 @@ pub fn assert(truthy: bool, msg: []const u8) void {
     }
 
     @panic(msg);
+}
+
+pub fn option(comptime T: type, val: ?T) T {
+    if (val) |v| {
+        return v;
+    } else |err| {
+        std.debug.print("unwrap error: {any}", .{err});
+        never("option is null");
+    }
+}
+
+pub fn u(v: anyerror![]u8) []u8 {
+    return unwrap([]u8, v);
+}
+
+pub fn assert(truthy: bool, msg: []const u8) void {
+    if (truthy) {
+        return;
+    }
+
+    never(msg);
 }
 
 // TODO: DO SOMETHING WITH THIS...

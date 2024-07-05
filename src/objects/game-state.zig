@@ -16,6 +16,7 @@ const Target = @import("target.zig").Target;
 // TODO: Make this adjustable
 const Vec2 = math.Vec2;
 const Coord = math.Coord;
+const Range = math.Range;
 
 const Message = messages.Message;
 
@@ -36,29 +37,6 @@ pub const Stats = struct {
     towersLost: usize = 0,
     towersKilled: usize = 0,
     shots: usize = 0,
-};
-
-pub const Range = struct {
-    startRow: usize = 0,
-    endRow: usize = 0,
-
-    pub fn position(self: Range) math.Position {
-        return .{
-            .row = self.startRow,
-            .col = 0,
-        };
-    }
-
-    pub fn sized(self: Range, cols: usize) math.Sized {
-        return .{
-            .pos = self.position(),
-            .cols = cols,
-        };
-    }
-
-    pub fn invalid(self: Range) bool {
-        return self.startRow >= self.endRow;
-    }
 };
 
 pub const GameState = struct {
