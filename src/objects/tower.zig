@@ -1,4 +1,4 @@
-const math = @import("math");
+const math = @import("../math/math.zig");
 const colors = @import("colors.zig");
 
 const INITIAL_AMMO = 50;

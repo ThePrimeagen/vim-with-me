@@ -1,5 +1,5 @@
-const objects = @import("objects");
-const assert = @import("assert").assert;
+const objects = @import("../objects/objects.zig");
+const assert = @import("../assert/assert.zig").assert;
 const std = @import("std");
 
 const io = std.io;

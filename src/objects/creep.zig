@@ -1,9 +1,9 @@
 const std = @import("std");
 
-const assert = @import("assert").assert;
+const assert = @import("../assert/assert.zig").assert;
 const Values = @import("values.zig");
-const math = @import("math");
-const scratchBuf = @import("scratch").scratchBuf;
+const math = @import("../math/math.zig");
+const scratchBuf = @import("../scratch/scratch.zig").scratchBuf;
 
 const colors = @import("colors.zig");
 

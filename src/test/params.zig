@@ -1,7 +1,7 @@
-const Values = @import("objects").Values;
-const scratchBuf = @import("scratch").scratchBuf;
+const Values = @import("../objects/objects.zig").Values;
+const scratchBuf = @import("../scratch/scratch.zig").scratchBuf;
 const std = @import("std");
-const assert = @import("assert").assert;
+const assert = @import("../assert/assert.zig").assert;
 
 const Allocator = std.mem.Allocator;
 const RndGen = std.rand.DefaultPrng;

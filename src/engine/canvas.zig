@@ -1,10 +1,10 @@
-const a = @import("assert");
+const a = @import("../assert/assert.zig");
 const std = @import("std");
 
 const assert = a.assert;
 const framer = @import("framer.zig");
-const math = @import("math");
-const objects = @import("objects");
+const math = @import("../math/math.zig");
+const objects = @import("../objects/objects.zig");
 const colors = objects.colors;
 const Values = objects.Values;
 

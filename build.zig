@@ -15,30 +15,6 @@ pub fn build(b: *std.Build) void {
     // set a preferred release mode, allowing the user to decide how to optimize.
     const optimize = b.standardOptimizeOption(.{});
 
-    const assert = b.addModule("assert", .{
-        .root_source_file = .{ .path = "src/assert/assert.zig" },
-    });
-
-    const scratch = b.addModule("scratch", .{
-        .root_source_file = .{ .path = "src/scratch/scratch.zig" },
-    });
-
-    const objects = b.addModule("objects", .{
-        .root_source_file = .{ .path = "src/objects/objects.zig" },
-    });
-
-    const math = b.addModule("math", .{
-        .root_source_file = .{ .path = "src/math/math.zig" },
-    });
-
-    const testing = b.addModule("testing", .{
-        .root_source_file = .{ .path = "src/test/test.zig" },
-    });
-
-    const vengine = b.addModule("vengine", .{
-        .root_source_file = .{ .path = "src/engine/engine.zig" },
-    });
-
     const exe = b.addExecutable(.{
         .name = "to",
         .root_source_file = b.path("src/main.zig"),
@@ -47,45 +23,12 @@ pub fn build(b: *std.Build) void {
     });
 
     const testExe = b.addExecutable(.{
-        .name = "test_to",
-        .root_source_file = b.path("src/test/main.zig"),
+        .name = "simulate_to",
+        .root_source_file = b.path("src/sim.zig"),
         .target = target,
         .optimize = optimize,
     });
 
-
-    exe.root_module.addImport("assert", assert);
-    exe.root_module.addImport("scratch", scratch);
-    scratch.addImport("assert", assert);
-
-    exe.root_module.addImport("vengine", vengine);
-    vengine.addImport("assert", assert);
-    vengine.addImport("scratch", scratch);
-    vengine.addImport("math", math);
-    vengine.addImport("objects", objects);
-
-    exe.root_module.addImport("testing", testing);
-    testing.addImport("assert", assert);
-    testing.addImport("scratch", scratch);
-    testing.addImport("math", math);
-    testing.addImport("objects", objects);
-    testing.addImport("vengine", vengine);
-
-    exe.root_module.addImport("math", math);
-    math.addImport("assert", assert);
-    math.addImport("scratch", scratch);
-
-    exe.root_module.addImport("objects", objects);
-    objects.addImport("math", math);
-    objects.addImport("assert", assert);
-    objects.addImport("scratch", scratch);
-
-    testExe.root_module.addImport("testing", testing);
-    testExe.root_module.addImport("assert", assert);
-    testExe.root_module.addImport("scratch", scratch);
-    testExe.root_module.addImport("math", math);
-    testExe.root_module.addImport("objects", objects);
-    testExe.root_module.addImport("vengine", vengine);
 
     {
         // This declares intent for the executable to be installed into the
@@ -153,38 +96,12 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    exe_unit_tests.root_module.addImport("assert", assert);
-    exe_unit_tests.root_module.addImport("objects", objects);
-    exe_unit_tests.root_module.addImport("math", math);
-    exe_unit_tests.root_module.addImport("scratch", scratch);
-    exe_unit_tests.root_module.addImport("testing", testing);
-    exe_unit_tests.root_module.addImport("vengine", vengine);
-
-    const test_exe_unit_tests = b.addTest(.{
-        .root_source_file = b.path("src/test/main.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-
-    test_exe_unit_tests.root_module.addImport("assert", assert);
-    test_exe_unit_tests.root_module.addImport("objects", objects);
-    test_exe_unit_tests.root_module.addImport("math", math);
-    test_exe_unit_tests.root_module.addImport("scratch", scratch);
-    test_exe_unit_tests.root_module.addImport("testing", testing);
-    test_exe_unit_tests.root_module.addImport("vengine", vengine);
-
     const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
     run_exe_unit_tests.has_side_effects = true;
-
-    const test_run_exe_unit_tests = b.addRunArtifact(test_exe_unit_tests);
-    test_run_exe_unit_tests.has_side_effects = true;
 
     // Similar to creating the run step earlier, this exposes a `test` step to
     // the `zig build --help` menu, providing a way for the user to request
     // running the unit tests.
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_exe_unit_tests.step);
-
-    const test_test_step = b.step("test-sim", "Run simulations");
-    test_test_step.dependOn(&test_run_exe_unit_tests.step);
 }

@@ -1,8 +1,8 @@
 const std = @import("std");
 
-const objects = @import("objects");
-const math = @import("math");
-const a = @import("assert");
+const objects = @import("../objects/objects.zig");
+const math = @import("../math/math.zig");
+const a = @import("../assert/assert.zig");
 const assert = a.assert;
 const towers = @import("tower.zig");
 const creeps = @import("creep.zig");

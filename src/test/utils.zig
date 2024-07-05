@@ -1,5 +1,5 @@
 const std = @import("std");
-const objects = @import("objects");
+const objects = @import("../objects/objects.zig");
 
 const GS = objects.gamestate.GameState;
 const Values = objects.Values;

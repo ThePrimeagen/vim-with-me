@@ -1,6 +1,6 @@
 const std = @import("std");
-const assert = @import("assert").assert;
-const scratchBuf = @import("scratch").scratchBuf;
+const assert = @import("../assert/assert.zig").assert;
+const scratchBuf = @import("../scratch/scratch.zig").scratchBuf;
 
 pub const ZERO_POS: Position = .{.row = 0, .col = 0};
 pub const ZERO_VEC2: Vec2 = .{.x = 0.0, .y = 0.0};
