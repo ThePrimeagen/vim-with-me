@@ -139,6 +139,11 @@ pub fn update(self: *Creep, gs: *GS) void {
         return;
     }
 
+    if (self.life == 0) {
+        self.alive = false;
+        return;
+    }
+
     var consumedUS: i64 = 0;
     var count: usize = 0;
     while (consumedUS < gs.loopDeltaUS and !completed(self)) {
@@ -169,6 +174,7 @@ pub fn update(self: *Creep, gs: *GS) void {
 
 pub fn render(self: *Creep, gs: *GS) void {
     self.rSized.pos = self.pos.position();
+    self.rCells[0].text = '0' + @as(u8, @intCast(self.life));
     _ = gs;
 }
 

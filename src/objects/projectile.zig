@@ -2,7 +2,7 @@ const math = @import("../math/math.zig");
 const colors = @import("colors.zig");
 const Target = @import("target.zig").Target;
 
-const INITIAL_PROJECTILE_COLOR: colors.Color = .{.r = 0, .g = 1, .b = 0};
+const INITIAL_PROJECTILE_COLOR: colors.Color = .{.r = 0, .g = 255, .b = 0};
 
 pub const ProjectileSize = 1;
 pub const ProjectileCell: [1]colors.Cell = .{

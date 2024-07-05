@@ -30,15 +30,27 @@ const TowerList = ArrayList(Tower);
 const CreepList = ArrayList(Creep);
 const ProjectileList = ArrayList(Projectile);
 
+pub const Stats = struct {
+    creepsKilled: usize = 0,
+    creepsEscaped: usize = 0,
+    towersLost: usize = 0,
+    towersKilled: usize = 0,
+    shots: usize = 0,
+};
+
 pub const GameState = struct {
     playing: bool = true,
     round: i32 = 1,
+
+    boardChanged: usize = 0,
+
     one: i32 = 0,
     oneCoords: [3]?Coord,
-    towersDestroyed: usize = 0,
+    oneStats: Stats = Stats{},
 
     two: i32 = 0,
     twoCoords: [3]?Coord,
+    twoStats: Stats = Stats{},
 
     time: i64 = 0,
     loopDeltaUS: i64 = 0,
@@ -155,6 +167,9 @@ pub const GameState = struct {
 };
 
 pub const GameStateFunctions = struct {
-    placeProjectile: *const fn(self: *GameState, pos: math.Position, target: Target, damage: usize) Allocator.Error!usize,
-    towerDied: *const fn(self: *GameState) void,
+    placeProjectile: *const fn(self: *GameState, tower: *Tower, target: Target) Allocator.Error!usize,
+    towerDied: *const fn(self: *GameState, tower: *Tower) void,
+    creepKilled: *const fn(self: *GameState, creep: *Creep) void,
+    shot: *const fn(self: *GameState, tower: *Tower) void,
+    strike: *const fn(self: *GameState, p: *Projectile) void,
 };

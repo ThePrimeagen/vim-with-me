@@ -11,13 +11,15 @@ const projectiles = @import("projectile.zig");
 const GS = objects.gamestate.GameState;
 const Message = objects.message.Message;
 const Tower = objects.tower.Tower;
+const Creep = objects.creep.Creep;
+const Projectile = objects.projectile.Projectile;
 const Vec2 = math.Vec2;
 const Allocator = std.mem.Allocator;
 
 pub fn update(state: *GS, delta: i64) !void {
     state.updates += 1;
 
-    const towersDestroyed = state.towersDestroyed;
+    const changed = state.boardChanged;
 
     const diff: isize = @intCast(state.one - state.two);
     assert(diff >= -1 and diff <= 1, "some how we have multiple updates to one side but not the other");
@@ -42,7 +44,7 @@ pub fn update(state: *GS, delta: i64) !void {
         try projectiles.update(p, state);
     }
 
-    if (state.towersDestroyed > towersDestroyed) {
+    if (state.boardChanged > changed) {
         updateBoard(state);
         for (state.creeps.items) |*c| {
             creeps.calculatePath(c, state.board);
@@ -71,11 +73,42 @@ pub fn init(self: *GS) void {
     self.fns = &.{
         .placeProjectile = placeProjectile,
         .towerDied = towerDied,
+        .creepKilled = creepKilled,
+        .shot = shot,
+        .strike = strike,
     };
 }
 
-pub fn towerDied(self: *GS) void {
-    self.towersDestroyed += 1;
+pub fn towerDied(self: *GS, t: *Tower) void {
+    if (t.team == '1') {
+        self.oneStats.towersLost += 1;
+    } else {
+        self.twoStats.towersLost += 1;
+    }
+    self.boardChanged += 1;
+}
+
+pub fn creepKilled(self: *GS, c: *Creep) void {
+    if (c.team == '1') {
+        self.oneStats.creepsKilled += 1;
+    } else {
+        self.twoStats.creepsKilled += 1;
+    }
+}
+
+pub fn shot(self: *GS, t: *Tower) void {
+    if (t.team == '1') {
+        self.oneStats.shots += 1;
+    } else {
+        self.twoStats.shots += 1;
+    }
+}
+
+pub fn strike(self: *GS, p: *Projectile) void {
+    switch (p.target) {
+        .creep => |c| self.creeps.items[c].life -|= p.damage,
+        .tower => |t| self.towers.items[t].ammo -|= p.damage,
+    }
 }
 
 pub fn play(state: *GS) void {
@@ -262,17 +295,19 @@ pub fn placeTower(self: *GS, pos: math.Position, team: u8) !usize {
     return id;
 }
 
-pub fn placeProjectile(self: *GS, pos: math.Position, target: objects.Target, damage: usize) Allocator.Error!usize {
+pub fn placeProjectile(self: *GS, t: *Tower, target: objects.Target) Allocator.Error!usize {
     const id = self.projectile.items.len;
     const projectile = objects.projectile.Projectile {
-        .pos = pos.vec2(),
+        .pos = t.pos,
         .target = target,
         .id = id,
-        .damage = damage,
+        .damage = t.damage,
         .speed = self.values.projectile.speed,
     };
 
     try self.projectile.append(projectile);
+    shot(self, t);
+
     return id;
 }
 
