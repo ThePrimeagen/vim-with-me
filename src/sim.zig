@@ -34,17 +34,6 @@ pub fn main() !void {
     defer render.deinit();
     var creeper = testing.gamestate.Spawner.init(&args, &gs);
 
-    for (0..args.towerCount) |_| {
-        while (true) {
-            const row = args.rand(usize) % args.rows;
-            const col = args.rand(usize) % args.cols;
-            const pos = math.Position{.row = row, .col = col};
-            if (try engine.gamestate.placeTower(&gs, pos, Values.TEAM_ONE)) |_| {
-                break;
-            }
-        }
-    }
-
     var count: usize = 0;
     while (args.runCount > count) : (count += 1) {
         var delta = args.fps;

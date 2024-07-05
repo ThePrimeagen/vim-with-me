@@ -235,7 +235,7 @@ test "creep movement" {
     var gs = try GS.init(t.allocator, &testValues);
     defer gs.deinit();
 
-    var creep = try create(t.allocator, 0, 0, &testValues, .{.x = 0, .y = 0});
+    var creep = try create(t.allocator, 0, Values.TEAM_ONE, &testValues, .{.x = 0, .y = 0});
     defer creep.deinit();
     _ = calculatePath(&creep, &testBoard);
 
@@ -265,7 +265,7 @@ test "creep movement" {
 }
 
 test "creep contains" {
-    var creep = try create(t.allocator, 0, 0, &testValues, .{.y = 1, .x = 1});
+    var creep = try create(t.allocator, 0, Values.TEAM_ONE, &testValues, .{.y = 1, .x = 1});
     defer creep.deinit();
 
     try t.expect(!contains(&creep, .{.x = 0.9999, .y = 0}));

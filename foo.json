@@ -1,8 +1,7 @@
 {
     "rows": 24,
     "cols": 80,
-    "creepRate": 1000000,
-    "towerCount": 10,
+    "creepRate": 2000000,
     "fps": 33333,
     "runCount": 50000,
     "realtime": false,
