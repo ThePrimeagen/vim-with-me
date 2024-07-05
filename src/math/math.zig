@@ -53,12 +53,7 @@ pub const Position = struct {
     }
 
     pub fn init(str: []const u8) ?Position {
-        const idxMaybe = std.mem.indexOf(u8, str, ",");
-        if (idxMaybe == null) {
-            return null;
-        }
-
-        const idx = idxMaybe.?;
+        const idx = std.mem.indexOf(u8, str, ",") orelse return null;
         const row = std.fmt.parseInt(usize, str[0..idx], 10) catch {
             return null;
         };

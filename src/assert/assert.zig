@@ -53,7 +53,6 @@ pub fn unwrap(comptime T: type, val: anyerror!T) T {
     } else |err| {
         std.debug.panic("unwrap error: {any}", .{err});
     }
-
 }
 
 pub fn u(v: anyerror![]u8) []u8 {
