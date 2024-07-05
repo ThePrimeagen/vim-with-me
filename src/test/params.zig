@@ -4,13 +4,19 @@ const std = @import("std");
 const assert = @import("assert").assert;
 
 const Allocator = std.mem.Allocator;
+const RndGen = std.rand.DefaultPrng;
 
 rows: usize,
 cols: usize,
-creepRate: f64,
+creepRate: usize,
 towerCount: usize,
+fps: isize,
+
+seed: ?usize = 0,
 viz: ?bool = true,
 realtime: ?bool = false,
+
+_rand: ?RndGen = null,
 
 const Self = @This();
 pub fn readFromArgs(alloc: Allocator) !Self {
@@ -23,8 +29,9 @@ pub fn readFromArgs(alloc: Allocator) !Self {
     const self = try readConfig(alloc, path);
     defer self.deinit();
 
-    // TODO: Do i need to do this for the copy to be correct?
-    const out = self.value;
+    var out = self.value;
+    out._rand = RndGen.init(@intCast(out.seed.?));
+
     return out;
 }
 
@@ -42,6 +49,10 @@ pub fn string(self: *const Self) ![]u8 {
     });
 }
 
+pub fn rand(self: *Self, comptime T: type) T {
+    return self._rand.?.random().int(T);
+}
+
 pub fn values(self: *const Self) Values {
     var v = Values{
         .rows = self.rows,
@@ -52,5 +63,3 @@ pub fn values(self: *const Self) Values {
 
     return v;
 }
-
-

@@ -35,6 +35,10 @@ pub fn build(b: *std.Build) void {
         .root_source_file = .{ .path = "src/test/test.zig" },
     });
 
+    const vengine = b.addModule("vengine", .{
+        .root_source_file = .{ .path = "src/engine/engine.zig" },
+    });
+
     const exe = b.addExecutable(.{
         .name = "to",
         .root_source_file = b.path("src/main.zig"),
@@ -54,11 +58,18 @@ pub fn build(b: *std.Build) void {
     exe.root_module.addImport("scratch", scratch);
     scratch.addImport("assert", assert);
 
+    exe.root_module.addImport("vengine", vengine);
+    vengine.addImport("assert", assert);
+    vengine.addImport("scratch", scratch);
+    vengine.addImport("math", math);
+    vengine.addImport("objects", objects);
+
     exe.root_module.addImport("testing", testing);
     testing.addImport("assert", assert);
     testing.addImport("scratch", scratch);
     testing.addImport("math", math);
     testing.addImport("objects", objects);
+    testing.addImport("vengine", vengine);
 
     exe.root_module.addImport("math", math);
     math.addImport("assert", assert);
@@ -74,6 +85,7 @@ pub fn build(b: *std.Build) void {
     testExe.root_module.addImport("scratch", scratch);
     testExe.root_module.addImport("math", math);
     testExe.root_module.addImport("objects", objects);
+    testExe.root_module.addImport("vengine", vengine);
 
     {
         // This declares intent for the executable to be installed into the
@@ -146,6 +158,7 @@ pub fn build(b: *std.Build) void {
     exe_unit_tests.root_module.addImport("math", math);
     exe_unit_tests.root_module.addImport("scratch", scratch);
     exe_unit_tests.root_module.addImport("testing", testing);
+    exe_unit_tests.root_module.addImport("vengine", vengine);
 
     const test_exe_unit_tests = b.addTest(.{
         .root_source_file = b.path("src/test/main.zig"),
@@ -158,6 +171,7 @@ pub fn build(b: *std.Build) void {
     test_exe_unit_tests.root_module.addImport("math", math);
     test_exe_unit_tests.root_module.addImport("scratch", scratch);
     test_exe_unit_tests.root_module.addImport("testing", testing);
+    test_exe_unit_tests.root_module.addImport("vengine", vengine);
 
     const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
     run_exe_unit_tests.has_side_effects = true;
