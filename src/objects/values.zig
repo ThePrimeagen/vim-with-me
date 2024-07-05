@@ -13,12 +13,17 @@ pub const CreepValues = struct {
     speed: f64 = 1,
 };
 
+pub const ProjectorValues = struct {
+    speed: f64 = 4,
+};
+
 rows: usize = 0,
 cols: usize = 0,
 size: usize = 0,
 debug: bool = false,
 tower: TowerValues = .{},
 creep: CreepValues = .{},
+projectile: ProjectorValues = .{},
 
 const Self = @This();
 

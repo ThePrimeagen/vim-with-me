@@ -9,6 +9,7 @@ const canvas = @import("canvas.zig");
 
 const towers = @import("tower.zig");
 const creeps = @import("creep.zig");
+const projectiles = @import("projectile.zig");
 
 const Allocator = std.mem.Allocator;
 const GameState = gamestate.GameState;
@@ -60,6 +61,15 @@ pub const Renderer = struct {
 
             creeps.render(c, gs);
             self.canvas.place(c.rSized, &c.rCells);
+        }
+
+        for (gs.projectile.items) |*p| {
+            if (!p.alive) {
+                continue;
+            }
+
+            projectiles.render(p, gs);
+            self.canvas.place(p.rSized, &p.rCells);
         }
 
         try self.text(gs);

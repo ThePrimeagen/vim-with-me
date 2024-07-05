@@ -2,19 +2,28 @@ const math = @import("../math/math.zig");
 const colors = @import("colors.zig");
 const Target = @import("target.zig").Target;
 
-pub const PROJECTILE_SPEED = 4;
+const INITIAL_PROJECTILE_COLOR: colors.Color = .{.r = 0, .g = 1, .b = 0};
+
+pub const ProjectileSize = 1;
+pub const ProjectileCell: [1]colors.Cell = .{
+    .{.text = 'x', .color = INITIAL_PROJECTILE_COLOR },
+};
 
 pub const Projectile = struct {
     id: usize,
     target: Target,
 
     pos: math.Vec2,
-    speed: f64 = PROJECTILE_SPEED,
+    speed: f64 = 0,
     alive: bool = true,
 
     // rendered
     rColor: colors.Color = colors.Red,
-    rText: u8 = '*',
+    rSized: math.Sized = .{
+        .pos = math.ZERO_POS,
+        .cols = ProjectileSize,
+    },
+    rCells: [1]colors.Cell = ProjectileCell,
 };
 
 
