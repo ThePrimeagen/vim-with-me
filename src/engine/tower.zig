@@ -107,22 +107,61 @@ pub fn update(self: *Tower, gs: *GS) void {
         return;
     }
 
-    _ = gs;
+    if (self.fired) {
+        self.fired = false;
+        self.firing = false;
+    }
+
+    const creepMaybe = creepWithinRange(self, gs);
+    if (creepMaybe == null) {
+        if (self.firing) {
+            self.firing = false;
+        }
+        return;
+    }
+    _ = creepMaybe.?;
+
+    if (self.firing and self.lastFiringUS + self.firingDurationUS < gs.time) {
+        // TODO: Place projectile here
+        self.fired = true;
+    }
+
+    if (self.lastFiringUS + self.fireRateUS > gs.time) {
+        return;
+    }
+
+    self.lastFiringUS += self.fireRateUS;
+    self.firing = true;
 }
 
 pub fn render(self: *Tower, gs: *GS) void {
 
+    if (self.firing) {
+        const delta: f64 = @floatFromInt(gs.time - self.lastFiringUS);
+        const fDuration: f64 = @floatFromInt(self.firingDurationUS);
+        const percent = @min(1, delta / fDuration);
+        const sqrt = @sqrt(percent);
+        const sq = percent * percent;
+
+        color(self, .{
+            .r = @intFromFloat(255.0 * sqrt),
+            .g = @intFromFloat(255.0 * sqrt),
+            .b = @intFromFloat(255.0 * sq),
+        });
+
+        return;
+    }
+
     const life = getLifePercent(self);
     const sqLife = life * life;
 
-    self.rCells[1].text = '0' + self.level;
+    //self.rCells[1].text = '0' + self.level;
+    self.rCells[1].text = '0' + @as(u8, @intCast(self.id));
     color(self, .{
         .r = @intFromFloat(255.0 * life),
-        .b = @intFromFloat(255.0 * sqLife),
         .g = @intFromFloat(255.0 * sqLife),
+        .b = @intFromFloat(255.0 * sqLife),
     });
-
-    _ = gs;
 }
 
 fn getLifePercent(self: *Tower) f64 {
@@ -144,6 +183,7 @@ pub fn creepWithinRange(self: *Tower, gs: *GS) ?*Creep {
 
     for (gs.creeps.items) |*c| {
         if (!c.alive or c.team != self.team) {
+            std.debug.print("  {} - {} dead or not same team\n", .{self.id, c.id});
             continue;
         }
 

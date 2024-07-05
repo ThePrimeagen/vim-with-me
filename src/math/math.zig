@@ -149,7 +149,10 @@ pub const Vec2 = struct {
     }
 
     pub fn aabb(self: Vec2, max: Vec2) AABB {
-        return AABB.aabb(self, max);
+        return AABB.aabb(self, .{
+            .x = self.x + max.x,
+            .y = self.y + max.y,
+        });
     }
 
     pub fn norm(self: Vec2) Vec2 {

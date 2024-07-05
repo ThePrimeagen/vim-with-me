@@ -2,10 +2,10 @@ const math = @import("../math/math.zig");
 const colors = @import("colors.zig");
 
 const INITIAL_AMMO = 50;
-const INITIAL_FIRERATE_MS = 1000;
+pub const INITIAL_FIRERATE_US = 1_000_000;
 
 // TODO: Bring this into some sort of global values
-const FIRING_DURATION = 200;
+const FIRING_DURATION = 200_000;
 
 pub const Tower = struct {
     id: usize,
@@ -24,9 +24,9 @@ pub const Tower = struct {
     radius: u8 = 1,
     damage: u8 = 1,
 
-    fireRateMS: u64 = INITIAL_FIRERATE_MS,
-    lastFiringUS: u64 = 0,
-    firingDurationMS: u64 = FIRING_DURATION,
+    fireRateUS: i64 = INITIAL_FIRERATE_US,
+    lastFiringUS: i64 = 0,
+    firingDurationUS: i64 = FIRING_DURATION,
     firing: bool = false,
     fired: bool = false,
 

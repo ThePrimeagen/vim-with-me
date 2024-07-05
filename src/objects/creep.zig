@@ -13,7 +13,7 @@ const Red = colors.Red;
 const Allocator = std.mem.Allocator;
 
 const INITIAL_CREEP_LIFE = 10;
-const INITIAL_CREEP_SPEED = 1;
+const INITIAL_CREEP_SPEED = 3;
 const INITIAL_CREEP_COLOR: Color = .{.r = 0, .g = 0, .b = 0};
 
 pub const CreepSize = 1;

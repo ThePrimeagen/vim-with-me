@@ -11,7 +11,7 @@ pub fn main() !void {
 
     const alloc = gpa.allocator();
     var args = try testing.Params.readFromArgs(alloc);
-    const values = args.values();
+    var values = args.values();
 
     var gs = try objects.gamestate.GameState.init(alloc, &values);
     defer gs.deinit();
@@ -52,6 +52,8 @@ pub fn main() !void {
         }
 
         try creeper.tick(delta);
+
+        engine.stdout.resetColor();
         engine.gamestate.update(&gs, delta);
 
         if (args.viz.?) {

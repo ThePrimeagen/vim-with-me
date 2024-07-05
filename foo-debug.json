@@ -1,0 +1,12 @@
+{
+    "rows": 5,
+    "cols": 35,
+    "creepRate": 100000000,
+    "towerCount": 2,
+    "fps": 33333,
+    "runCount": 50000,
+    "realtime": true,
+    "viz": true,
+    "seed": 1250
+}
+

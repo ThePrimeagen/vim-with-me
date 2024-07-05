@@ -32,6 +32,23 @@ pub fn update(state: *GS, delta: i64) void {
     for (state.creeps.items) |*c| {
         creeps.update(c, state);
     }
+
+    if (!state.values.debug) {
+        return;
+    }
+
+    if (state.towers.items.len < 2 or state.creeps.items.len < 1) {
+        return;
+    }
+
+    const one = &state.towers.items[1];
+    const c = state.creeps.items[0];
+
+    std.debug.print("within: {} -- creep: {s} tower: {s}\n", .{
+        towers.withinRange(one, c.pos),
+        a.u(c.pos.string()),
+        a.u(one.pos.string()),
+    });
 }
 
 pub fn play(state: *GS) void {
