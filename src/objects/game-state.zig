@@ -11,6 +11,7 @@ const creep = @import("creep.zig");
 const colors = @import("colors.zig");
 const messages = @import("messages.zig");
 const Values = @import("values.zig");
+const Target = @import("target.zig").Target;
 
 // TODO: Make this adjustable
 const Vec2 = math.Vec2;
@@ -47,6 +48,8 @@ pub const GameState = struct {
     projectile: ProjectileList,
     board: []bool,
     alloc: Allocator,
+
+    fns: ?*const GameStateFunctions = null,
 
     values: *const Values,
 
@@ -150,11 +153,6 @@ pub const GameState = struct {
     }
 };
 
-pub const Target = union(enum) {
-    creep: usize,
-    tower: usize,
-};
-
 pub const GameStateFunctions = struct {
-    placeProjectile: fn(gs: *GameState, team: u8, t: Target, pos: Vec2) void,
+    placeProjectile: *const fn(self: *GameState, pos: math.Position, target: Target) Allocator.Error!usize,
 };

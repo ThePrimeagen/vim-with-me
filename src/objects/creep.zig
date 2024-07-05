@@ -12,8 +12,6 @@ const Cell = colors.Cell;
 const Red = colors.Red;
 const Allocator = std.mem.Allocator;
 
-const INITIAL_CREEP_LIFE = 10;
-const INITIAL_CREEP_SPEED = 3;
 const INITIAL_CREEP_COLOR: Color = .{.r = 0, .g = 0, .b = 0};
 
 pub const CreepSize = 1;
@@ -27,12 +25,12 @@ pub const Creep = struct {
     values: *const Values,
 
     pos: math.Vec2 = math.ZERO_VEC2,
-    life: u16 = INITIAL_CREEP_LIFE,
-    speed: f64 = INITIAL_CREEP_SPEED,
+    life: usize = 0,
+    speed: f64 = 0,
     alive: bool = true,
 
     // rendered
-    rLife: u16 = INITIAL_CREEP_LIFE,
+    rLife: usize = 0,
     rColor: Color = INITIAL_CREEP_COLOR,
     rCells: [1]Cell = CreepCell,
     rSized: math.Sized = math.ZERO_SIZED,
@@ -60,6 +58,10 @@ pub const Creep = struct {
             .alloc = alloc,
             .id = 0,
             .team = 0,
+
+            .life = values.creep.life,
+            .rLife = values.creep.life,
+            .speed = values.creep.speed,
         };
     }
 

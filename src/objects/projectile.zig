@@ -1,22 +1,20 @@
 const math = @import("../math/math.zig");
 const colors = @import("colors.zig");
+const Target = @import("target.zig").Target;
+
+pub const PROJECTILE_SPEED = 4;
 
 pub const Projectile = struct {
     id: usize,
-    createdBy: usize,
-    target: usize,
-    targetType: u8, // i have to look up creep or tower
-    team: u8,
+    target: Target,
 
     pos: math.Vec2,
-    life: u16,
-    speed: f32,
+    speed: f64 = PROJECTILE_SPEED,
     alive: bool = true,
 
     // rendered
-    rLife: u16,
-    rColor: colors.Color,
-    rText: u8,
+    rColor: colors.Color = colors.Red,
+    rText: u8 = '*',
 };
 
 

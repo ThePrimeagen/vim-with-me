@@ -1,7 +1,9 @@
 const math = @import("../math/math.zig");
 const objects = @import("../objects/objects.zig");
 const std = @import("std");
-const unwrap = @import("../assert/assert.zig").unwrap;
+const a = @import("../assert/assert.zig");
+const unwrap = a.unwrap;
+const assert = a.unwrap;
 const creeps = @import("creep.zig");
 
 const Tower = objects.tower.Tower;
@@ -75,7 +77,7 @@ pub const TowerBuilder = struct {
         return tow;
     }
 
-    pub fn tower(t: TowerBuilder) Tower {
+    pub fn tower(t: TowerBuilder, gs: *GS) Tower {
         return .{
             .id = t._id,
             .pos = t._pos,
@@ -86,6 +88,11 @@ pub const TowerBuilder = struct {
             },
             .aabb = t._pos.sub(.{.x = 1, .y = 1}).aabb(.{.x = TowerSize + 2, .y = 3}),
             .rCells = TowerCell,
+
+            .firingDurationUS = gs.values.tower.firingDurationUS,
+            .fireRateUS = gs.values.tower.fireRateUS,
+            .ammo = gs.values.tower.ammo,
+            .maxAmmo = gs.values.tower.ammo,
         };
     }
 };
@@ -102,7 +109,7 @@ pub fn projectile(self: *Tower, gs: *GS, target: Target) void {
     _ = target;
 }
 
-pub fn update(self: *Tower, gs: *GS) void {
+pub fn update(self: *Tower, gs: *GS) !void {
     if (!self.alive) {
         return;
     }
@@ -119,10 +126,10 @@ pub fn update(self: *Tower, gs: *GS) void {
         }
         return;
     }
-    _ = creepMaybe.?;
+    const creep = creepMaybe.?;
 
     if (self.firing and self.lastFiringUS + self.firingDurationUS < gs.time) {
-        // TODO: Place projectile here
+        _ = try gs.fns.?.placeProjectile(gs, self.pos.position(), .{.creep = creep.id});
         self.fired = true;
     }
 
@@ -187,7 +194,7 @@ pub fn creepWithinRange(self: *Tower, gs: *GS) ?*Creep {
             continue;
         }
 
-        if (withinRange(self, c.pos)) {
+        if (!creeps.completed(c) and c.alive and withinRange(self, c.pos)) {
             const dist = creeps.distanceToExit(c, gs);
             if (dist < maxDist) {
                 maxDist = dist;

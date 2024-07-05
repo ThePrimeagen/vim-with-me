@@ -27,6 +27,7 @@ pub fn main() !void {
 
     var gs = try GameState.init(allocator, &values);
     defer gs.deinit();
+    engine.gamestate.init(&gs);
 
     var stdin = engine.input.StdinInputter.init();
     var stdinInputter = stdin.inputter();
@@ -59,8 +60,7 @@ pub fn main() !void {
             }
         }
 
-        engine.gamestate.update(&gs, delta);
-
+        try engine.gamestate.update(&gs, delta);
         try render.render(&gs);
         try out(render.output);
     }
