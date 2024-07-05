@@ -9,7 +9,7 @@ pub const TowerValues = struct {
 };
 
 pub const CreepValues = struct {
-    life: usize = 10,
+    life: usize = 5,
     speed: f64 = 1,
 };
 

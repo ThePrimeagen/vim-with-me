@@ -125,7 +125,7 @@ pub fn update(self: *Tower, gs: *GS) !void {
     if (self.ammo == 0) {
         self.alive = false;
         self.deadTimeUS = gs.time;
-        gs.fns.?.towerDied(gs);
+        gs.fns.?.towerDied(gs, self);
         return;
     }
 
@@ -139,7 +139,8 @@ pub fn update(self: *Tower, gs: *GS) !void {
     const creep = creepMaybe.?;
 
     if (self.firing and self.lastFiringUS + self.firingDurationUS < gs.time) {
-        _ = try gs.fns.?.placeProjectile(gs, self.pos.position(), .{.creep = creep.id}, self.damage);
+        _ = try gs.fns.?.placeProjectile(gs, self, .{.creep = creep.id});
+
         self.ammo -= 1;
         self.fired = true;
     }
@@ -201,7 +202,6 @@ pub fn creepWithinRange(self: *Tower, gs: *GS) ?*Creep {
 
     for (gs.creeps.items) |*c| {
         if (!c.alive or c.team != self.team) {
-            std.debug.print("  {} - {} dead or not same team\n", .{self.id, c.id});
             continue;
         }
 
