@@ -1,4 +1,7 @@
-const assert = @import("../assert/assert.zig").assert;
+const scratchBuf = @import("../scratch/scratch.zig").scratchBuf;
+const a = @import("../assert/assert.zig");
+const assert = a.assert;
+const never = a.never;
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 
@@ -7,32 +10,37 @@ pub const InputSize = 4096;
 pub const Input = struct {
     input: [InputSize]u8,
     length: usize,
+
+    pub fn slice(self: *const Input) []const u8 {
+        return self.input[0..self.length];
+    }
+
+    pub fn string(self: *const Input) ![]u8 {
+        return std.fmt.bufPrint(scratchBuf(10 + self.length), "{}: \"{s}\"", .{self.length, self.slice()});
+    }
 };
 pub const InputList = std.ArrayList(Input);
 
 pub const BufferedInputter = struct {
-    lines: [][]const u8,
-    idx: usize,
+    lines: []const []const u8 = undefined,
+    idx: usize = 0,
 
-    pub fn init() BufferedInputter {
-        return .{
-            .lines = .{},
-            .idx = 0,
-        };
+    pub fn inputter(self: *BufferedInputter) Inputter {
+        return Inputter{.buffered = self};
     }
 
-    pub fn data(self: *BufferedInputter, lines: [][]const u8) void {
+    pub fn data(self: *BufferedInputter, lines: []const []const u8) void {
         self.lines = lines;
         self.idx = 0;
     }
 
     pub fn next(self: *BufferedInputter, buf: []u8) !?usize {
         if (self.idx >= self.lines.len) {
-            return 0;
+            return null;
         }
 
         const n = self.lines[self.idx].len;
-        @memcpy(buf, self.lines[self.idx]);
+        @memcpy(buf[0..n], self.lines[self.idx]);
         self.idx += 1;
 
         return n;
@@ -83,8 +91,19 @@ pub const InputRunner = struct {
     alloc: Allocator,
     mutex: std.Thread.Mutex,
     thread: std.Thread,
+    alive: bool = true,
+    running: usize = 0,
 
     pub fn deinit(self: *InputRunner) void {
+        {
+            self.mutex.lock();
+            defer self.mutex.unlock();
+
+            self.alive = false;
+        }
+
+        while (self.running > 0) { }
+
         self.inputs.deinit();
         self.alloc.destroy(self);
     }
@@ -103,19 +122,36 @@ pub const InputRunner = struct {
     }
 
     pub fn runReadLoop(self: *InputRunner, inputter: *Inputter) !void {
+        self.running += 1;
         while (true) {
+            {
+                self.mutex.lock();
+                defer self.mutex.unlock();
+                if (!self.alive) {
+                    break;
+                }
+            }
+
             var buf: [InputSize]u8 = undefined;
-            const n = try inputter.next(&buf) orelse break;
+            const n = inputter.next(&buf) catch |e| {
+                never(try std.fmt.bufPrint(scratchBuf(250), "some how got an error: {any}", .{e}));
+                unreachable;
+            };
+
+            if (n == null) {
+                continue;
+            }
 
             {
                 self.mutex.lock();
                 defer self.mutex.unlock();
                 try self.inputs.append(Input{
                     .input = buf,
-                    .length = n,
+                    .length = n.?,
                 });
             }
         }
+        self.running -= 1;
     }
 
 };
@@ -138,5 +174,32 @@ pub fn createInputRunner(alloc: Allocator, inputter: *Inputter) !*InputRunner {
     return input;
 }
 
+const t = std.testing;
 test "buffered input" {
+    var buff = BufferedInputter{};
+    var inputter = buff.inputter();
+    var input = try createInputRunner(t.allocator, &inputter);
+    defer input.deinit();
+
+    var out = input.pop();
+    try t.expect(out == null);
+
+    const data: [2][]const u8 = .{
+        "hello",
+        "goodbye",
+    };
+
+    buff.data(data[0..2]);
+    std.time.sleep(10_000_000);
+
+    out = input.pop();
+    try t.expectEqualStrings("hello", out.?.slice());
+
+    out = input.pop();
+    try t.expectEqualStrings("goodbye", out.?.slice());
+
+    out = input.pop();
+    try t.expect(out == null);
 }
+
+
