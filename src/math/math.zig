@@ -229,7 +229,7 @@ pub const Vec2 = struct {
     }
 
     pub fn string(self: Vec2) ![]u8 {
-        return try std.fmt.bufPrint(scratchBuf(25), "x = {}, y = {}", .{floor(self.x, 1000), floor(self.y, 1000)});
+        return try std.fmt.bufPrint(scratchBuf(50), "x = {}, y = {}", .{floor(self.x, 1000), floor(self.y, 1000)});
     }
 
 };

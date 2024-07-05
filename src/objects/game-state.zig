@@ -35,6 +35,7 @@ pub const GameState = struct {
     round: i32 = 1,
     one: i32 = 0,
     oneCoords: [3]?Coord,
+    towersDestroyed: usize = 0,
 
     two: i32 = 0,
     twoCoords: [3]?Coord,
@@ -154,5 +155,6 @@ pub const GameState = struct {
 };
 
 pub const GameStateFunctions = struct {
-    placeProjectile: *const fn(self: *GameState, pos: math.Position, target: Target) Allocator.Error!usize,
+    placeProjectile: *const fn(self: *GameState, pos: math.Position, target: Target, damage: usize) Allocator.Error!usize,
+    towerDied: *const fn(self: *GameState) void,
 };

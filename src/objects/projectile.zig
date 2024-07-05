@@ -16,6 +16,8 @@ pub const Projectile = struct {
     pos: math.Vec2,
     speed: f64 = 0,
     alive: bool = true,
+    deadUS: i64 = 0,
+    damage: usize,
 
     // rendered
     rColor: colors.Color = colors.Red,

@@ -50,6 +50,10 @@ pub const Renderer = struct {
 
     pub fn render(self: *Renderer, gs: *GameState) !void {
         for (gs.towers.items) |*t| {
+            if (!t.alive) {
+                continue;
+            }
+
             towers.render(t, gs);
             self.canvas.place(t.rSized, &t.rCells);
         }
