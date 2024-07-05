@@ -148,15 +148,17 @@ pub fn calculateBoard(self: *GS) void {
     }
 }
 
-// TODO: vec and position?
-pub fn placeCreep(self: *GS, pos: math.Position) !void {
+pub fn placeCreep(self: *GS, pos: math.Position, team: u8) !usize {
+    const id = self.creeps.items.len;
     var c = try creeps.create(
-        self.alloc, self.creeps.items.len, 0, self.values, pos.vec2()
+        self.alloc, id, team, self.values, pos.vec2()
     );
     errdefer c.deinit();
     try self.creeps.append(c);
 
-    creeps.calculatePath(&c, self.board);
+    creeps.calculatePath(&self.creeps.items[id], self.board);
+
+    return id;
 }
 
 pub fn updateBoard(self: *GS) void {
@@ -193,11 +195,12 @@ pub fn canPlaceTower(self: *GS, pos: math.Position) bool {
 }
 
 // TODO: vec and position?
-pub fn placeTower(self: *GS, pos: math.Position, team: u8) !void {
+pub fn placeTower(self: *GS, pos: math.Position, team: u8) !usize {
+    const id = self.towers.items.len;
     const t = towers.TowerBuilder.start()
         .pos(pos)
         .team(team)
-        .id(self.towers.items.len)
+        .id(id)
         .tower();
 
     try self.towers.append(t);
@@ -208,7 +211,17 @@ pub fn placeTower(self: *GS, pos: math.Position, team: u8) !void {
         creeps.calculatePath(c, self.board);
     }
 
+    return id;
 }
+
+pub fn towerById(self: *GS, id: usize) *Tower {
+    assert(self.towers.items.len > id, "grabbing a tower outside the size of the tower list");
+
+    const t = &self.towers.items[id];
+    assert(t.alive, "cannot retrieve a dead tower");
+    return t;
+}
+
 
 pub fn validateState(self: *GS) void {
     for (self.creeps.items) |*c| {
@@ -236,3 +249,14 @@ test "calculate the board" {
     }, gs.board);
 }
 
+test "place creep calculates positions" {
+    var values = objects.Values{.rows = 3, .cols = 3};
+    values.init();
+
+    var gs = try GS.init(testing.allocator, &values);
+    defer gs.deinit();
+    calculateBoard(&gs);
+
+    _ = try placeCreep(&gs, .{.row = 0, .col = 0}, 0);
+    try testing.expect(gs.creeps.items[0].pathLen == 2);
+}

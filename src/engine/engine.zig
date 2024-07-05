@@ -9,11 +9,9 @@ pub const framer = @import("framer.zig");
 pub const stdout = @import("stdout_output.zig");
 pub const input = @import("input.zig");
 pub const time = @import("time.zig");
+pub const tests = @import("test.zig");
 
-test {
-    std.debug.print("hello world\n", .{});
-    _ = tower;
-}
+test { _ = tower; }
 test { _ = creep; }
 test { _ = renderer; }
 test { _ = gamestate; }
@@ -23,3 +21,4 @@ test { _ = framer; }
 test { _ = stdout; }
 test { _ = input; }
 test { _ = time; }
+test { _ = tests; }

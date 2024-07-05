@@ -4,9 +4,10 @@ const scratchBuf = @import("../scratch/scratch.zig").scratchBuf;
 
 pub const ZERO_POS: Position = .{.row = 0, .col = 0};
 pub const ZERO_VEC2: Vec2 = .{.x = 0.0, .y = 0.0};
+pub const ZERO_AABB: AABB = .{.min = ZERO_VEC2, .max = ZERO_VEC2};
 pub const ZERO_SIZED: Sized = .{.cols = 3, .pos = ZERO_POS};
 
-pub fn floor(a: f64, precision: u8) f64 {
+pub fn floor(a: f64, precision: usize) f64 {
     const p: f64 = @floatFromInt(precision);
     return std.math.floor(a * p) / p;
 }
@@ -113,12 +114,42 @@ pub const Coord = struct {
     }
 };
 
+pub const AABB = struct {
+    min: Vec2,
+    max: Vec2,
+
+    pub fn aabb(m: Vec2, max: Vec2) AABB {
+        return .{
+            .min = m,
+            .max = max,
+        };
+    }
+
+    pub fn contains(self: AABB, pos: Vec2) bool {
+        return pos.x >= self.min.x and pos.x < self.max.x and
+            pos.y >= self.min.y and pos.y < self.max.y;
+    }
+
+    pub fn string(self: AABB) ![]u8 {
+        return std.fmt.bufPrint(scratchBuf(100), "AABB({s}, {s})", .{try self.min.string(), try self.max.string()});
+    }
+};
+
 pub const Vec2 = struct {
     x: f64,
     y: f64,
 
     pub fn eql(self: Vec2, b: Vec2) bool {
         return self.x == b.x and self.y == b.y;
+    }
+
+    pub fn closeEnough(self: Vec2, b: Vec2, enough: f64) bool {
+        return @abs(self.x - b.x) < enough and
+            @abs(self.y - b.y) < enough;
+    }
+
+    pub fn aabb(self: Vec2, max: Vec2) AABB {
+        return AABB.aabb(self, max);
     }
 
     pub fn norm(self: Vec2) Vec2 {
@@ -190,7 +221,7 @@ pub const Vec2 = struct {
     }
 
     pub fn string(self: Vec2) ![]u8 {
-        return try std.fmt.bufPrint(scratchBuf(25), "x = {}, y = {}", .{floor(self.x, 10), floor(self.y, 10)});
+        return try std.fmt.bufPrint(scratchBuf(25), "x = {}, y = {}", .{floor(self.x, 1000), floor(self.y, 1000)});
     }
 
 };
@@ -201,3 +232,18 @@ test "vec2 add" {
     const b = Vec2{.x = 68, .y = 418};
     try t.expect(a.add(b).eql(Vec2{.x = 69, .y = 420}));
 }
+
+test "aabb contains" {
+    const a = Vec2{.x = 1, .y = 2};
+    const box = a.sub(.{.x = 1, .y = 1}).aabb(.{.x = 3, .y = 3});
+
+    try t.expect(!box.contains(.{.x = 0, .y = 0.9999}));
+    try t.expect(box.contains(.{.x = 0, .y = 1}));
+    try t.expect(!box.contains(.{.x = 3, .y = 1}));
+    try t.expect(box.contains(.{.x = 2.9999, .y = 1}));
+    try t.expect(!box.contains(.{.x = 2.9999, .y = 3}));
+    try t.expect(box.contains(.{.x = 2.9999, .y = 2.9999}));
+
+}
+
+

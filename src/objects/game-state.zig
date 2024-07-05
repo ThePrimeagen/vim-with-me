@@ -118,7 +118,7 @@ pub const GameState = struct {
         }
         std.debug.print("\nCreeps:\n", .{});
         for (self.creeps.items) |*c| {
-            std.debug.print("  {s}\n", .{a.u(c.pos.position().string())});
+            std.debug.print("  {s}\n", .{a.u(c.string())});
         }
         std.debug.print("\nProjectiles\n", .{});
         for (self.projectile.items) |*p| {
@@ -130,10 +130,19 @@ pub const GameState = struct {
 
     pub fn debugBoard(self: *GameState) void {
         std.debug.print("\nBoard:\n", .{});
+        outer:
         for (self.board, 0..) |b, idx| {
             if (idx > 0 and idx % self.values.cols == 0) {
                 std.debug.print("\n", .{});
             }
+
+            for (self.creeps.items) |*c| {
+                if (idx == c.pos.position().toIdx(self.values.cols)) {
+                    std.debug.print("c ", .{});
+                    continue :outer;
+                }
+            }
+
             const v: usize = if (b) 1 else 0;
             std.debug.print("{} ", .{v});
         }

@@ -2,6 +2,7 @@ const math = @import("../math/math.zig");
 const objects = @import("../objects/objects.zig");
 const std = @import("std");
 const unwrap = @import("../assert/assert.zig").unwrap;
+const creeps = @import("creep.zig");
 
 const Tower = objects.tower.Tower;
 const colors = objects.colors;
@@ -10,6 +11,7 @@ const Cell = colors.Cell;
 const Black = colors.Black;
 const GS = objects.gamestate.GameState;
 const Target = objects.gamestate.Target;
+const Creep = objects.creep.Creep;
 
 const TowerSize = 3;
 const TowerCell: [TowerSize]Cell = .{
@@ -28,7 +30,10 @@ pub fn contains(self: *Tower, pos: math.Vec2) bool {
     }
 
     return pos.sub(self.pos.add(.{.x = 1, .y = 0})).lenSq() <= 1;
+}
 
+pub fn withinRange(self: *Tower, pos: math.Vec2) bool {
+    return self.aabb.contains(pos);
 }
 
 pub fn find(self: *Tower, gs: *GS) void {
@@ -79,6 +84,7 @@ pub const TowerBuilder = struct {
                 .pos = t._pos.position(),
                 .cols = TowerSize,
             },
+            .aabb = t._pos.sub(.{.x = 1, .y = 1}).aabb(.{.x = TowerSize + 2, .y = 3}),
             .rCells = TowerCell,
         };
     }
@@ -129,6 +135,27 @@ var testId: usize = 0;
 fn getTestId() usize {
     const out = testId;
     testId += 1;
+    return out;
+}
+
+pub fn creepWithinRange(self: *Tower, gs: *GS) ?*Creep {
+    var maxDist: f64 = std.math.floatMax(f64);
+    var out: ?*Creep = null;
+
+    for (gs.creeps.items) |*c| {
+        if (!c.alive or c.team != self.team) {
+            continue;
+        }
+
+        if (withinRange(self, c.pos)) {
+            const dist = creeps.distanceToExit(c, gs);
+            if (dist < maxDist) {
+                maxDist = dist;
+                out = c;
+            }
+        }
+    }
+
     return out;
 }
 

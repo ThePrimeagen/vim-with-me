@@ -27,10 +27,10 @@ pub const Spawner = struct {
             self.lastSpawn = self.currentTime;
 
             const row = self.params.rand(usize) % self.gs.values.rows;
-            try gamestate.placeCreep(self.gs, .{
+            _ = try gamestate.placeCreep(self.gs, .{
                 .col = 0,
                 .row = row,
-            });
+            }, 0);
         }
     }
 };

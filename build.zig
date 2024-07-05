@@ -29,7 +29,6 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-
     {
         // This declares intent for the executable to be installed into the
         // standard location when the user invokes the "install" step (the default
@@ -104,4 +103,19 @@ pub fn build(b: *std.Build) void {
     // running the unit tests.
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_exe_unit_tests.step);
+
+    // zig lsp
+    // // This is where the interesting part begins.
+    // As you can see we are re-defining the same
+    // executable but we're binding it to a
+    // dedicated build step.
+    const to_check = b.addExecutable(.{
+        .name = "to-check",
+        .root_source_file = b.path("src/main.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    const check = b.step("check", "check if main compiles (you piece of shit)");
+    check.dependOn(&to_check.step);
 }

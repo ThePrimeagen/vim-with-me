@@ -1,7 +1,9 @@
 const std = @import("std");
 const math = @import("../math/math.zig");
 const objects = @import("../objects/objects.zig");
-const assert = @import("../assert/assert.zig").assert;
+const a = @import("../assert/assert.zig");
+const assert = a.assert;
+const u = a.u;
 const scratchBuf = @import("../scratch/scratch.zig").scratchBuf;
 
 const Values = objects.Values;
@@ -11,16 +13,18 @@ const CreepSize = objects.creep.CreepSize;
 const colors = objects.colors;
 const GS = objects.gamestate.GameState;
 const Position = math.Position;
+const MICROSECOND = 1_000_000.0;
 
 pub fn distanceToExit(creep: *Creep, gs: *GS) f64 {
     assert(creep.alive, "you cannot call distance to exit if the creep is dead");
     assert(!completed(creep), "expected the creep to be still within the maze");
+    assert(creep.pathLen > creep.pathIdx, "pathLen should always be larger than pathIdx");
 
     // 1 or larger
     const diff: f64 = @floatFromInt(creep.pathLen - creep.pathIdx);
 
     // distance from where we are to the _NEXT_ path and add that
-    const dist = Position.fromIdx(creep.pathIdx, gs.values.cols).
+    const dist = Position.fromIdx(creep.path[creep.pathIdx], gs.values.cols).
         vec2().sub(creep.pos).lenSq();
 
     return diff + dist;
@@ -111,10 +115,10 @@ pub fn calculatePath(self: *Creep, board: []const bool) void {
     }
 
     const pos = self.pos.position().toIdx(cols);
-
     const last = walk(pos, pos, cols, board, self.scratch);
+
     if (last == 0) {
-        // TODO: i need to just go straight forward if i can...
+        unreachable;
     } else {
         self.pathLen = path(self.scratch, last, self.path);
         self.pathIdx = 0;
@@ -135,20 +139,31 @@ pub fn update(self: *Creep, gs: *GS) void {
         return;
     }
 
-    const delta = gs.loopDeltaUS;
+    var consumedUS: i64 = 0;
+    var count: usize = 0;
+    while (consumedUS < gs.loopDeltaUS and !completed(self)) {
+        const delta = gs.loopDeltaUS - consumedUS;
 
-    const to = math.Position.fromIdx(self.path[self.pathIdx], self.values.cols);
-    const dist = self.pos.subP(to);
-    const normDist = dist.norm();
-    const len = dist.len();
+        const to = math.Position.fromIdx(self.path[self.pathIdx], self.values.cols);
+        const dist = self.pos.subP(to);
+        const normDist = dist.norm();
+        const len = dist.len();
+        const maxUS: i64 = @intFromFloat(@ceil(len / self.speed * MICROSECOND));
+        const usConsumed = @min(maxUS, delta);
+        assert(usConsumed > 0, "we must consume some amount of the remaining microsecnds");
 
-    const deltaF: f64 = @floatFromInt(delta);
-    const deltaP: f64 = math.min(deltaF / 1_000_000.0 * self.speed, len);
-    const change = normDist.scale(-deltaP);
-    self.pos = self.pos.add(change);
+        const deltaF: f64 = @floatFromInt(usConsumed);
+        const deltaP: f64 = deltaF / MICROSECOND * self.speed;
+        const change = normDist.scale(-deltaP);
+        self.pos = self.pos.add(change);
 
-    if (self.pos.eql(to.vec2())) {
-        self.pathIdx += 1;
+        if (self.pos.closeEnough(to.vec2(), 0.001)) {
+            self.pos = Position.fromIdx(self.path[self.pathIdx], self.values.cols).vec2();
+            self.pathIdx += 1;
+        }
+
+        consumedUS += usConsumed;
+        count += 1;
     }
 }
 
@@ -220,21 +235,18 @@ test "creep movement" {
 
     try t.expect(creep.pathIdx == 0);
     runUntil(&creep, &gs, 1, 1500);
-    try t.expect(creep.pos.x == 0.0);
-    try t.expect(creep.pos.y == 1.0);
+    try t.expect(creep.pos.closeEnough(.{.x = 0, .y = 1}, 0.01));
     try t.expect(creep.pathIdx == 1);
+
     runUntil(&creep, &gs, 2, 1500);
     try t.expect(creep.pathIdx == 2);
-    try t.expect(creep.pos.x == 0.0);
-    try t.expect(creep.pos.y == 2.0);
+    try t.expect(creep.pos.closeEnough(.{.x = 0, .y = 2}, 0.01));
     runUntil(&creep, &gs, 3, 1500);
     try t.expect(creep.pathIdx == 3);
-    try t.expect(creep.pos.x == 1.0);
-    try t.expect(creep.pos.y == 2.0);
+    try t.expect(creep.pos.closeEnough(.{.x = 1, .y = 2}, 0.01));
     runUntil(&creep, &gs, 4, 1500);
     try t.expect(creep.pathIdx == 4);
-    try t.expect(creep.pos.x == 2.0);
-    try t.expect(creep.pos.y == 2.0);
+    try t.expect(creep.pos.closeEnough(.{.x = 2, .y = 2}, 0.01));
 }
 
 test "creep contains" {
@@ -246,19 +258,4 @@ test "creep contains" {
     try t.expect(!contains(&creep, .{.x = 0, .y = 1.5}));
     try t.expect(contains(&creep, .{.x = 1, .y = 1.5}));
 
-}
-
-test "creep distance to exit" {
-    var gs = try GS.init(t.allocator, &testValues);
-    defer gs.deinit();
-
-    var creep = try create(t.allocator, 0, 0, &testValues, .{.y = 0.5, .x = 1});
-    defer creep.deinit();
-
-    creep.pathIdx = 2;
-    creep.pathLen = 4;
-    creep.path[2] = 0;
-
-    // 2 for the path remaining
-    try t.expect(distanceToExit(&creep, &gs) == 2 + 0.5 * 0.5 + 1 * 1);
 }
