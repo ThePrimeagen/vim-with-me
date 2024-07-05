@@ -1,5 +1,7 @@
 const std = @import("std");
-const gamestate = @import("objects").gamestate;
+const objects = @import("objects");
+const gamestate = objects.gamestate;
+const Values = objects.Values;
 const canvas = @import("canvas.zig");
 
 const towers = @import("tower.zig");
@@ -12,10 +14,12 @@ pub const Renderer = struct {
     canvas: canvas.Canvas,
     output: []u8,
     count: u32,
+    values: *const objects.Values,
 
-    pub fn init(rows: usize, cols: usize, alloc: Allocator) !Renderer {
+    pub fn init(alloc: Allocator, values: *const Values) !Renderer {
         return .{
-            .canvas = try canvas.Canvas.init(rows, cols, alloc),
+            .values = values,
+            .canvas = try canvas.Canvas.init(alloc, values),
             .output = undefined,
             .count = 0,
         };
