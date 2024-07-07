@@ -174,8 +174,7 @@ pub fn render(self: *Tower, gs: *GS) void {
     const life = getLifePercent(self);
     const sqLife = life * life;
 
-    //self.rCells[1].text = '0' + self.level;
-    self.rCells[1].text = '0' + @as(u8, @intCast(self.id));
+    self.rCells[1].text = '0' + self.level;
     color(self, .{
         .r = @intFromFloat(255.0 * life),
         .g = @intFromFloat(255.0 * sqLife),

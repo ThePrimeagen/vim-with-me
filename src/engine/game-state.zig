@@ -81,15 +81,15 @@ pub fn init(self: *GS) void {
     const rows = self.values.rows;
     const teamSpace = rows / 3;
 
-    self.oneRange.endRow = teamSpace;
+    self.oneCreepRange.endRow = teamSpace;
+    self.oneNoBuildTowerRange = self.oneCreepRange;
 
-    self.twoRange.startRow = rows - teamSpace;
-    self.twoRange.endRow = rows;
+    self.twoCreepRange.startRow = rows - teamSpace;
+    self.twoCreepRange.endRow = rows;
+    self.twoNoBuildTowerRange = self.twoCreepRange;
 
-    self.noBuildRange.startRow = self.oneRange.endRow;
-    self.noBuildRange.endRow = self.twoRange.startRow;
-
-    self.playing = false;
+    self.noBuildRange.startRow = self.oneCreepRange.endRow;
+    self.noBuildRange.endRow = self.twoCreepRange.startRow;
 }
 
 pub fn towerDied(self: *GS, t: *Tower) void {
@@ -124,14 +124,29 @@ pub fn strike(self: *GS, p: *Projectile) void {
     }
 }
 
+pub fn roundPlayed(state: *GS) bool {
+    return state.round == state.one and state.round == state.two;
+}
+
+pub fn roundOver(state: *GS) bool {
+    return state.playing and
+        state.playingStartUS + state.values.roundTimeUS < state.time;
+}
+
 pub fn play(state: *GS) void {
     assert(state.one == state.two, "player one and two must have same play count");
+    assert(state.one == state.round, "the round and the played moves are not the same");
+
     state.playing = true;
+    state.playingStartUS = state.time;
 }
 
 pub fn pause(state: *GS) void {
     assert(state.one == state.two, "player one and two must have same play count");
+    assert(state.one == state.round, "the round and the played moves are not the same");
+
     state.playing = false;
+    state.round += 1;
 }
 
 pub fn message(state: *GS, msg: Message) !void {
@@ -202,7 +217,7 @@ pub fn clone(self: *GS) !GS {
     };
 }
 
-fn tower(self: *GS, pos: Vec2) ?usize {
+pub fn tower(self: *GS, pos: Vec2) ?usize {
     for (self.towers.items, 0..) |*t, i| {
         if (towers.contains(t, pos)) {
             return i;
@@ -211,7 +226,7 @@ fn tower(self: *GS, pos: Vec2) ?usize {
     return null;
 }
 
-fn creep(self: *GS, pos: Vec2) ?usize {
+pub fn creep(self: *GS, pos: Vec2) ?usize {
     for (self.creeps.items, 0..) |*c, i| {
         if (creeps.contains(c, pos)) {
             return i;
@@ -240,8 +255,8 @@ pub fn calculateBoard(self: *GS) void {
 
 pub fn placeCreep(self: *GS, pos: math.Position, team: u8) !usize {
     switch (team) {
-        objects.Values.TEAM_ONE => assert(self.oneRange.contains(pos), "invalid team one position"),
-        objects.Values.TEAM_TWO => assert(self.twoRange.contains(pos), "invalid team one position"),
+        objects.Values.TEAM_ONE => assert(self.oneCreepRange.contains(pos), "invalid team one position"),
+        objects.Values.TEAM_TWO => assert(self.twoCreepRange.contains(pos), "invalid team one position"),
         else => a.never("invalid team"),
     }
 
@@ -283,8 +298,8 @@ fn canPlaceTower(self: *GS, pos: math.Position, team: u8) bool {
 
     if (self.noBuildZone) {
         const range = switch (team) {
-            '1' => self.oneRange,
-            '2' => self.twoRange,
+            '1' => self.oneCreepRange,
+            '2' => self.twoCreepRange,
             else => {
                 assert(false, "inTeam is an invalid value");
                 unreachable;

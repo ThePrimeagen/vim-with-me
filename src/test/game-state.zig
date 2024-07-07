@@ -30,8 +30,8 @@ pub const Spawner = struct {
         if (self.currentTime - self.lastSpawn > self.spawnRate) {
             self.lastSpawn = self.currentTime;
 
-            const range = self.gs.oneRange;
-            const row = range.startRow + self.params.rand(usize) % range.len();
+            const range = self.gs.oneCreepRange;
+            const row = self.params.randRange(usize, range.startRows, range.endRow);
 
             _ = try gamestate.placeCreep(self.gs, .{
                 .col = 0,

@@ -4,6 +4,7 @@ const scratchBuf = @import("../scratch/scratch.zig").scratchBuf;
 
 pub const TEAM_ONE = '1';
 pub const TEAM_TWO = '2';
+pub const ROUND_TIME = 3_000_000;
 
 pub const TowerValues = struct {
     ammo: usize = 50,
@@ -23,6 +24,7 @@ pub const ProjectorValues = struct {
 rows: usize = 0,
 cols: usize = 0,
 size: usize = 0,
+roundTimeUS: i64 = ROUND_TIME,
 debug: bool = false,
 tower: TowerValues = .{},
 creep: CreepValues = .{},

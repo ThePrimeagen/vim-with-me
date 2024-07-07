@@ -41,7 +41,8 @@ pub const Stats = struct {
 
 pub const GameState = struct {
     playing: bool = true,
-    round: usize = 1,
+    playingStartUS: i64 = 0,
+    round: usize = 0,
 
     noBuildZone: bool = true,
     noBuildRange: Range = Range{},
@@ -51,12 +52,14 @@ pub const GameState = struct {
     one: usize = 0,
     oneCoords: [3]?Coord,
     oneStats: Stats = Stats{},
-    oneRange: Range = Range{},
+    oneCreepRange: Range = Range{},
+    oneNoBuildTowerRange: Range = Range{},
 
     two: usize = 0,
     twoCoords: [3]?Coord,
     twoStats: Stats = Stats{},
-    twoRange: Range = Range{},
+    twoCreepRange: Range = Range{},
+    twoNoBuildTowerRange: Range = Range{},
 
     time: i64 = 0,
     loopDeltaUS: i64 = 0,
