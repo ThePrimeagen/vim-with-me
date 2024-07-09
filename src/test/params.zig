@@ -4,7 +4,6 @@ const std = @import("std");
 const assert = @import("../assert/assert.zig").assert;
 
 const Allocator = std.mem.Allocator;
-const RndGen = std.rand.DefaultPrng;
 
 rows: usize,
 cols: usize,
@@ -15,8 +14,6 @@ runCount: usize = 10000,
 seed: ?usize = 0,
 viz: ?bool = true,
 realtime: ?bool = false,
-
-_rand: ?RndGen = null,
 
 const Self = @This();
 pub fn readFromArgs(alloc: Allocator) !Self {
@@ -29,10 +26,7 @@ pub fn readFromArgs(alloc: Allocator) !Self {
     const self = try readConfig(alloc, path);
     defer self.deinit();
 
-    var out = self.value;
-    out._rand = RndGen.init(@intCast(out.seed.?));
-
-    return out;
+    return self.value;
 }
 
 fn readConfig(allocator: Allocator, path: []const u8) !std.json.Parsed(Self) {
@@ -49,19 +43,11 @@ pub fn string(self: *const Self) ![]u8 {
     });
 }
 
-pub fn rand(self: *Self, comptime T: type) T {
-    return self._rand.?.random().int(T);
-}
-
-pub fn randRange(self: *Self, comptime T: type, start: T, end: T) T {
-    assert(start < end, "end must be greater than start");
-    return start + self._rand.?.random().int(T) % (end - start);
-}
-
 pub fn values(self: *const Self) Values {
     var v = Values{
         .rows = self.rows,
         .cols = self.cols,
+        .seed = self.seed orelse 42069,
     };
 
     Values.init(&v);

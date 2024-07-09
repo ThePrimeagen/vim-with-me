@@ -31,7 +31,7 @@ pub const Spawner = struct {
             self.lastSpawn = self.currentTime;
 
             const range = self.gs.oneCreepRange;
-            const row = self.params.randRange(usize, range.startRow, range.endRow);
+            const row = self.gs.values.randRange(usize, range.startRow, range.endRow);
 
             _ = try gamestate.placeCreep(self.gs, .{
                 .col = 0,
