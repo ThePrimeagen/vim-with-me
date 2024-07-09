@@ -62,10 +62,10 @@ pub fn update(state: *GS, delta: i64) !void {
     const one = &state.towers.items[1];
     const c = state.creeps.items[0];
 
-    std.debug.print("within: {} -- creep: {s} tower: {s}\n", .{
+    std.debug.print("within: {} -- creep: {} tower: {}\n", .{
         towers.withinRange(one, c.pos),
-        a.u(c.pos.string()),
-        a.u(one.pos.string()),
+        c.pos,
+        one.pos,
     });
 }
 
@@ -140,18 +140,17 @@ pub fn message(state: *GS, msg: Message) !void {
             }
 
             if (canPlaceTower(state, c.pos)) {
-                const tt = towers.TowerBuilder.start().
-                    team(c.team).
-                    pos(c.pos).
-                    id(state.towers.items.len).
-                    tower(state);
+                const tt = towers.TowerBuilder.start()
+                    .team(c.team)
+                    .pos(c.pos)
+                    .id(state.towers.items.len)
+                    .tower(state);
 
                 try state.towers.append(tt);
             } else {
                 // TODO: randomly place tower
                 unreachable;
             }
-
         },
         .round => |_| {
             // not sure what to do here...
@@ -227,9 +226,7 @@ pub fn calculateBoard(self: *GS) void {
 
 pub fn placeCreep(self: *GS, pos: math.Position, team: u8) !usize {
     const id = self.creeps.items.len;
-    var c = try creeps.create(
-        self.alloc, id, team, self.values, pos.vec2()
-    );
+    var c = try creeps.create(self.alloc, id, team, self.values, pos.vec2());
     errdefer c.deinit();
     try self.creeps.append(c);
 
@@ -297,7 +294,7 @@ pub fn placeTower(self: *GS, pos: math.Position, team: u8) !usize {
 
 pub fn placeProjectile(self: *GS, t: *Tower, target: objects.Target) Allocator.Error!usize {
     const id = self.projectile.items.len;
-    const projectile = objects.projectile.Projectile {
+    const projectile = objects.projectile.Projectile{
         .pos = t.pos,
         .target = target,
         .id = id,
@@ -319,11 +316,10 @@ pub fn towerById(self: *GS, id: usize) *Tower {
     return t;
 }
 
-
 pub fn validateState(self: *GS) void {
     for (self.creeps.items) |*c| {
         if (tower(self, c.pos)) |t| {
-            std.debug.print("tower: {s} collided with creep {s}\n", .{a.u(self.towers.items[t].pos.string()), a.u(c.string())});
+            std.debug.print("tower: {} collided with creep {}\n", .{ self.towers.items[t].pos, c });
             assert(false, "a creep is within a tower");
         }
     }
@@ -331,7 +327,7 @@ pub fn validateState(self: *GS) void {
 
 const testing = std.testing;
 test "calculate the board" {
-    var values = objects.Values{.rows = 3, .cols = 3};
+    var values = objects.Values{ .rows = 3, .cols = 3 };
     values.init();
 
     var gs = try GS.init(testing.allocator, &values);
@@ -347,13 +343,13 @@ test "calculate the board" {
 }
 
 test "place creep calculates positions" {
-    var values = objects.Values{.rows = 3, .cols = 3};
+    var values = objects.Values{ .rows = 3, .cols = 3 };
     values.init();
 
     var gs = try GS.init(testing.allocator, &values);
     defer gs.deinit();
     calculateBoard(&gs);
 
-    _ = try placeCreep(&gs, .{.row = 0, .col = 0}, 0);
+    _ = try placeCreep(&gs, .{ .row = 0, .col = 0 }, 0);
     try testing.expect(gs.creeps.items[0].pathLen == 2);
 }

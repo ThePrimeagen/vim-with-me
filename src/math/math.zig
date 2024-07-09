@@ -2,10 +2,10 @@ const std = @import("std");
 const assert = @import("../assert/assert.zig").assert;
 const scratchBuf = @import("../scratch/scratch.zig").scratchBuf;
 
-pub const ZERO_POS: Position = .{.row = 0, .col = 0};
-pub const ZERO_VEC2: Vec2 = .{.x = 0.0, .y = 0.0};
-pub const ZERO_AABB: AABB = .{.min = ZERO_VEC2, .max = ZERO_VEC2};
-pub const ZERO_SIZED: Sized = .{.cols = 3, .pos = ZERO_POS};
+pub const ZERO_POS: Position = .{ .row = 0, .col = 0 };
+pub const ZERO_VEC2: Vec2 = .{ .x = 0.0, .y = 0.0 };
+pub const ZERO_AABB: AABB = .{ .min = ZERO_VEC2, .max = ZERO_VEC2 };
+pub const ZERO_SIZED: Sized = .{ .cols = 3, .pos = ZERO_POS };
 
 pub fn floor(a: f64, precision: usize) f64 {
     const p: f64 = @floatFromInt(precision);
@@ -58,7 +58,7 @@ pub const Position = struct {
         const row = std.fmt.parseInt(usize, str[0..idx], 10) catch {
             return null;
         };
-        const col = std.fmt.parseInt(usize, str[idx + 1..], 10) catch {
+        const col = std.fmt.parseInt(usize, str[idx + 1 ..], 10) catch {
             return null;
         };
 
@@ -68,9 +68,16 @@ pub const Position = struct {
         };
     }
 
-    pub fn string(self: Position) ![]u8 {
-        const tmp = scratchBuf(50);
-        return try std.fmt.bufPrint(tmp, "vec(r = {}, c = {})", .{self.row, self.col});
+    pub fn format(
+        self: Position,
+        comptime fmt: []const u8,
+        options: std.fmt.FormatOptions,
+        writer: anytype,
+    ) !void {
+        _ = fmt;
+        _ = options;
+
+        try writer.print("vec(r = {}, c = {})", .{ self.row, self.col });
     }
 };
 
@@ -78,10 +85,18 @@ pub const Sized = struct {
     cols: usize,
     pos: Position,
 
-    pub fn string(self: Sized) ![]u8 {
-        return std.fmt.bufPrint(scratchBuf(50), "Sized(cols={}, pos={s})", .{
+    pub fn format(
+        self: Sized,
+        comptime fmt: []const u8,
+        options: std.fmt.FormatOptions,
+        writer: anytype,
+    ) !void {
+        _ = fmt;
+        _ = options;
+
+        try writer.print("Sized(cols={}, pos={})", .{
             self.cols,
-            try self.pos.string(),
+            self.pos,
         });
     }
 };
@@ -90,10 +105,18 @@ pub const Coord = struct {
     pos: Position,
     team: u8,
 
-    pub fn string(self: Coord) ![]u8 {
-        return try std.fmt.bufPrint(scratchBuf(120), "choord(team = {} pos = {s})", .{
+    pub fn format(
+        self: Coord,
+        comptime fmt: []const u8,
+        options: std.fmt.FormatOptions,
+        writer: anytype,
+    ) !void {
+        _ = fmt;
+        _ = options;
+
+        try writer.print("choord(team = {} pos = {})", .{
             self.team,
-            try self.pos.string(),
+            self.pos,
         });
     }
 
@@ -135,8 +158,19 @@ pub const AABB = struct {
         _ = other;
     }
 
-    pub fn string(self: AABB) ![]u8 {
-        return std.fmt.bufPrint(scratchBuf(100), "AABB({s}, {s})", .{try self.min.string(), try self.max.string()});
+    pub fn format(
+        self: AABB,
+        comptime fmt: []const u8,
+        options: std.fmt.FormatOptions,
+        writer: anytype,
+    ) !void {
+        _ = fmt;
+        _ = options;
+
+        try writer.print("AABB({}, {})", .{
+            self.min,
+            self.max,
+        });
     }
 };
 
@@ -228,32 +262,36 @@ pub const Vec2 = struct {
         };
     }
 
-    pub fn string(self: Vec2) ![]u8 {
-        return try std.fmt.bufPrint(scratchBuf(50), "x = {}, y = {}", .{floor(self.x, 1000), floor(self.y, 1000)});
-    }
+    pub fn format(
+        self: Vec2,
+        comptime fmt: []const u8,
+        options: std.fmt.FormatOptions,
+        writer: anytype,
+    ) !void {
+        _ = fmt;
+        _ = options;
 
+        try writer.print("x = {d}, y = {d}", .{ floor(self.x, 1000), floor(self.y, 1000) });
+    }
 };
 
 const t = std.testing;
 test "vec2 add" {
-    const a = Vec2{.x = 1, .y = 2};
-    const b = Vec2{.x = 68, .y = 418};
-    try t.expect(a.add(b).eql(Vec2{.x = 69, .y = 420}));
+    const a = Vec2{ .x = 1, .y = 2 };
+    const b = Vec2{ .x = 68, .y = 418 };
+    try t.expect(a.add(b).eql(Vec2{ .x = 69, .y = 420 }));
 }
 
 test "aabb contains" {
-    const a = Vec2{.x = 1, .y = 1};
-    const box = a.aabb(.{.x = 3, .y = 3});
+    const a = Vec2{ .x = 1, .y = 1 };
+    const box = a.aabb(.{ .x = 3, .y = 3 });
 
-    try t.expect(!box.contains(.{.x = 1, .y = 0.9999}));
-    try t.expect(!box.contains(.{.x = 0.9999, .y = 1}));
-    try t.expect(box.contains(.{.x = 1, .y = 1}));
-    try t.expect(box.contains(.{.x = 3.9999, .y = 1}));
-    try t.expect(box.contains(.{.x = 1, .y = 3.9999}));
+    try t.expect(!box.contains(.{ .x = 1, .y = 0.9999 }));
+    try t.expect(!box.contains(.{ .x = 0.9999, .y = 1 }));
+    try t.expect(box.contains(.{ .x = 1, .y = 1 }));
+    try t.expect(box.contains(.{ .x = 3.9999, .y = 1 }));
+    try t.expect(box.contains(.{ .x = 1, .y = 3.9999 }));
 
-    try t.expect(!box.contains(.{.x = 3.9999, .y = 4}));
-    try t.expect(!box.contains(.{.x = 4, .y = 3.9999}));
-
+    try t.expect(!box.contains(.{ .x = 3.9999, .y = 4 }));
+    try t.expect(!box.contains(.{ .x = 4, .y = 3.9999 }));
 }
-
-

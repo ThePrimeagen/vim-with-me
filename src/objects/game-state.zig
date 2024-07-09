@@ -66,9 +66,17 @@ pub const GameState = struct {
 
     values: *const Values,
 
-    pub fn string(gs: *GameState) ![]u8 {
-        _ = gs;
-        unreachable;
+    pub fn format(
+        self: GameState,
+        comptime fmt: []const u8,
+        options: std.fmt.FormatOptions,
+        writer: anytype,
+    ) !void {
+        _ = self;
+        _ = fmt;
+        _ = options;
+
+        try writer.print("not done yet but you did it on stream while I was doing this", .{});
     }
 
     pub fn init(alloc: Allocator, values: *const Values) !GameState {
@@ -79,8 +87,8 @@ pub const GameState = struct {
             .board = try alloc.alloc(bool, values.size),
             .alloc = alloc,
             .values = values,
-            .oneCoords = .{null, null, null},
-            .twoCoords = .{null, null, null},
+            .oneCoords = .{ null, null, null },
+            .twoCoords = .{ null, null, null },
         };
 
         for (0..values.size) |i| {
@@ -107,14 +115,14 @@ pub const GameState = struct {
 
     pub fn dump(self: *GameState) void {
         std.debug.print("------ GameState ------\n", .{});
-        std.debug.print("values: {s}\n", .{a.u(self.values.string())});
-        std.debug.print("round = {}, one = {}, two = {}\n", .{self.round, self.one, self.two});
-        std.debug.print("time = {}, loopDeltaUS = {}\n", .{self.time, self.loopDeltaUS});
+        std.debug.print("values: {}\n", .{self.values});
+        std.debug.print("round = {}, one = {}, two = {}\n", .{ self.round, self.one, self.two });
+        std.debug.print("time = {}, loopDeltaUS = {}\n", .{ self.time, self.loopDeltaUS });
 
         std.debug.print("one coords:\n", .{});
         for (&self.oneCoords) |c| {
             if (c) |coord| {
-                std.debug.print("  {s}\n", .{a.u(coord.string())});
+                std.debug.print("  {}\n", .{coord});
             }
         }
         std.debug.print("\n", .{});
@@ -122,7 +130,7 @@ pub const GameState = struct {
         std.debug.print("two coords:\n", .{});
         for (&self.twoCoords) |c| {
             if (c) |coord| {
-                std.debug.print("  {s}\n", .{a.u(coord.string())});
+                std.debug.print("  {}\n", .{coord});
             }
         }
 
@@ -130,24 +138,22 @@ pub const GameState = struct {
 
         std.debug.print("Towers:\n", .{});
         for (self.towers.items) |*t| {
-            std.debug.print("  {s}\n", .{a.u(t.pos.position().string())});
+            std.debug.print("  {}\n", .{t.pos.position()});
         }
         std.debug.print("\nCreeps:\n", .{});
         for (self.creeps.items) |*c| {
-            std.debug.print("  {s}\n", .{a.u(c.string())});
+            std.debug.print("  {}\n", .{c});
         }
         std.debug.print("\nProjectiles\n", .{});
         for (self.projectile.items) |*p| {
-            std.debug.print("  {s}\n", .{a.u(p.pos.position().string())});
+            std.debug.print("  {}\n", .{p.pos.position()});
         }
         std.debug.print("\n", .{});
-
     }
 
     pub fn debugBoard(self: *GameState) void {
         std.debug.print("\nBoard:\n", .{});
-        outer:
-        for (self.board, 0..) |b, idx| {
+        outer: for (self.board, 0..) |b, idx| {
             if (idx > 0 and idx % self.values.cols == 0) {
                 std.debug.print("\n", .{});
             }
@@ -167,9 +173,9 @@ pub const GameState = struct {
 };
 
 pub const GameStateFunctions = struct {
-    placeProjectile: *const fn(self: *GameState, tower: *Tower, target: Target) Allocator.Error!usize,
-    towerDied: *const fn(self: *GameState, tower: *Tower) void,
-    creepKilled: *const fn(self: *GameState, creep: *Creep) void,
-    shot: *const fn(self: *GameState, tower: *Tower) void,
-    strike: *const fn(self: *GameState, p: *Projectile) void,
+    placeProjectile: *const fn (self: *GameState, tower: *Tower, target: Target) Allocator.Error!usize,
+    towerDied: *const fn (self: *GameState, tower: *Tower) void,
+    creepKilled: *const fn (self: *GameState, creep: *Creep) void,
+    shot: *const fn (self: *GameState, tower: *Tower) void,
+    strike: *const fn (self: *GameState, p: *Projectile) void,
 };

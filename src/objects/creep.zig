@@ -12,11 +12,11 @@ const Cell = colors.Cell;
 const Red = colors.Red;
 const Allocator = std.mem.Allocator;
 
-const INITIAL_CREEP_COLOR: Color = .{.r = 0, .g = 0, .b = 0};
+const INITIAL_CREEP_COLOR: Color = .{ .r = 0, .g = 0, .b = 0 };
 
 pub const CreepSize = 1;
 pub const CreepCell: [1]Cell = .{
-    .{.text = '*', .color = Red },
+    .{ .text = '*', .color = Red },
 };
 
 pub const Creep = struct {
@@ -41,12 +41,19 @@ pub const Creep = struct {
     pathLen: usize = 0,
     alloc: Allocator,
 
-    pub fn string(self: *Creep) ![]u8 {
-        const buf = scratchBuf(150);
-        return std.fmt.bufPrint(buf, "creep({}, {}, {})\r\n  pos = {s}\r\n  path = {}/{}, life = {}, speed = {}\r\n", .{
-            self.alive, self.id, self.team,
-            try self.pos.string(),
-            self.pathIdx, self.pathLen, self.life, self.speed,
+    pub fn format(
+        self: Creep,
+        comptime fmt: []const u8,
+        options: std.fmt.FormatOptions,
+        writer: anytype,
+    ) !void {
+        _ = fmt;
+        _ = options;
+
+        try writer.print("creep({}, {}, {})\r\n  pos = {}\r\n  path = {}/{}, life = {}, speed = {d}\r\n", .{
+            self.alive, self.id,      self.team,
+            self.pos,   self.pathIdx, self.pathLen,
+            self.life,  self.speed,
         });
     }
 
@@ -70,4 +77,3 @@ pub const Creep = struct {
         self.alloc.free(self.scratch);
     }
 };
-

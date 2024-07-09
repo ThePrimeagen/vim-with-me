@@ -39,14 +39,21 @@ pub fn readFromArgs(alloc: Allocator) !Self {
 fn readConfig(allocator: Allocator, path: []const u8) !std.json.Parsed(Self) {
     const data = try std.fs.cwd().readFileAlloc(allocator, path, 1024);
     defer allocator.free(data);
-    return std.json.parseFromSlice(Self, allocator, data, .{.allocate = .alloc_always});
+    return std.json.parseFromSlice(Self, allocator, data, .{ .allocate = .alloc_always });
 }
 
-pub fn string(self: *const Self) ![]u8 {
-    return std.fmt.bufPrint(scratchBuf(150), "rows = {}, cols = {}, creepRate = {}, towerCount = {}, viz = {}, realtime = {}", .{
-        self.rows, self.cols, self.creepRate, self.towerCount,
-        self.viz.?,
-        self.realtime.?,
+pub fn format(
+    self: *const Self,
+    comptime fmt: []const u8,
+    options: std.fmt.FormatOptions,
+    writer: anytype,
+) !void {
+    _ = fmt;
+    _ = options;
+
+    try writer.print("rows = {}, cols = {}, creepRate = {}, towerCount = {}, viz = {}, realtime = {}", .{
+        self.rows,  self.cols,       self.creepRate, self.towerCount,
+        self.viz.?, self.realtime.?,
     });
 }
 

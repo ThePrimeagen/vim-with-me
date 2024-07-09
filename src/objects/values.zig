@@ -40,6 +40,14 @@ pub fn copyInto(v: *const Self, other: *Self) void {
     other.size = v.size;
 }
 
-pub fn string(v: *const Self) ![]u8 {
-    return std.fmt.bufPrint(scratchBuf(75), "rows = {}, cols = {}, size = {}", .{v.rows, v.cols, v.size});
+pub fn format(
+    self: *const Self,
+    comptime fmt: []const u8,
+    options: std.fmt.FormatOptions,
+    writer: anytype,
+) !void {
+    _ = fmt;
+    _ = options;
+
+    try writer.print("rows = {}, cols = {}, size = {}", .{ self.rows, self.cols, self.size });
 }
