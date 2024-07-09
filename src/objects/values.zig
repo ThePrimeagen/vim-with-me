@@ -31,6 +31,7 @@ tower: TowerValues = .{},
 creep: CreepValues = .{},
 projectile: ProjectorValues = .{},
 seed: usize = 69420,
+removeNoBuild: usize = 3,
 
 _rand: ?RndGen = null,
 
