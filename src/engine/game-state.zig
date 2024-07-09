@@ -8,6 +8,7 @@ const towers = @import("tower.zig");
 const creeps = @import("creep.zig");
 const projectiles = @import("projectile.zig");
 
+const AABB = math.AABB;
 const GS = objects.gamestate.GameState;
 const Message = objects.message.Message;
 const Tower = objects.tower.Tower;
@@ -63,7 +64,7 @@ pub fn update(state: *GS, delta: i64) !void {
     const c = state.creeps.items[0];
 
     std.debug.print("within: {} -- creep: {s} tower: {s}\n", .{
-        towers.withinRange(one, c.pos),
+        towers.contains(one, c.pos),
         a.u(c.pos.string()),
         a.u(one.pos.string()),
     });
@@ -125,7 +126,7 @@ pub fn strike(self: *GS, p: *Projectile) void {
 }
 
 pub fn roundPlayed(state: *GS) bool {
-    return state.round == state.one and state.round == state.two;
+    return !state.playing and state.round == state.one and state.round == state.two;
 }
 
 pub fn roundOver(state: *GS) bool {
@@ -153,33 +154,27 @@ pub fn message(state: *GS, msg: Message) !void {
     switch (msg) {
         .coord => |c| {
 
-            //if (c.team == '1') {
-            //    state.one += 1;
-            //} else {
-            //    state.two += 1;
-            //}
-
-            state.one += 1;
-            state.two += 1;
-
-            if (tower(state, c.pos.vec2())) |idx| {
-                towers.upgrade(&state.towers.items[idx]);
-                return;
+            if (c.team == objects.Values.TEAM_ONE) {
+                state.one += 1;
+            } else {
+                state.two += 1;
             }
 
-            //if (canPlaceTower(state, c.pos)) {
-            //    const tt = towers.TowerBuilder.start().
-            //        team(c.team).
-            //        pos(c.pos).
-            //        id(state.towers.items.len).
-            //        tower(state);
+            const aabb = towers.placementAABB(c.pos.vec2());
+            if (towerByAABB(state, aabb)) |idx| {
+                if (state.towers.items[idx].team == c.team) {
+                    towers.upgrade(&state.towers.items[idx]);
+                    return;
+                }
+                a.never("haven't programmed this yet");
+            }
 
-            //    try state.towers.append(tt);
-            //} else {
-                // TODO: randomly place tower
-                unreachable;
-            //}
-
+            if (try placeTower(state, aabb, c.team)) |id| {
+                std.debug.print("placed tower: {}\n", .{id});
+            } else {
+                std.debug.print("could not place tower: {s} {s}\n", .{try aabb.string(), try c.string()});
+                a.never("haven't programmed this yet also");
+            }
         },
         .round => |_| {
             // not sure what to do here...
@@ -215,6 +210,24 @@ pub fn clone(self: *GS) !GS {
         .board = board,
         .alloc = self.alloc,
     };
+}
+
+pub fn towerByAABB(self: *GS, aabb: AABB) ?usize {
+    for (self.towers.items, 0..) |*t, i| {
+        if (t.aabb.overlaps(aabb)) {
+            return i;
+        }
+    }
+    return null;
+}
+
+pub fn creepByAABB(self: *GS, aabb: AABB) ?usize {
+    for (self.creeps.items, 0..) |*c, i| {
+        if (c.aabb.overlaps(aabb)) {
+            return i;
+        }
+    }
+    return null;
 }
 
 pub fn tower(self: *GS, pos: Vec2) ?usize {
@@ -294,49 +307,51 @@ pub fn updateBoard(self: *GS) void {
     }
 }
 
-fn canPlaceTower(self: *GS, pos: math.Position, team: u8) bool {
-
+fn canPlaceTower(self: *GS, aabb: math.AABB, team: u8) bool {
+    const pos = aabb.min.position();
     if (self.noBuildZone) {
         const range = switch (team) {
-            '1' => self.oneCreepRange,
-            '2' => self.twoCreepRange,
+            '1' => self.oneNoBuildTowerRange,
+            '2' => self.twoNoBuildTowerRange,
             else => {
-                assert(false, "inTeam is an invalid value");
+                a.never("inTeam is an invalid value");
                 unreachable;
             }
         };
 
         if (!range.contains(pos)) {
+            std.debug.print("outside range\n", .{});
             return false;
         }
     }
 
-    if (pos.col == 0 or pos.col == self.values.cols - 1) {
+    if (pos.col <= 0 or pos.col >= self.values.cols - objects.tower.TowerSize) {
+        std.debug.print("on outside of accepted range: col <= 0, col => {}\n", .{self.values.cols - objects.tower.TowerSize});
         return false;
     }
 
-    if (tower(self, pos.vec2())) |_| {
-        return false;
-    }
-
-    if (creep(self, pos.vec2())) |_| {
+    if (creepByAABB(self, aabb)) |_| {
+        std.debug.print("on creep", .{});
         return false;
     }
 
     return true;
 }
 
-pub fn placeTower(self: *GS, pos: math.Position, team: u8) !?usize {
-    if (!canPlaceTower(self, pos, team)) {
+pub fn placeTower(self: *GS, aabb: math.AABB, team: u8) !?usize {
+    const pos = aabb.min;
+    assert(aabb.min.closeEnough(pos, 0.0001), "you must place towers on natural numbers");
+
+    if (!canPlaceTower(self, aabb, team)) {
         return null;
     }
 
     const id = self.towers.items.len;
     const t = towers.TowerBuilder.start()
-        .pos(pos)
+        .pos(pos.position())
         .team(team)
         .id(id)
-        .tower(self);
+        .tower(self.values);
 
     try self.towers.append(t);
 

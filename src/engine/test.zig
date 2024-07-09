@@ -22,7 +22,8 @@ test "find nearest creep" {
     a.addDump(&gsDump);
     defer a.removeDump(&gsDump);
 
-    const tId = a.option(usize, try gamestate.placeTower(&gs, .{.row = 2, .col = 2}, objects.Values.TEAM_ONE));
+    const aabb = objects.tower.TOWER_AABB.move(.{.y = 2, .x = 2});
+    const tId = a.option(usize, try gamestate.placeTower(&gs, aabb, objects.Values.TEAM_ONE));
     const tower = gamestate.towerById(&gs, tId);
 
     const one = try gamestate.placeCreep(&gs, .{.row = 1, .col = 0}, objects.Values.TEAM_ONE);
@@ -32,6 +33,10 @@ test "find nearest creep" {
     try testing.expect(towers.withinRange(tower, gs.creeps.items[one].pos) == false);
     try testing.expect(towers.withinRange(tower, gs.creeps.items[two].pos) == true);
     try testing.expect(towers.withinRange(tower, gs.creeps.items[three].pos) == true);
+
+    try testing.expect(towers.contains(tower, gs.creeps.items[one].pos) == false);
+    try testing.expect(towers.contains(tower, gs.creeps.items[two].pos) == false);
+    try testing.expect(towers.contains(tower, gs.creeps.items[three].pos) == false);
 
     var creep = towers.creepWithinRange(tower, &gs);
 

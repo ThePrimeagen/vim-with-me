@@ -25,6 +25,7 @@ pub const Creep = struct {
     values: *const Values,
 
     pos: math.Vec2 = math.ZERO_VEC2,
+    aabb: math.AABB = math.ZERO_AABB,
     life: usize = 0,
     speed: f64 = 0,
     alive: bool = true,
@@ -43,9 +44,9 @@ pub const Creep = struct {
 
     pub fn string(self: *Creep) ![]u8 {
         const buf = scratchBuf(150);
-        return std.fmt.bufPrint(buf, "creep({}, {}, {})\r\n  pos = {s}\r\n  path = {}/{}, life = {}, speed = {}\r\n", .{
+        return std.fmt.bufPrint(buf, "creep({}, {}, {})\r\n  pos = {s} aabb = {s}\r\n  path = {}/{}, life = {}, speed = {}\r\n", .{
             self.alive, self.id, self.team,
-            try self.pos.string(),
+            try self.pos.string(), try self.aabb.string(),
             self.pathIdx, self.pathLen, self.life, self.speed,
         });
     }

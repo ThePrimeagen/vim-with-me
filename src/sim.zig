@@ -47,6 +47,8 @@ pub fn main() !void {
 
         engine.stdout.resetColor();
 
+        std.debug.print("{s}  \n", .{try gs.playingString()});
+
         if (engine.gamestate.roundPlayed(&gs)) {
             engine.gamestate.play(&gs);
         }
@@ -59,18 +61,8 @@ pub fn main() !void {
         } else {
             const one = utils.positionInRange(&gs, &args, Values.TEAM_ONE);
             const two = utils.positionInRange(&gs, &args, Values.TEAM_TWO);
-
-            if (engine.gamestate.tower(&gs, one.vec2())) |id| {
-                engine.tower.upgrade(&gs.towers.items[id]);
-            } else {
-                _ = try engine.gamestate.placeTower(&gs, one, Values.TEAM_ONE);
-            }
-
-            if (engine.gamestate.tower(&gs, two.vec2())) |id| {
-                engine.tower.upgrade(&gs.towers.items[id]);
-            } else {
-                _ = try engine.gamestate.placeTower(&gs, two, Values.TEAM_TWO);
-            }
+            try engine.gamestate.message(&gs, .{ .coord = .{ .pos = one, .team = Values.TEAM_ONE, }, });
+            try engine.gamestate.message(&gs, .{ .coord = .{ .pos = two, .team = Values.TEAM_TWO, }, });
         }
 
         if (args.viz.?) {

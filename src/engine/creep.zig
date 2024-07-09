@@ -39,6 +39,7 @@ pub fn create(alloc: Allocator, id: usize, team: u8, values: *const Values, pos:
     creep.team = team;
 
     creep.pos = pos;
+    creep.aabb = .{.min = pos, .max = pos.add(.{.x = 1, .y = 1})};
     creep.rSized = .{
         .cols = CreepSize,
         .pos = creep.pos.position(),
@@ -166,6 +167,7 @@ pub fn update(self: *Creep, gs: *GS) void {
 
         if (self.pos.closeEnough(to.vec2(), 0.001)) {
             self.pos = Position.fromIdx(self.path[self.pathIdx], self.values.cols).vec2();
+            self.aabb = self.aabb.move(self.pos);
             self.pathIdx += 1;
         }
 
