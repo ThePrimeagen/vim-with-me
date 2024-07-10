@@ -10,6 +10,7 @@ pub const stdout = @import("stdout_output.zig");
 pub const input = @import("input.zig");
 pub const time = @import("time.zig");
 pub const tests = @import("test.zig");
+pub const utils = @import("utils.zig");
 
 test { _ = tower; }
 test { _ = creep; }
@@ -22,3 +23,4 @@ test { _ = stdout; }
 test { _ = input; }
 test { _ = time; }
 test { _ = tests; }
+test { _ = utils; }

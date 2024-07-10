@@ -8,7 +8,13 @@ const objects = @import("../objects/objects.zig");
 
 const testing = std.testing;
 test "find nearest creep" {
-    var values = objects.Values{.rows = 6, .cols = 6};
+    var values = objects.Values{
+        .rows = 6, .cols = 60,
+        .creep = .{
+            .speed = 1,
+        }
+    };
+
     values.tower.fireRateUS = 10_000_000; // ensures we don't fire
     objects.Values.init(&values);
     var gs = try objects.gamestate.GameState.init(testing.allocator, &values);
@@ -43,17 +49,17 @@ test "find nearest creep" {
     try testing.expect(creep != null);
     try testing.expect(creep.?.id == three);
 
-    try gamestate.update(&gs, 2_990_000);
+    try gamestate.update(&gs, 3_990_000);
 
     creep = towers.creepWithinRange(tower, &gs);
     a.assert(creep != null, "expected to find the creep");
-    try testing.expect(creep.?.id == three);
+    a.assert(creep.?.id == three, "expected to find creep 3");
 
     try gamestate.update(&gs, 16_000);
 
     creep = towers.creepWithinRange(tower, &gs);
     try testing.expect(creep != null);
-    try testing.expect(creep.?.id == two);
+    a.assert(creep.?.id == two, "expected to find creep 2");
 }
 
 test "creep distance" {

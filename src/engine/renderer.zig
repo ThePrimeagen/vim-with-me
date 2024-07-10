@@ -2,6 +2,7 @@ const assert = @import("../assert/assert.zig").assert;
 const std = @import("std");
 const objects = @import("../objects/objects.zig");
 const scratchBuf = @import("../scratch/scratch.zig").scratchBuf;
+const utils = @import("utils.zig");
 
 const gamestate = objects.gamestate;
 const Values = objects.Values;
@@ -89,18 +90,19 @@ pub const Renderer = struct {
     }
 
     pub fn text(self: *Renderer, gs: *GameState) !void {
-        const buf = scratchBuf(50);
-
-        // round
-        const roundBuf = try std.fmt.bufPrint(buf, "round: {}", .{gs.round});
-
+        const roundBuf = try std.fmt.bufPrint(scratchBuf(50), "round: {}", .{gs.round});
         var row: usize = 0;
-
         self.canvas.writeText(.{
             .row = row,
             .col = self.textOffset,
         }, roundBuf, .{.r = 255, .g = 255, .b = 255});
 
         row += 1;
+
+        const elapsed = try std.fmt.bufPrint(scratchBuf(50), "time: {s}", .{try utils.humanTime(gs.time)});
+        self.canvas.writeText(.{
+            .row = row,
+            .col = self.textOffset,
+        }, elapsed, .{.r = 255, .g = 255, .b = 255});
     }
 };
