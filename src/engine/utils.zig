@@ -11,6 +11,19 @@ pub fn humanTime(timeUS: isize) ![]u8 {
     return std.fmt.bufPrint(scratchBuf(50), "{}m {}s", .{minutes, seconds});
 }
 
+pub fn compare(expected: []const u8, value: []const u8) bool {
+    if (expected.len != value.len) {
+        return false;
+    }
+
+    for (expected, 0..) |c, i| {
+        if (c != value[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 test "displayTime" {
     const out = try humanTime(69 * 1000 * 1000);
     try std.testing.expectEqualStrings("1m 9s", out);

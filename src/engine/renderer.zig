@@ -15,6 +15,8 @@ const projectiles = @import("projectile.zig");
 const Allocator = std.mem.Allocator;
 const GameState = gamestate.GameState;
 const TEXT_AREA_COLS = 30;
+const PLAYER_ONE = "Player One";
+const PLAYER_TWO = "Player Two";
 
 pub const Renderer = struct {
     canvas: canvas.Canvas,
@@ -83,13 +85,13 @@ pub const Renderer = struct {
             self.canvas.place(sized, cells);
         }
 
-        try self.text(gs);
+        try self.gameStateText(gs);
         try self.canvas.render();
         self.output = self.canvas.renderBuffer;
         self.count += 1;
     }
 
-    pub fn text(self: *Renderer, gs: *GameState) !void {
+    pub fn gameStateText(self: *Renderer, gs: *GameState) !void {
         const roundBuf = try std.fmt.bufPrint(scratchBuf(50), "round: {}", .{gs.round});
         var row: usize = 0;
         self.canvas.writeText(.{
@@ -104,5 +106,39 @@ pub const Renderer = struct {
             .row = row,
             .col = self.textOffset,
         }, elapsed, .{.r = 255, .g = 255, .b = 255});
+    }
+
+    pub fn completed(self: *Renderer, gs: *GameState) !void {
+        const roundBuf = try std.fmt.bufPrint(scratchBuf(50), "round: {}", .{gs.round});
+        var row: usize = 0;
+        self.canvas.writeText(.{
+            .row = row,
+            .col = 0,
+        }, roundBuf, .{.r = 255, .g = 255, .b = 255});
+
+        row += 1;
+
+        const elapsed = try std.fmt.bufPrint(scratchBuf(50), "time: {s}", .{try utils.humanTime(gs.time)});
+        self.canvas.writeText(.{
+            .row = row,
+            .col = 0,
+        }, elapsed, .{.r = 255, .g = 255, .b = 255});
+
+        var winner = PLAYER_ONE;
+        if (gs.oneTowerCount == 0) {
+            winner = PLAYER_TWO;
+        }
+
+        row += 1;
+
+        const winnerTxt = try std.fmt.bufPrint(scratchBuf(50), "winner: {s}", .{winner});
+        self.canvas.writeText(.{
+            .row = row,
+            .col = 0,
+        }, winnerTxt, .{.r = 255, .g = 255, .b = 255});
+
+        try self.canvas.render();
+        self.output = self.canvas.renderBuffer;
+        self.count += 1;
     }
 };

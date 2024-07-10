@@ -482,7 +482,6 @@ pub fn validateState(self: *GS) void {
 
     }
 
-    std.debug.print("one = {} / {} two = {} / {}\n", .{one, self.oneTowerCount, tuwu, self.twoTowerCount});
     assert(one == self.oneTowerCount, "one's tower count does not equal the alive towers");
     assert(tuwu == self.twoTowerCount, "two's tower count does not equal the alive towers");
 }
