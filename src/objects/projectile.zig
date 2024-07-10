@@ -13,6 +13,9 @@ pub const Projectile = struct {
     id: usize,
     target: Target,
 
+    createdAt: i64,
+    maxTimeAlive: i64,
+
     pos: math.Vec2,
     speed: f64 = 0,
     alive: bool = true,

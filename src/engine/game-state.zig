@@ -7,6 +7,7 @@ const assert = a.assert;
 const towers = @import("tower.zig");
 const creeps = @import("creep.zig");
 const projectiles = @import("projectile.zig");
+const utils = @import("utils.zig");
 
 const never = a.never;
 const Values = objects.Values;
@@ -430,14 +431,35 @@ pub fn placeTower(self: *GS, aabb: math.AABB, team: u8) !?usize {
     return id;
 }
 
+pub fn getTargetPos(self: *GS, target: objects.Target) Vec2 {
+    switch (target) {
+        .tower => |t| return self.towers.items[t].pos,
+        .creep => |c| return self.creeps.items[c].pos,
+    }
+}
+
+pub fn getTargetSpeed(self: *GS, target: objects.Target) f64 {
+    switch (target) {
+        .tower => |_| return 0,
+        .creep => |c| return self.creeps.items[c].speed,
+    }
+}
+
 pub fn placeProjectile(self: *GS, t: *Tower, target: objects.Target) Allocator.Error!usize {
     const id = self.projectile.items.len;
+    const len = getTargetPos(self, target).sub(t.pos).len();
+    const targetSpeed = getTargetSpeed(self, target);
+    const speed = self.values.projectile.speed;
+    const speedDiff = speed - targetSpeed;
+
     const projectile = objects.projectile.Projectile {
         .pos = t.pos,
         .target = target,
         .id = id,
         .damage = t.damage,
-        .speed = self.values.projectile.speed,
+        .speed = speed,
+        .createdAt = self.time,
+        .maxTimeAlive = @as(i64, @intFromFloat(len / speedDiff)) * utils.SECOND + self.values.roundTimeUS,
     };
 
     try self.projectile.append(projectile);
