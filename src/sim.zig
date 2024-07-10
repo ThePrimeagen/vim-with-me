@@ -51,11 +51,6 @@ pub fn main() !void {
 
         engine.stdout.resetColor();
 
-        std.debug.print("{s}  \n", .{try gs.playingString()});
-        if (gs.creeps.items.len > 0) {
-            std.debug.print("{s}\n", .{try gs.creeps.items[0].string()});
-        }
-
         if (engine.gamestate.roundPlayed(&gs)) {
             engine.gamestate.play(&gs);
         }

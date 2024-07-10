@@ -8,6 +8,8 @@ const towers = @import("tower.zig");
 const creeps = @import("creep.zig");
 const projectiles = @import("projectile.zig");
 
+const never = a.never;
+const Values = objects.Values;
 const AABB = math.AABB;
 const GS = objects.gamestate.GameState;
 const Message = objects.message.Message;
@@ -39,6 +41,13 @@ pub fn update(state: *GS, delta: i64) !void {
 
     for (state.creeps.items) |*c| {
         creeps.update(c, state);
+
+        if (creeps.completed(c) and c.alive) {
+            creeps.kill(c, state);
+            if (getRandomTower(state, c.team)) |tid| {
+                towers.killById(tid, state);
+            }
+        }
     }
 
     for (state.projectile.items) |*p| {
@@ -70,6 +79,36 @@ pub fn update(state: *GS, delta: i64) !void {
     });
 }
 
+fn getRandomTower(self: *GS, team: u8) ?usize {
+    switch (team) {
+        Values.TEAM_ONE => {
+            if (self.oneTowerCount == 0) {
+                return null;
+            }
+        },
+        Values.TEAM_TWO => {
+            if (self.twoTowerCount == 0) {
+                return null;
+            }
+        },
+        else => never("invalid team"),
+    }
+
+    // TODO: Such a bad way to do this
+    // i am sure there is a better way...
+    while (true) {
+        for (self.towers.items, 0..) |*t, idx| {
+            // 50% chance is not really random especially given the order...
+            if (t.alive and t.team == team and self.values.randBool()) {
+                return idx;
+            }
+        }
+    }
+
+    never("i should select a tower");
+    return null;
+}
+
 pub fn init(self: *GS) void {
     self.fns = &.{
         .placeProjectile = placeProjectile,
@@ -96,9 +135,12 @@ pub fn init(self: *GS) void {
 pub fn towerDied(self: *GS, t: *Tower) void {
     if (t.team == objects.Values.TEAM_ONE) {
         self.oneStats.towersLost += 1;
+        self.oneTowerCount -= 1;
     } else {
         self.twoStats.towersLost += 1;
+        self.twoTowerCount -= 1;
     }
+
     self.boardChanged += 1;
 }
 
@@ -123,6 +165,11 @@ pub fn strike(self: *GS, p: *Projectile) void {
         .creep => |c| self.creeps.items[c].life -|= p.damage,
         .tower => |t| self.towers.items[t].ammo -|= p.damage,
     }
+}
+
+pub fn completed(self: *GS) bool {
+    return !self.noBuildZone and
+        (self.oneTowerCount == 0 or self.twoTowerCount == 0);
 }
 
 pub fn roundPlayed(state: *GS) bool {
@@ -173,9 +220,17 @@ pub fn message(state: *GS, msg: Message) !void {
                 a.never("haven't programmed this yet");
             }
 
-            if (try placeTower(state, aabb, c.team)) |id| {
-                std.debug.print("placed tower: {}\n", .{id});
+            if (try placeTower(state, aabb, c.team)) |_| {
             } else {
+                var count: usize = 0;
+                while (creepByAABB(state, aabb)) |id| : (count += 1) {
+                    creeps.kill(&state.creeps.items[id], state);
+                }
+
+                if (count > 0) {
+                    return;
+                }
+
                 std.debug.print("could not place tower: {s} {s}\n", .{try aabb.string(), try c.string()});
                 a.never("haven't programmed this yet also");
             }
@@ -218,7 +273,7 @@ pub fn clone(self: *GS) !GS {
 
 pub fn towerByAABB(self: *GS, aabb: AABB) ?usize {
     for (self.towers.items, 0..) |*t, i| {
-        if (t.aabb.overlaps(aabb)) {
+        if (t.alive and t.aabb.overlaps(aabb)) {
             return i;
         }
     }
@@ -227,7 +282,7 @@ pub fn towerByAABB(self: *GS, aabb: AABB) ?usize {
 
 pub fn creepByAABB(self: *GS, aabb: AABB) ?usize {
     for (self.creeps.items, 0..) |*c, i| {
-        if (c.aabb.overlaps(aabb)) {
+        if (c.alive and c.aabb.overlaps(aabb)) {
             return i;
         }
     }
@@ -335,7 +390,6 @@ fn canPlaceTower(self: *GS, aabb: math.AABB, team: u8) bool {
     }
 
     if (creepByAABB(self, aabb)) |_| {
-        std.debug.print("on creep", .{});
         return false;
     }
 
@@ -343,6 +397,8 @@ fn canPlaceTower(self: *GS, aabb: math.AABB, team: u8) bool {
 }
 
 pub fn placeTower(self: *GS, aabb: math.AABB, team: u8) !?usize {
+    Values.assertTeam(team);
+
     const pos = aabb.min;
     assert(aabb.min.closeEnough(pos, 0.0001), "you must place towers on natural numbers");
 
@@ -358,6 +414,11 @@ pub fn placeTower(self: *GS, aabb: math.AABB, team: u8) !?usize {
         .tower(self.values);
 
     try self.towers.append(t);
+    if (team == Values.TEAM_ONE) {
+        self.oneTowerCount += 1;
+    } else {
+        self.twoTowerCount += 1;
+    }
 
     updateBoard(self);
 
@@ -395,11 +456,35 @@ pub fn towerById(self: *GS, id: usize) *Tower {
 
 pub fn validateState(self: *GS) void {
     for (self.creeps.items) |*c| {
-        if (tower(self, c.pos)) |t| {
+        if (!c.alive) {
+            continue;
+        }
+
+        if (towerByAABB(self, c.aabb)) |t| {
             std.debug.print("tower: {s} collided with creep {s}\n", .{a.u(self.towers.items[t].pos.string()), a.u(c.string())});
             assert(false, "a creep is within a tower");
         }
     }
+
+    var one: usize = 0;
+    var tuwu: usize = 0;
+
+    for (self.towers.items) |*t| {
+        if (!t.alive) {
+            continue;
+        }
+
+        switch (t.team) {
+            Values.TEAM_ONE => one += 1,
+            Values.TEAM_TWO => tuwu += 1,
+            else => never("how tf did i get here?"),
+        }
+
+    }
+
+    std.debug.print("one = {} / {} two = {} / {}\n", .{one, self.oneTowerCount, tuwu, self.twoTowerCount});
+    assert(one == self.oneTowerCount, "one's tower count does not equal the alive towers");
+    assert(tuwu == self.twoTowerCount, "two's tower count does not equal the alive towers");
 }
 
 const testing = std.testing;

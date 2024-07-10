@@ -9,13 +9,13 @@ pub const ROUND_TIME = 3_000_000;
 
 pub const TowerValues = struct {
     ammo: usize = 50,
-    fireRateUS: i64 = 1_000_000,
+    fireRateUS: i64 = 400_000,
     firingDurationUS: i64 = 200_000,
 };
 
 pub const CreepValues = struct {
-    life: usize = 5,
-    speed: f64 = 1,
+    life: usize = 20,
+    speed: f64 = 1.5,
 };
 
 pub const ProjectorValues = struct {
@@ -36,6 +36,10 @@ removeNoBuild: usize = 3,
 _rand: ?RndGen = null,
 
 const Self = @This();
+
+pub fn assertTeam(team: u8) void {
+    assert(team == TEAM_ONE or team == TEAM_TWO, "invalid team");
+}
 
 pub fn init(v: *Self) void {
     assert(v.rows > 0, "must set rows");
@@ -60,6 +64,10 @@ pub fn rand(self: *Self, comptime T: type) T {
 pub fn randRange(self: *Self, comptime T: type, start: T, end: T) T {
     assert(start < end, "end must be greater than start");
     return start + self._rand.?.random().int(T) % (end - start);
+}
+
+pub fn randBool(self: *Self) bool {
+    return self.randRange(usize, 0, 2) == 1;
 }
 
 pub fn string(v: *const Self) ![]u8 {

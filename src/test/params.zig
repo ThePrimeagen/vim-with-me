@@ -7,9 +7,9 @@ const Allocator = std.mem.Allocator;
 
 rows: usize,
 cols: usize,
-creepRate: usize,
 fps: isize,
 runCount: usize = 10000,
+roundTimeUS: ?i64,
 
 seed: ?usize = 0,
 viz: ?bool = true,
@@ -36,8 +36,8 @@ fn readConfig(allocator: Allocator, path: []const u8) !std.json.Parsed(Self) {
 }
 
 pub fn string(self: *const Self) ![]u8 {
-    return std.fmt.bufPrint(scratchBuf(150), "rows = {}, cols = {}, creepRate = {}, towerCount = {}, viz = {}, realtime = {}", .{
-        self.rows, self.cols, self.creepRate, self.towerCount,
+    return std.fmt.bufPrint(scratchBuf(150), "rows = {}, cols = {}, towerCount = {}, viz = {}, realtime = {}", .{
+        self.rows, self.cols, self.towerCount,
         self.viz.?,
         self.realtime.?,
     });
@@ -48,6 +48,7 @@ pub fn values(self: *const Self) Values {
         .rows = self.rows,
         .cols = self.cols,
         .seed = self.seed orelse 42069,
+        .roundTimeUS = self.roundTimeUS orelse 3_000_000,
     };
 
     Values.init(&v);

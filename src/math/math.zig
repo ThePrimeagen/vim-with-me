@@ -322,3 +322,12 @@ test "aabb overlap" {
     try t.expect(!b_false_y.overlaps(a));
     try t.expect(b_true.overlaps(a));
 }
+
+test "aabb collision failure creep tower issue" {
+    const tower = AABB{.min = .{.x = 2.8e1, .y = 0e0}, .max = .{.x = 3.1e1, .y = 1e0}};
+    const creep = AABB{.min = .{.x = 3e1, .y = 1e0}, .max = .{.x = 3.1e1, .y = 2e0}};
+
+    try t.expect(!tower.overlaps(creep));
+    try t.expect(!creep.overlaps(tower));
+}
+

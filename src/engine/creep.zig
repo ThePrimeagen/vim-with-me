@@ -109,23 +109,35 @@ pub fn contains(self: *Creep, pos: math.Vec2) bool {
 }
 
 pub fn calculatePath(self: *Creep, board: []const bool) void {
+    if (!self.alive) {
+        return;
+    }
+
     const cols = self.values.cols;
     assert(board.len % cols == 0, "the length is not a rectangle");
     assert(board.len == self.path.len, "the length of the board is different than what the creep was initialized with.");
+    assert(self.alive, "cannot calculate a path for a dead creep");
 
     for (0..self.scratch.len) |idx| {
         self.scratch[idx] = -1;
     }
 
-    const pos = self.pos.position().toIdx(cols);
+    const pos = self.aabb.min.position().toIdx(cols);
     const last = walk(pos, pos, cols, board, self.scratch);
 
     if (last == 0) {
-        unreachable;
+        a.never("unable to move creep forward");
     } else {
         self.pathLen = path(self.scratch, last, self.path);
         self.pathIdx = 0;
     }
+}
+
+pub fn kill(self: *Creep, gs: *GS) void {
+    assert(gs.fns != null, "must have functions defined");
+
+    self.alive = false;
+    gs.fns.?.creepKilled(gs, self);
 }
 
 pub fn completed(self: *Creep) bool {

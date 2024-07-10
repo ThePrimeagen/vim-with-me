@@ -51,12 +51,14 @@ pub const GameState = struct {
     boardChanged: usize = 0,
 
     one: usize = 0,
+    oneTowerCount: usize = 0,
     oneCoords: [3]?Coord,
     oneStats: Stats = Stats{},
     oneCreepRange: Range = Range{},
     oneNoBuildTowerRange: Range = Range{},
 
     two: usize = 0,
+    twoTowerCount: usize = 0,
     twoCoords: [3]?Coord,
     twoStats: Stats = Stats{},
     twoCreepRange: Range = Range{},
@@ -158,6 +160,12 @@ pub const GameState = struct {
 
     pub fn debugBoard(self: *GameState) void {
         std.debug.print("\nBoard:\n", .{});
+
+        for (0..self.values.cols) |c| {
+                std.debug.print("{:0>3}", .{c});
+        }
+        std.debug.print("\n", .{});
+
         outer:
         for (self.board, 0..) |b, idx| {
             if (idx > 0 and idx % self.values.cols == 0) {
@@ -166,13 +174,13 @@ pub const GameState = struct {
 
             for (self.creeps.items) |*c| {
                 if (idx == c.pos.position().toIdx(self.values.cols)) {
-                    std.debug.print("c ", .{});
+                    std.debug.print("c  ", .{});
                     continue :outer;
                 }
             }
 
             const v: usize = if (b) 1 else 0;
-            std.debug.print("{} ", .{v});
+            std.debug.print("{}  ", .{v});
         }
         std.debug.print("\n", .{});
     }
