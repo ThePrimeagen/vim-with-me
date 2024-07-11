@@ -7,6 +7,7 @@ const unwrap = a.unwrap;
 const assert = a.assert;
 const creeps = @import("creep.zig");
 
+const Values = objects.tower.Tower;
 const Tower = objects.tower.Tower;
 const colors = objects.colors;
 const Color = colors.Color;
@@ -101,16 +102,34 @@ pub const TowerBuilder = struct {
             .fireRateUS = values.tower.fireRateUS,
             .ammo = values.tower.ammo,
             .maxAmmo = values.tower.ammo,
+
+            .values = values,
         };
     }
 };
 
+const ONE_VEC: math.Vec2 = .{.x = 1, .y = 1};
 pub fn upgrade(self: *Tower) void {
+    if (true) {
     if (self.level < 9) {
         self.level += 1;
+        if (self.level == 3 or self.level == 9) {
+            self.firingRangeAABB.min = self.firingRangeAABB.min.sub(ONE_VEC);
+            self.firingRangeAABB.max = self.firingRangeAABB.max.add(ONE_VEC);
+        }
     }
 
-    // TODO: More here
+
+    const ammo = self.values.tower.ammo * self.level;
+    self.ammo = ammo;
+    self.maxAmmo = ammo;
+
+    const level: i64 = @intCast(self.level);
+    self.fireRateUS = self.values.tower.fireRateUS -
+        self.values.tower.scaleFireRateUS * level;
+
+    assert(self.fireRateUS > self.firingDurationUS, "cannot shoot quicker than animation");
+    }
 }
 
 pub fn update(self: *Tower, gs: *GS) !void {
