@@ -52,6 +52,12 @@ pub const Renderer = struct {
     }
 
     pub fn render(self: *Renderer, gs: *GameState) !void {
+        if (gs.noBuildZone) {
+            const cells = objects.nobuild.createCells(gs.noBuildRange, gs.values.cols);
+            const sized = gs.noBuildRange.sized(gs.values.cols);
+            self.canvas.place(sized, cells);
+        }
+
         for (gs.towers.items) |*t| {
             if (!t.alive) {
                 continue;
@@ -77,12 +83,6 @@ pub const Renderer = struct {
 
             projectiles.render(p, gs);
             self.canvas.place(p.rSized, &p.rCells);
-        }
-
-        if (gs.noBuildZone) {
-            const cells = objects.nobuild.createCells(gs.noBuildRange, gs.values.cols);
-            const sized = gs.noBuildRange.sized(gs.values.cols);
-            self.canvas.place(sized, cells);
         }
 
         try self.gameStateText(gs);
