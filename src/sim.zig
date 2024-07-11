@@ -74,6 +74,12 @@ pub fn main() !void {
         }
 
         engine.gamestate.validateState(&gs);
+
+        if (engine.gamestate.completed(&gs)) {
+            try render.completed(&gs);
+            try out(render.output);
+            break;
+        }
     }
 
 }

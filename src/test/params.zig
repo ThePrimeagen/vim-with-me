@@ -1,7 +1,9 @@
 const Values = @import("../objects/objects.zig").Values;
 const scratchBuf = @import("../scratch/scratch.zig").scratchBuf;
 const std = @import("std");
-const assert = @import("../assert/assert.zig").assert;
+const a = @import("../assert/assert.zig");
+const assert = a.assert;
+const never = a.never;
 
 const Allocator = std.mem.Allocator;
 
@@ -23,8 +25,17 @@ pub fn readFromArgs(alloc: Allocator) !Self {
     assert(pathMaybe != null, "there must be arguments");
 
     const path = pathMaybe.?;
-    const self = try readConfig(alloc, path);
+    var self = try readConfig(alloc, path);
     defer self.deinit();
+
+    // TODO: This could be a lot smarter....
+    while (args.next()) |k| {
+        std.debug.print("arg: {s}\n", .{k});
+        if (std.mem.eql(u8, "--seed", k)) {
+            const v = try std.fmt.parseInt(usize, args.next().?, 10);
+            self.value.seed = v;
+        }
+    }
 
     return self.value;
 }
