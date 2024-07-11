@@ -8,16 +8,15 @@ pub const TEAM_TWO = '2';
 pub const ROUND_TIME = 3_000_000;
 
 pub const TowerValues = struct {
-    ammo: usize = 50,
-    fireRateUS: i64 = 400_000,
-    firingDurationUS: i64 = 200_000,
-
-    scaleFireRateUS: i64 = 20_000,
+    ammo: usize = 55,
+    fireRateUS: i64 = 280_000,
+    firingDurationUS: i64 = 150_000,
+    scaleFireRateUS: i64 = 10_000,
 };
 
 pub const CreepValues = struct {
     life: usize = 5,
-    speed: f64 = 1.5,
+    speed: f64 = 2,
 
     scaleSpeed: f64 = 0.1,
     scaleSpeedRounds: usize = 3,
