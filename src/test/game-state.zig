@@ -30,7 +30,7 @@ pub const Spawner = struct {
             _ = try gamestate.placeCreep(self.gs, .{
                 .col = 0,
                 .row = row,
-            }, 0);
+            }, objects.Values.TEAM_ONE);
         }
     }
 };

@@ -4,6 +4,7 @@ const objects = @import("objects/objects.zig");
 const engine = @import("engine/engine.zig");
 const assert = @import("assert/assert.zig");
 const math = @import("math/math.zig");
+const Values = objects.Values;
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -38,8 +39,7 @@ pub fn main() !void {
             const row = args.rand(usize) % args.rows;
             const col = args.rand(usize) % args.cols;
             const pos = math.Position{.row = row, .col = col};
-            if (engine.gamestate.canPlaceTower(&gs, pos)) {
-                _ = try engine.gamestate.placeTower(&gs, pos, 0);
+            if (try engine.gamestate.placeTower(&gs, pos, Values.TEAM_ONE)) |_| {
                 break;
             }
         }

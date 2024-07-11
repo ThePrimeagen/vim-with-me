@@ -20,7 +20,7 @@ test "find nearest creep" {
     a.addDump(&gsDump);
     defer a.removeDump(&gsDump);
 
-    const tId = try gamestate.placeTower(&gs, .{.row = 2, .col = 2}, 0);
+    const tId = a.option(try gamestate.placeTower(&gs, .{.row = 2, .col = 2}, 0));
     const tower = gamestate.towerById(&gs, tId);
 
     const one = try gamestate.placeCreep(&gs, .{.row = 1, .col = 0}, 0);

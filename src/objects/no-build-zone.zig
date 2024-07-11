@@ -1,7 +1,8 @@
 const math = @import("../math/math.zig");
 const assert = @import("../assert/assert.zig").assert;
 const colors = @import("colors.zig");
-const Range = @import("game-state.zig").Range;
+
+const Range = math.Range;
 
 pub const TEXT = 'o';
 pub const COLOR = colors.Red;

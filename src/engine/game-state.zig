@@ -91,7 +91,7 @@ pub fn init(self: *GS) void {
 }
 
 pub fn towerDied(self: *GS, t: *Tower) void {
-    if (t.team == '1') {
+    if (t.team == objects.Values.TEAM_ONE) {
         self.oneStats.towersLost += 1;
     } else {
         self.twoStats.towersLost += 1;
@@ -100,7 +100,7 @@ pub fn towerDied(self: *GS, t: *Tower) void {
 }
 
 pub fn creepKilled(self: *GS, c: *Creep) void {
-    if (c.team == '1') {
+    if (c.team == objects.Values.TEAM_ONE) {
         self.oneStats.creepsKilled += 1;
     } else {
         self.twoStats.creepsKilled += 1;
@@ -108,7 +108,7 @@ pub fn creepKilled(self: *GS, c: *Creep) void {
 }
 
 pub fn shot(self: *GS, t: *Tower) void {
-    if (t.team == '1') {
+    if (t.team == objects.Values.TEAM_ONE) {
         self.oneStats.shots += 1;
     } else {
         self.twoStats.shots += 1;
@@ -150,18 +150,18 @@ pub fn message(state: *GS, msg: Message) !void {
                 return;
             }
 
-            if (canPlaceTower(state, c.pos)) {
-                const tt = towers.TowerBuilder.start().
-                    team(c.team).
-                    pos(c.pos).
-                    id(state.towers.items.len).
-                    tower(state);
+            //if (canPlaceTower(state, c.pos)) {
+            //    const tt = towers.TowerBuilder.start().
+            //        team(c.team).
+            //        pos(c.pos).
+            //        id(state.towers.items.len).
+            //        tower(state);
 
-                try state.towers.append(tt);
-            } else {
+            //    try state.towers.append(tt);
+            //} else {
                 // TODO: randomly place tower
                 unreachable;
-            }
+            //}
 
         },
         .round => |_| {
@@ -270,7 +270,23 @@ pub fn updateBoard(self: *GS) void {
     }
 }
 
-pub fn canPlaceTower(self: *GS, pos: math.Position) bool {
+fn canPlaceTower(self: *GS, pos: math.Position, team: u8) bool {
+
+    if (self.noBuildZone) {
+        const range = switch (team) {
+            '1' => self.oneRange,
+            '2' => self.twoRange,
+            else => {
+                assert(false, "inTeam is an invalid value");
+                unreachable;
+            }
+        };
+
+        if (!range.contains(pos)) {
+            return false;
+        }
+    }
+
     if (pos.col == 0 or pos.col == self.values.cols - 1) {
         return false;
     }
@@ -286,8 +302,11 @@ pub fn canPlaceTower(self: *GS, pos: math.Position) bool {
     return true;
 }
 
-// TODO: vec and position?
-pub fn placeTower(self: *GS, pos: math.Position, team: u8) !usize {
+pub fn placeTower(self: *GS, pos: math.Position, team: u8) !?usize {
+    if (!canPlaceTower(self, pos, team)) {
+        return null;
+    }
+
     const id = self.towers.items.len;
     const t = towers.TowerBuilder.start()
         .pos(pos)

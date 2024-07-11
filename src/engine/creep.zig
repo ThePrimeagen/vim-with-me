@@ -32,6 +32,8 @@ pub fn distanceToExit(creep: *Creep, gs: *GS) f64 {
 
 // TODO: Params object STAT (just not now)
 pub fn create(alloc: Allocator, id: usize, team: u8, values: *const Values, pos: math.Vec2) !Creep {
+    assert(team == Values.TEAM_ONE or team == Values.TEAM_TWO, "invalid team");
+
     var creep: Creep = try Creep.init(alloc, values);
     creep.id = id;
     creep.team = team;
