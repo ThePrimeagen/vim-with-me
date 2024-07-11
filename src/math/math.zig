@@ -79,6 +79,9 @@ pub const Range = struct {
     endRow: usize = 0,
 
     pub fn len(self: Range) usize {
+        if (self.endRow < self.startRow) {
+            return 0;
+        }
         return self.endRow - self.startRow;
     }
 
