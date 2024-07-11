@@ -25,8 +25,8 @@ pub fn update(state: *GS, delta: i64) !void {
 
     const changed = state.boardChanged;
 
-    const diff: isize = @intCast(state.one - state.two);
-    assert(diff >= -1 and diff <= 1, "some how we have multiple updates to one side but not the other");
+    assert(state.oneAvailableTower == 0, "player one still had towers to place");
+    assert(state.twoAvailableTower == 0, "player two still had towers to place");
 
     state.loopDeltaUS = delta;
 
@@ -120,12 +120,11 @@ pub fn init(self: *GS) void {
     };
 
     const rows = self.values.rows;
-    const teamSpace = rows / 3;
 
-    self.oneCreepRange.endRow = teamSpace;
+    self.oneCreepRange.endRow = 1;
     self.oneNoBuildTowerRange = self.oneCreepRange;
 
-    self.twoCreepRange.startRow = rows - teamSpace;
+    self.twoCreepRange.startRow = rows - 1;
     self.twoCreepRange.endRow = rows;
     self.twoNoBuildTowerRange = self.twoCreepRange;
 
@@ -151,6 +150,9 @@ pub fn creepKilled(self: *GS, c: *Creep) void {
     } else {
         self.twoStats.creepsKilled += 1;
     }
+
+    self.activeCreepCount -= 1;
+    assert(self.activeCreepCount >= 0, "killed more creeps than were on the board");
 }
 
 pub fn shot(self: *GS, t: *Tower) void {
@@ -173,33 +175,39 @@ pub fn completed(self: *GS) bool {
         (self.oneTowerCount == 0 or self.twoTowerCount == 0);
 }
 
-pub fn roundPlayed(state: *GS) bool {
-    return !state.playing and state.round == state.one and state.round == state.two;
-}
-
-pub fn roundOver(state: *GS) bool {
-    return state.playing and
-        state.playingStartUS + state.values.roundTimeUS < state.time;
-}
-
-pub fn play(state: *GS) void {
-    assert(state.one == state.two, "player one and two must have same play count");
-    assert(state.one == state.round, "the round and the played moves are not the same");
-
+pub fn startRound(state: *GS) void {
     state.playing = true;
     state.playingStartUS = state.time;
 }
 
-pub fn pause(state: *GS) void {
-    assert(state.one == state.two, "player one and two must have same play count");
-    assert(state.one == state.round, "the round and the played moves are not the same");
-
+pub fn endRound(state: *GS) void {
     state.playing = false;
     state.round += 1;
 
-    if (state.round > state.values.removeNoBuild) {
+    assert(state.activeCreepCount == 0, "there should not be any creeps when the game is paused");
+
+    if (state.noBuildZone) {
+        state.noBuildRange.startRow += 1;
+        state.noBuildRange.endRow -= 1;
+
+        state.oneCreepRange.endRow += 1;
+        state.twoCreepRange.startRow -= 1;
+        state.oneNoBuildTowerRange.endRow += 1;
+        state.twoNoBuildTowerRange.startRow -= 1;
+    }
+
+    if (state.noBuildRange.len() == 0) {
         state.noBuildZone = false;
     }
+}
+
+pub fn setTowerPlacementCount(state: *GS, count: usize) void {
+    state.oneAvailableTower = @intCast(count);
+    state.twoAvailableTower = @intCast(count);
+}
+
+pub fn hasActiveCreeps(state: *GS) bool {
+    return state.activeCreepCount > 0;
 }
 
 pub fn message(state: *GS, msg: Message) !void {
@@ -207,10 +215,13 @@ pub fn message(state: *GS, msg: Message) !void {
         .coord => |c| {
 
             if (c.team == objects.Values.TEAM_ONE) {
-                state.one += 1;
+                state.oneAvailableTower -= 1;
             } else {
-                state.two += 1;
+                state.twoAvailableTower -= 1;
             }
+
+            assert(state.oneAvailableTower >= 0, "one cannot place more towers than allowed");
+            assert(state.twoAvailableTower >= 0, "two cannot place more towers than allowed");
 
             const aabb = towers.placementAABB(c.pos.vec2());
             if (towerByAABB(state, aabb)) |idx| {
@@ -221,20 +232,11 @@ pub fn message(state: *GS, msg: Message) !void {
                 a.never("haven't programmed this yet");
             }
 
-            if (try placeTower(state, aabb, c.team)) |_| {
-            } else {
-                var count: usize = 0;
-                while (creepByAABB(state, aabb)) |id| : (count += 1) {
-                    creeps.kill(&state.creeps.items[id], state);
-                }
-
-                if (count > 0) {
-                    return;
-                }
-
+            if (try placeTower(state, aabb, c.team) == null)  {
                 std.debug.print("could not place tower: {s} {s}\n", .{try aabb.string(), try c.string()});
                 a.never("haven't programmed this yet also");
             }
+
         },
         .round => |_| {
             // not sure what to do here...

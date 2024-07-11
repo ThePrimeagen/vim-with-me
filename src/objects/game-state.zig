@@ -49,15 +49,16 @@ pub const GameState = struct {
     noBuildRange: Range = Range{},
 
     boardChanged: usize = 0,
+    activeCreepCount: isize = 0,
 
-    one: usize = 0,
+    oneAvailableTower: isize = 0,
     oneTowerCount: usize = 0,
     oneCoords: [3]?Coord,
     oneStats: Stats = Stats{},
     oneCreepRange: Range = Range{},
     oneNoBuildTowerRange: Range = Range{},
 
-    two: usize = 0,
+    twoAvailableTower: isize = 0,
     twoTowerCount: usize = 0,
     twoCoords: [3]?Coord,
     twoStats: Stats = Stats{},
@@ -122,7 +123,7 @@ pub const GameState = struct {
     pub fn dump(self: *GameState) void {
         std.debug.print("------ GameState ------\n", .{});
         std.debug.print("values: {s}\n", .{a.u(self.values.string())});
-        std.debug.print("round = {}, one = {}, two = {}\n", .{self.round, self.one, self.two});
+        std.debug.print("round = {}, oneAvailable = {}, twoAvailable = {}\n", .{self.round, self.oneAvailableTower, self.twoAvailableTower});
         std.debug.print("time = {}, loopDeltaUS = {}\n", .{self.time, self.loopDeltaUS});
 
         std.debug.print("one coords:\n", .{});

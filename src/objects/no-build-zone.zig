@@ -8,7 +8,7 @@ pub const TEXT = 'o';
 pub const COLOR = colors.Red;
 
 // I LOVE DOING THIS
-var cells: [1024]colors.Cell = undefined;
+var cells: [8192]colors.Cell = undefined;
 
 pub fn createCells(range: Range, cols: usize) []colors.Cell {
     const count = (range.endRow - range.startRow) * cols;
