@@ -20,7 +20,7 @@ pub fn values() *const Values {
     return &testValues;
 }
 
-pub fn positionInRange(gs: *GS, params: *Params, team: u8) math.Position {
+pub fn positionInRange(gs: *GS, team: u8) math.Position {
     const range = switch (team) {
         Values.TEAM_ONE => gs.oneCreepRange,
         Values.TEAM_TWO => gs.twoCreepRange,
@@ -30,9 +30,8 @@ pub fn positionInRange(gs: *GS, params: *Params, team: u8) math.Position {
         }
     };
 
-    const diff = range.endRow - range.startRow;
-    const row = range.startRow + params.rand(usize) % diff;
-    const col = params.randRange(usize, 2, gs.values.cols - objects.tower.TowerSize);
+    const row = gs.values.randRange(usize, range.startRow, range.endRow);
+    const col = gs.values.randRange(usize, 2, gs.values.cols - objects.tower.TowerSize);
 
     return .{
         .row = row,

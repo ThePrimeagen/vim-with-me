@@ -74,7 +74,7 @@ pub const GameState = struct {
 
     fns: ?*const GameStateFunctions = null,
 
-    values: *const Values,
+    values: *Values,
 
     pub fn playingString(gs: *GameState) ![]u8 {
         return std.fmt.bufPrint(scratchBuf(150), "GameState({}): round={} one={} two={}\ntime={} playingTime={} overTime={}", .{
@@ -83,7 +83,7 @@ pub const GameState = struct {
         });
     }
 
-    pub fn init(alloc: Allocator, values: *const Values) !GameState {
+    pub fn init(alloc: Allocator, values: *Values) !GameState {
         var gs = .{
             .towers = TowerList.init(alloc),
             .creeps = CreepList.init(alloc),

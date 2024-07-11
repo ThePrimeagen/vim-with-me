@@ -59,8 +59,8 @@ pub fn main() !void {
             try creeper.tick(delta);
             try engine.gamestate.update(&gs, delta);
         } else {
-            const one = utils.positionInRange(&gs, &args, Values.TEAM_ONE);
-            const two = utils.positionInRange(&gs, &args, Values.TEAM_TWO);
+            const one = utils.positionInRange(&gs, Values.TEAM_ONE);
+            const two = utils.positionInRange(&gs, Values.TEAM_TWO);
             try engine.gamestate.message(&gs, .{ .coord = .{ .pos = one, .team = Values.TEAM_ONE, }, });
             try engine.gamestate.message(&gs, .{ .coord = .{ .pos = two, .team = Values.TEAM_TWO, }, });
         }
