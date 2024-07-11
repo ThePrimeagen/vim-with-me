@@ -16,6 +16,11 @@ pub const TowerValues = struct {
 pub const CreepValues = struct {
     life: usize = 20,
     speed: f64 = 1.5,
+
+    scaleSpeed: f64 = 0.1,
+    scaleSpeedRounds: usize = 3,
+    scaleLife: usize = 1,
+    scaleLifeRounds: usize = 3,
 };
 
 pub const ProjectorValues = struct {

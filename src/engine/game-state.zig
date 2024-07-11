@@ -341,6 +341,7 @@ pub fn placeCreep(self: *GS, pos: math.Position, team: u8) !usize {
     try self.creeps.append(c);
 
     creeps.calculatePath(&self.creeps.items[id], self.board);
+    creeps.scale(&self.creeps.items[id], self.round);
 
     return id;
 }

@@ -148,6 +148,14 @@ pub fn dead(self: *Creep) bool {
     return !self.alive;
 }
 
+pub fn scale(self: *Creep, round: usize) void {
+    const speedAddition: f64 = @as(f64, @floatFromInt(@divFloor(round, self.values.creep.scaleSpeedRounds))) * self.values.creep.scaleSpeed;
+    const lifeAddition = @divFloor(round, self.values.creep.scaleLifeRounds) * self.values.creep.scaleLife;
+
+    self.life += lifeAddition;
+    self.speed += speedAddition;
+}
+
 // TODO: I suck at game programming... how bad is this...?
 pub fn update(self: *Creep, gs: *GS) void {
     if (completed(self) or !self.alive) {

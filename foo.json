@@ -4,8 +4,7 @@
     "fps": 33333,
     "runCount": 50000,
     "roundTimeUS": 5000000,
-    "realtime": false,
+    "realtime": true,
     "viz": true,
     "seed": 1234
-
 }
