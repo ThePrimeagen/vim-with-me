@@ -3,6 +3,7 @@ const std = @import("std");
 const scratchBuf = @import("../scratch/scratch.zig").scratchBuf;
 const math = @import("../math/math.zig");
 const colors = @import("colors.zig");
+const Values = @import("values.zig");
 
 pub const TowerSize = 3;
 pub const TOWER_AABB: math.AABB = .{
@@ -44,6 +45,8 @@ pub const Tower = struct {
     // TODO(render): THis is a bad plan
     rows: usize = 1,
     cols: usize = 3,
+
+    values: *const Values,
 
     pub fn string(self: *Tower) ![]u8 {
         return std.fmt.bufPrint(scratchBuf(250),

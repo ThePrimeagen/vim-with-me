@@ -3,8 +3,8 @@
     "cols": 80,
     "fps": 33333,
     "runCount": 50000,
-    "roundTimeUS": 5000000,
-    "realtime": true,
+    "roundTimeUS": 3000000,
+    "realtime": false,
     "viz": true,
     "seed": 1234
 }

@@ -11,6 +11,8 @@ pub const TowerValues = struct {
     ammo: usize = 50,
     fireRateUS: i64 = 400_000,
     firingDurationUS: i64 = 200_000,
+
+    scaleFireRateUS: i64 = 20_000,
 };
 
 pub const CreepValues = struct {
