@@ -76,6 +76,12 @@ pub const Renderer = struct {
             self.canvas.place(p.rSized, &p.rCells);
         }
 
+        if (gs.noBuildZone) {
+            const cells = objects.nobuild.createCells(gs.noBuildRange, gs.values.cols);
+            const sized = gs.noBuildRange.sized(gs.values.cols);
+            self.canvas.place(sized, cells);
+        }
+
         try self.text(gs);
         try self.canvas.render();
         self.output = self.canvas.renderBuffer;

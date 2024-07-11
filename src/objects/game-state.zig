@@ -38,19 +38,47 @@ pub const Stats = struct {
     shots: usize = 0,
 };
 
+pub const Range = struct {
+    startRow: usize = 0,
+    endRow: usize = 0,
+
+    pub fn position(self: Range) math.Position {
+        return .{
+            .row = self.startRow,
+            .col = 0,
+        };
+    }
+
+    pub fn sized(self: Range, cols: usize) math.Sized {
+        return .{
+            .pos = self.position(),
+            .cols = cols,
+        };
+    }
+
+    pub fn invalid(self: Range) bool {
+        return self.startRow >= self.endRow;
+    }
+};
+
 pub const GameState = struct {
     playing: bool = true,
-    round: i32 = 1,
+    round: usize = 1,
+
+    noBuildZone: bool = true,
+    noBuildRange: Range = Range{},
 
     boardChanged: usize = 0,
 
-    one: i32 = 0,
+    one: usize = 0,
     oneCoords: [3]?Coord,
     oneStats: Stats = Stats{},
+    oneRange: Range = Range{},
 
-    two: i32 = 0,
+    two: usize = 0,
     twoCoords: [3]?Coord,
     twoStats: Stats = Stats{},
+    twoRange: Range = Range{},
 
     time: i64 = 0,
     loopDeltaUS: i64 = 0,
