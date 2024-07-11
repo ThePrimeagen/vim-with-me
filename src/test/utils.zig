@@ -32,7 +32,7 @@ pub fn positionInRange(gs: *GS, params: *Params, team: u8) math.Position {
 
     const diff = range.endRow - range.startRow;
     const row = range.startRow + params.rand(usize) % diff;
-    const col = params.rand(usize) % gs.values.cols;
+    const col = params.randRange(usize, 2, gs.values.cols - objects.tower.TowerSize);
 
     return .{
         .row = row,

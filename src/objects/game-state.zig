@@ -4,6 +4,7 @@ const std = @import("std");
 const assert = a.assert;
 const Dump = a.Dump;
 
+const scratchBuf = @import("../scratch/scratch.zig").scratchBuf;
 const math = @import("../math/math.zig");
 const projectile = @import("projectile.zig");
 const tower = @import("tower.zig");
@@ -75,9 +76,11 @@ pub const GameState = struct {
 
     values: *const Values,
 
-    pub fn string(gs: *GameState) ![]u8 {
-        _ = gs;
-        unreachable;
+    pub fn playingString(gs: *GameState) ![]u8 {
+        return std.fmt.bufPrint(scratchBuf(150), "GameState({}): round={} one={} two={}\ntime={} playingTime={} overTime={}", .{
+            gs.playing, gs.round, gs.one, gs.two,
+            gs.time, gs.playingStartUS, gs.playingStartUS + gs.values.roundTimeUS,
+        });
     }
 
     pub fn init(alloc: Allocator, values: *const Values) !GameState {

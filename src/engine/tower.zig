@@ -1,3 +1,4 @@
+const utils = @import("../test/utils.zig");
 const math = @import("../math/math.zig");
 const objects = @import("../objects/objects.zig");
 const std = @import("std");
@@ -15,32 +16,33 @@ const GS = objects.gamestate.GameState;
 const Target = objects.gamestate.Target;
 const Creep = objects.creep.Creep;
 
-const TowerSize = 3;
-const TowerCell: [TowerSize]Cell = .{
+const TowerCell: [objects.tower.TowerSize]Cell = .{
     .{.text = '/', .color = Black },
     .{.text = '*', .color = Black },
     .{.text = '\\', .color = Black },
 };
+
+pub fn placementAABB(pos: math.Vec2) math.AABB {
+    return objects.tower.TOWER_AABB.move(pos).add(.{
+        .x = -1,
+        .y = 0,
+    });
+}
 
 pub fn contains(self: *Tower, pos: math.Vec2) bool {
     if (!self.alive) {
         return false;
     }
 
-    if (pos.row() != self.pos.row()) {
-        return false;
-    }
-
-    return pos.sub(self.pos.add(.{.x = 1, .y = 0})).lenSq() <= 1;
-}
-
-pub fn withinRange(self: *Tower, pos: math.Vec2) bool {
     return self.aabb.contains(pos);
 }
 
-pub fn find(self: *Tower, gs: *GS) void {
-    _ = self;
-    _ = gs;
+pub fn withinRange(self: *Tower, pos: math.Vec2) bool {
+    if (!self.alive) {
+        return false;
+    }
+
+    return self.firingRangeAABB.contains(pos);
 }
 
 pub fn color(self: *Tower, c: Color) void {
@@ -77,22 +79,28 @@ pub const TowerBuilder = struct {
         return tow;
     }
 
-    pub fn tower(t: TowerBuilder, gs: *GS) Tower {
+    pub fn tower(t: TowerBuilder, values: *const objects.Values) Tower {
         return .{
             .id = t._id,
             .pos = t._pos,
             .team = t._team,
             .rSized = .{
                 .pos = t._pos.position(),
-                .cols = TowerSize,
+                .cols = objects.tower.TowerSize,
             },
-            .aabb = t._pos.sub(.{.x = 1, .y = 1}).aabb(.{.x = TowerSize + 2, .y = 3}),
+            .aabb = objects.tower.TOWER_AABB.move(t._pos),
+
+            // TODO(render): when i make the tower pretty... this will change
+            .firingRangeAABB = t._pos.
+                sub(.{.x = 1, .y = 1}).
+                aabb(.{.x = objects.tower.TowerSize + 2, .y = 3}),
+
             .rCells = TowerCell,
 
-            .firingDurationUS = gs.values.tower.firingDurationUS,
-            .fireRateUS = gs.values.tower.fireRateUS,
-            .ammo = gs.values.tower.ammo,
-            .maxAmmo = gs.values.tower.ammo,
+            .firingDurationUS = values.tower.firingDurationUS,
+            .fireRateUS = values.tower.fireRateUS,
+            .ammo = values.tower.ammo,
+            .maxAmmo = values.tower.ammo,
         };
     }
 };
@@ -101,12 +109,8 @@ pub fn upgrade(self: *Tower) void {
     if (self.level < 9) {
         self.level += 1;
     }
-}
 
-pub fn projectile(self: *Tower, gs: *GS, target: Target) void {
-    _ = self;
-    _ = gs;
-    _ = target;
+    // TODO: More here
 }
 
 pub fn update(self: *Tower, gs: *GS) !void {
@@ -217,28 +221,26 @@ pub fn creepWithinRange(self: *Tower, gs: *GS) ?*Creep {
 }
 
 fn createTestTower() Tower {
-    return .{
-        .id = getTestId(),
-        .pos = math.ZERO_VEC2,
-        .team = 0,
-        .rSized = .{
-            .pos = math.ZERO_POS,
-            .cols = TowerSize,
-        },
-        .rCells = TowerCell,
-    };
+    return TowerBuilder.
+        start().
+        pos(math.ZERO_POS).
+        id(getTestId()).
+        team(objects.Values.TEAM_ONE).
+        tower(utils.values());
 }
 
 const testing = std.testing;
 test "tower contains" {
     var t = createTestTower();
+
     try testing.expect(!contains(&t, .{.x = -0.9999, .y = 0}));
+
     try testing.expect(contains(&t, .{.x = 0.9999, .y = 0}));
     try testing.expect(contains(&t, .{.x = 0, .y = 0}));
 
     // col
-    try testing.expect(contains(&t, .{.x = 1.1, .y = 0}));
-    try testing.expect(!contains(&t, .{.x = 2.1, .y = 0}));
+    try testing.expect(contains(&t, .{.x = 2.99, .y = 0}));
+    try testing.expect(!contains(&t, .{.x = 3.1, .y = 0}));
 
     // row
     try testing.expect(!contains(&t, .{.x = 0, .y = 1}));

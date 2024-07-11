@@ -55,7 +55,7 @@ pub fn rand(self: *Self, comptime T: type) T {
 
 pub fn randRange(self: *Self, comptime T: type, start: T, end: T) T {
     assert(start < end, "end must be greater than start");
-    return start + (end - start) % self._rand.?.random().int(T);
+    return start + self._rand.?.random().int(T) % (end - start);
 }
 
 pub fn values(self: *const Self) Values {

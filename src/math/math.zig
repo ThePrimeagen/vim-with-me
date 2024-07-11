@@ -162,13 +162,34 @@ pub const AABB = struct {
     }
 
     pub fn overlaps(self: AABB, other: AABB) bool {
-        _ = self;
-        _ = other;
+        return !(
+            self.min.x >= other.max.x or
+            self.min.y >= other.max.y or
+            other.min.x >= self.max.x or
+            other.min.y >= self.max.y
+        );
+    }
+
+    pub fn add(self: AABB, to: Vec2) AABB {
+        var out = self;
+        out.min = out.min.add(to);
+        out.max = out.max.add(to);
+        return out;
+    }
+
+    pub fn move(self: AABB, to: Vec2) AABB {
+        const xDist = self.max.x - self.min.x;
+        const yDist = self.max.y - self.min.y;
+        return .{
+            .min = to,
+            .max = to.add(.{.x = xDist, .y = yDist }),
+        };
     }
 
     pub fn string(self: AABB) ![]u8 {
         return std.fmt.bufPrint(scratchBuf(100), "AABB({s}, {s})", .{try self.min.string(), try self.max.string()});
     }
+
 };
 
 pub const Vec2 = struct {
@@ -287,4 +308,17 @@ test "aabb contains" {
 
 }
 
+test "aabb overlap" {
+    const a = AABB{.min = .{.x = 1, .y = 1}, .max = .{.x = 3, .y = 3}};
+    const b_false_x = AABB{.min = .{.x = 3, .y = 1}, .max = .{.x = 4, .y = 4}};
+    const b_false_y = AABB{.min = .{.x = 1, .y = 3}, .max = .{.x = 4, .y = 4}};
+    const b_true = AABB{.min = .{.x = 2, .y = 1}, .max = .{.x = 4, .y = 4}};
 
+    try t.expect(!a.overlaps(b_false_x));
+    try t.expect(!a.overlaps(b_false_y));
+    try t.expect(a.overlaps(b_true));
+
+    try t.expect(!b_false_x.overlaps(a));
+    try t.expect(!b_false_y.overlaps(a));
+    try t.expect(b_true.overlaps(a));
+}
