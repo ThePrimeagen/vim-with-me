@@ -42,13 +42,24 @@ pub const Creep = struct {
     pathLen: usize = 0,
     alloc: Allocator,
 
-    pub fn string(self: *Creep) ![]u8 {
-        const buf = scratchBuf(150);
+    pub fn string(self: *const Creep) ![]u8 {
+        const buf = scratchBuf(250);
         return std.fmt.bufPrint(buf, "creep({}, {}, {})\r\n  pos = {s} aabb = {s}\r\n  path = {}/{}, life = {}, speed = {}\r\n", .{
             self.alive, self.id, self.team,
             try self.pos.string(), try self.aabb.string(),
             self.pathIdx, self.pathLen, self.life, self.speed,
         });
+    }
+
+    pub fn dumpScratch(self: *Creep) void {
+        std.debug.print("Creep({} {}): Scratch\n", .{self.alive, self.id});
+        for (0..self.scratch.len) |idx| {
+            if (idx > 0 and idx % self.values.cols == 0) {
+                std.debug.print("\n", .{});
+            }
+            std.debug.print("{} ", .{self.scratch[idx]});
+        }
+        std.debug.print("\n", .{});
     }
 
     pub fn init(alloc: Allocator, values: *const Values) !Creep {

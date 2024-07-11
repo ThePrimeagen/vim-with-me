@@ -1,10 +1,11 @@
 {
     "rows": 24,
     "cols": 80,
-    "creepRate": 2000000,
     "fps": 33333,
     "runCount": 50000,
-    "realtime": true,
+    "roundTimeUS": 5000000,
+    "realtime": false,
     "viz": true,
     "seed": 1234
+
 }

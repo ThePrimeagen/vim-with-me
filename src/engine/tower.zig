@@ -127,9 +127,7 @@ pub fn update(self: *Tower, gs: *GS) !void {
     }
 
     if (self.ammo == 0) {
-        self.alive = false;
-        self.deadTimeUS = gs.time;
-        gs.fns.?.towerDied(gs, self);
+        kill(self, gs);
         return;
     }
 
@@ -218,6 +216,19 @@ pub fn creepWithinRange(self: *Tower, gs: *GS) ?*Creep {
     }
 
     return out;
+}
+
+pub fn killById(tid: usize, gs: *GS) void {
+    kill(&gs.towers.items[tid], gs);
+}
+
+pub fn kill(t: *Tower, gs: *GS) void {
+    assert(gs.fns != null, "gs must have functions on it");
+
+    t.alive = false;
+    t.deadTimeUS = gs.time;
+
+    gs.fns.?.towerDied(gs, t);
 }
 
 fn createTestTower() Tower {
