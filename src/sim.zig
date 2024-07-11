@@ -1,5 +1,6 @@
 const std = @import("std");
 const testing = @import("test/test.zig");
+const utils = @import("test/utils.zig");
 const objects = @import("objects/objects.zig");
 const engine = @import("engine/engine.zig");
 const assert = @import("assert/assert.zig");
@@ -18,6 +19,7 @@ pub fn main() !void {
     defer gs.deinit();
 
     engine.gamestate.init(&gs);
+    engine.gamestate.pause(&gs);
 
     const gsDump = gs.dumper();
     assert.addDump(&gsDump);
@@ -32,6 +34,7 @@ pub fn main() !void {
 
     var render = try engine.renderer.Renderer.init(alloc, &values);
     defer render.deinit();
+
     var creeper = testing.gamestate.Spawner.init(&args, &gs);
 
     var count: usize = 0;
@@ -42,10 +45,33 @@ pub fn main() !void {
             delta = f.delta();
         }
 
-        try creeper.tick(delta);
-
         engine.stdout.resetColor();
-        try engine.gamestate.update(&gs, delta);
+
+        if (engine.gamestate.roundPlayed(&gs)) {
+            engine.gamestate.play(&gs);
+        }
+
+        if (engine.gamestate.roundOver(&gs)) {
+            engine.gamestate.pause(&gs);
+        } else if (gs.playing) {
+            try creeper.tick(delta);
+            try engine.gamestate.update(&gs, delta);
+        } else {
+            const one = utils.positionInRange(&gs, &args, Values.TEAM_ONE);
+            const two = utils.positionInRange(&gs, &args, Values.TEAM_TWO);
+
+            if (engine.gamestate.tower(&gs, one.vec2())) |id| {
+                engine.tower.upgrade(&gs.towers.items[id]);
+            } else {
+                _ = try engine.gamestate.placeTower(&gs, one, Values.TEAM_ONE);
+            }
+
+            if (engine.gamestate.tower(&gs, two.vec2())) |id| {
+                engine.tower.upgrade(&gs.towers.items[id]);
+            } else {
+                _ = try engine.gamestate.placeTower(&gs, two, Values.TEAM_TWO);
+            }
+        }
 
         if (args.viz.?) {
             try render.render(&gs);
