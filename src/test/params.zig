@@ -11,6 +11,7 @@ rows: usize,
 cols: usize,
 fps: isize,
 runCount: usize = 10000,
+simCount: usize = 100,
 roundTimeUS: ?i64,
 
 seed: ?usize = 0,
