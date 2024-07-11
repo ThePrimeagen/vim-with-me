@@ -27,7 +27,10 @@ pub fn update(self: *Projectile, gs: *GS) !void {
 
     if (!alive) {
         kill(self, gs);
+        return;
     }
+
+    assert(gs.time - self.createdAt < self.maxTimeAlive, "bullet has lived longer than expected");
 
     const target = switch (self.target) {
         .creep => |c| gs.creeps.items[c].pos,
