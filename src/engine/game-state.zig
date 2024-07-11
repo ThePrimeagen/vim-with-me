@@ -88,6 +88,8 @@ pub fn init(self: *GS) void {
 
     self.noBuildRange.startRow = self.oneRange.endRow;
     self.noBuildRange.endRow = self.twoRange.startRow;
+
+    self.playing = false;
 }
 
 pub fn towerDied(self: *GS, t: *Tower) void {
@@ -237,10 +239,17 @@ pub fn calculateBoard(self: *GS) void {
 }
 
 pub fn placeCreep(self: *GS, pos: math.Position, team: u8) !usize {
+    switch (team) {
+        objects.Values.TEAM_ONE => assert(self.oneRange.contains(pos), "invalid team one position"),
+        objects.Values.TEAM_TWO => assert(self.twoRange.contains(pos), "invalid team one position"),
+        else => a.never("invalid team"),
+    }
+
     const id = self.creeps.items.len;
     var c = try creeps.create(
         self.alloc, id, team, self.values, pos.vec2()
     );
+
     errdefer c.deinit();
     try self.creeps.append(c);
 
@@ -383,7 +392,8 @@ test "place creep calculates positions" {
     var gs = try GS.init(testing.allocator, &values);
     defer gs.deinit();
     calculateBoard(&gs);
+    init(&gs);
 
-    _ = try placeCreep(&gs, .{.row = 0, .col = 0}, 0);
+    _ = try placeCreep(&gs, .{.row = 0, .col = 0}, objects.Values.TEAM_ONE);
     try testing.expect(gs.creeps.items[0].pathLen == 2);
 }

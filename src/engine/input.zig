@@ -14,11 +14,16 @@ pub const BufferedInputter = struct {
     lines: [][]const u8,
     idx: usize,
 
-    pub fn init(data: [][]const u8) BufferedInputter {
+    pub fn init() BufferedInputter {
         return .{
-            .lines = data,
+            .lines = .{},
             .idx = 0,
         };
+    }
+
+    pub fn data(self: *BufferedInputter, lines: [][]const u8) void {
+        self.lines = lines;
+        self.idx = 0;
     }
 
     pub fn next(self: *BufferedInputter, buf: []u8) !?usize {
@@ -131,4 +136,7 @@ pub fn createInputRunner(alloc: Allocator, inputter: *Inputter) !*InputRunner {
     input.thread = try std.Thread.spawn(.{}, read, .{input, inputter});
 
     return input;
+}
+
+test "buffered input" {
 }

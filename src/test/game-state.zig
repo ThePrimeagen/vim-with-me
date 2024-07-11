@@ -22,11 +22,17 @@ pub const Spawner = struct {
     }
 
     pub fn tick(self: *Spawner, deltaUS: isize) !void {
+        if (self.gs.noBuildZone) {
+            return;
+        }
+
         self.currentTime += deltaUS;
         if (self.currentTime - self.lastSpawn > self.spawnRate) {
             self.lastSpawn = self.currentTime;
 
-            const row = self.params.rand(usize) % self.gs.values.rows;
+            const range = self.gs.oneRange;
+            const row = range.startRow + self.params.rand(usize) % range.len();
+
             _ = try gamestate.placeCreep(self.gs, .{
                 .col = 0,
                 .row = row,

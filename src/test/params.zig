@@ -9,7 +9,6 @@ const RndGen = std.rand.DefaultPrng;
 rows: usize,
 cols: usize,
 creepRate: usize,
-towerCount: usize,
 fps: isize,
 runCount: usize = 10000,
 

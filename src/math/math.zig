@@ -78,6 +78,10 @@ pub const Range = struct {
     startRow: usize = 0,
     endRow: usize = 0,
 
+    pub fn len(self: Range) usize {
+        return self.endRow - self.startRow;
+    }
+
     pub fn position(self: Range) Position {
         return .{
             .row = self.startRow,

@@ -87,10 +87,9 @@ pub fn never(msg: []const u8) void {
 pub fn option(comptime T: type, val: ?T) T {
     if (val) |v| {
         return v;
-    } else |err| {
-        std.debug.print("unwrap error: {any}", .{err});
-        never("option is null");
     }
+    never("option is null");
+    unreachable;
 }
 
 pub fn u(v: anyerror![]u8) []u8 {
