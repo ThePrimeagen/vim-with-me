@@ -48,7 +48,6 @@ test "find nearest creep" {
 
     creep = towers.creepWithinRange(tower, &gs);
     try testing.expect(creep != null);
-    std.debug.print("{s}\n", .{try creep.?.string()});
     try testing.expect(creep.?.id == two);
 }
 
