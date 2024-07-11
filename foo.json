@@ -4,7 +4,7 @@
     "creepRate": 2000000,
     "fps": 33333,
     "runCount": 50000,
-    "realtime": false,
+    "realtime": true,
     "viz": true,
     "seed": 1234
 }

@@ -7,6 +7,10 @@ const assert = @import("assert/assert.zig");
 const math = @import("math/math.zig");
 const Values = objects.Values;
 
+fn linear(round: usize, last: usize) usize {
+    return round * 2 - last;
+}
+
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
@@ -35,7 +39,7 @@ pub fn main() !void {
     var render = try engine.renderer.Renderer.init(alloc, &values);
     defer render.deinit();
 
-    var creeper = testing.gamestate.Spawner.init(&args, &gs);
+    var creeper = testing.gamestate.Spawner.init(&gs, linear);
 
     var count: usize = 0;
     while (args.runCount > count) : (count += 1) {
@@ -48,6 +52,9 @@ pub fn main() !void {
         engine.stdout.resetColor();
 
         std.debug.print("{s}  \n", .{try gs.playingString()});
+        if (gs.creeps.items.len > 0) {
+            std.debug.print("{s}\n", .{try gs.creeps.items[0].string()});
+        }
 
         if (engine.gamestate.roundPlayed(&gs)) {
             engine.gamestate.play(&gs);
@@ -56,8 +63,9 @@ pub fn main() !void {
         if (engine.gamestate.roundOver(&gs)) {
             engine.gamestate.pause(&gs);
         } else if (gs.playing) {
-            try creeper.tick(delta);
+            try creeper.tick();
             try engine.gamestate.update(&gs, delta);
+
         } else {
             const one = utils.positionInRange(&gs, Values.TEAM_ONE);
             const two = utils.positionInRange(&gs, Values.TEAM_TWO);

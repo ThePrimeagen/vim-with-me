@@ -148,6 +148,10 @@ pub fn pause(state: *GS) void {
 
     state.playing = false;
     state.round += 1;
+
+    if (state.round > state.values.removeNoBuild) {
+        state.noBuildZone = false;
+    }
 }
 
 pub fn message(state: *GS, msg: Message) !void {
