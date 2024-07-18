@@ -4,7 +4,7 @@
     "fps": 33333,
     "runCount": 50000,
     "roundTimeUS": 3000000,
-    "simulationType": "file:test.game",
+    "simulationType": "stdin",
     "realtime": true,
     "realtimeMultiplier": 5,
     "viz": true,

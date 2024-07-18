@@ -15,12 +15,11 @@ pub const Sim = union(enum) {
 
 pub fn fromParams(params: *const Params) !Sim {
     if (params.simulationType) |sim| {
-        std.debug.print("sim: {any}\n", .{sim});
         if (std.mem.startsWith(u8, sim, "rand")) {
             return .{
                 .rand = RandSim.randPlacement,
             };
-        } else if (std.mem.startsWith(u8, sim, "file:")) {
+        } else if (std.mem.startsWith(u8, sim, "file:") or std.mem.eql(u8, sim, "stdin")) {
             return .{
                 .file = try SimFile.fromParams(params),
             };
