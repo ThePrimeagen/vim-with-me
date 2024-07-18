@@ -12,7 +12,6 @@ cols: usize,
 fps: isize,
 runCount: usize = 10000,
 simCount: usize = 100,
-roundTimeUS: ?i64,
 
 seed: ?usize = 0,
 viz: ?bool = true,
@@ -73,7 +72,6 @@ pub fn values(self: *const Self) Values {
         .rows = self.rows,
         .cols = self.cols,
         .seed = self.seed orelse 42069,
-        .roundTimeUS = self.roundTimeUS orelse 3_000_000,
     };
 
     Values.init(&v);

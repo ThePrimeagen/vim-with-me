@@ -86,26 +86,12 @@ fn runSimulation(alloc: Allocator, args: *Params) !Timings {
                 const innerDelta = @min(multipliedDelta, delta);
                 try engine.gamestate.update(&gs, innerDelta);
                 try spawner.tick();
-
                 multipliedDelta -= innerDelta;
             }
         } else {
-
-            // TODO: Move tower count into end round and creeper spawn into
-            // start round
             engine.gamestate.endRound(&gs);
-
-            const cnt = engine.rounds.towerCount(&gs);
-            engine.gamestate.setTowerPlacementCount(&gs, cnt);
-
             try simulation.simulate(&sim, &gs);
-            engine.gamestate.startRound(&gs);
-
-            spawner.startRound();
-
-            // Note: Future me... remember my spawner spawns 2 creeps PER spawnCount
-            const creepCount: isize = @intCast(spawner.spawnCount);
-            engine.gamestate.setActiveCreeps(&gs, creepCount * 2);
+            engine.gamestate.startRound(&gs, &spawner);
         }
 
         if (args.viz.?) {

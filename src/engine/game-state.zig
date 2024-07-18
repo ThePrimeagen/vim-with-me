@@ -1,5 +1,6 @@
 const std = @import("std");
 
+const rounds = @import("rounds.zig");
 const objects = @import("../objects/objects.zig");
 const math = @import("../math/math.zig");
 const a = @import("../assert/assert.zig");
@@ -178,14 +179,26 @@ pub fn completed(self: *GS) bool {
         (self.oneTowerCount == 0 or self.twoTowerCount == 0);
 }
 
-pub fn startRound(state: *GS) void {
+pub fn startRound(state: *GS, spawner: *rounds.CreepSpawner) void {
     state.playing = true;
     state.playingStartUS = state.time;
+
+    spawner.startRound();
+
+    // Note: Future me... remember my spawner spawns 2 creeps PER spawnCount
+    const creepCount: isize = @intCast(spawner.spawnCount);
+    setActiveCreeps(state, creepCount * 2);
+}
+
+pub fn waitingForTowers(state: *GS) bool {
+    return state.oneAvailableTower + state.twoAvailableTower > 0;
 }
 
 pub fn endRound(state: *GS) void {
     state.playing = false;
     state.round += 1;
+
+    setTowerPlacementCount(state, rounds.towerCount(state));
 
     assert(state.activeCreepCount == 0, "there should not be any creeps when the game is paused");
 
@@ -465,6 +478,7 @@ pub fn placeProjectile(self: *GS, t: *Tower, target: objects.Target) Allocator.E
     const speed = self.values.projectile.speed;
     const speedDiff = speed - targetSpeed;
 
+    const maxTime: i64 = @intFromFloat(len * speedDiff * utils.SECOND_F);
     const projectile = objects.projectile.Projectile {
         .pos = t.pos,
         .target = target,
@@ -472,7 +486,7 @@ pub fn placeProjectile(self: *GS, t: *Tower, target: objects.Target) Allocator.E
         .damage = t.damage,
         .speed = speed,
         .createdAt = self.time,
-        .maxTimeAlive = @as(i64, @intFromFloat(len / speedDiff)) * utils.SECOND + self.values.roundTimeUS,
+        .maxTimeAlive = maxTime + self.values.fps,
     };
 
     try self.projectile.append(projectile);
