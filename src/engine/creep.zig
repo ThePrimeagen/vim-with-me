@@ -163,7 +163,7 @@ pub fn update(self: *Creep, gs: *GS) void {
     }
 
     if (self.life == 0) {
-        self.alive = false;
+        kill(self, gs);
         return;
     }
 

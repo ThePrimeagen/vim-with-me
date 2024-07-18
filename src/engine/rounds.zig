@@ -1,4 +1,5 @@
-const never = @import("../assert/assert.zig").never;
+const a = @import("../assert/assert.zig");
+const assert = a.assert;
 const std = @import("std");
 const objects = @import("../objects/objects.zig");
 const engine = @import("../engine/engine.zig");
@@ -25,38 +26,50 @@ pub fn placeRandomCreep(gs: *GS, range: math.Range, team: u8) !void {
     }, team);
 }
 
-//pub const CreepSpawner = struct {
-//    gs: *GS,
-//    lastSpawn: usize = 0,
-//    spawner: *const fn (usize, usize) usize,
-//
-//    pub fn init(gs: *GS, spawner: *const fn (usize, usize) usize) CreepSpawner {
-//        return .{
-//            .gs = gs,
-//            .spawner = spawner,
-//        };
-//    }
-//
-//    pub fn tick(self: *CreepSpawner) !void {
-//        if (self.gs.noBuildZone) {
-//            return;
-//        }
-//
-//        const count = self.spawner(self.gs.round, self.lastSpawn);
-//
-//        for (0..count) |_| {
-//            try self.placeCreep(self.gs.oneCreepRange, Values.TEAM_ONE);
-//            try self.placeCreep(self.gs.twoCreepRange, Values.TEAM_TWO);
-//        }
-//
-//        self.lastSpawn += count;
-//    }
-//
-//    pub fn placeCreep(self: *CreepSpawner, range: math.Range, team: u8) !void {
-//        const row = self.gs.values.randRange(usize, range.startRow, range.endRow);
-//        _ = try gamestate.placeCreep(self.gs, .{
-//            .col = 0,
-//            .row = row,
-//        }, team);
-//    }
-//};
+pub const CreepSpawner = struct {
+    gs: *GS,
+    spawnStartUS: i64 = 0,
+    spawnDurationUS: i64 = 10_000_000,
+    spawnCount: usize = 0,
+    spawned: usize = 0,
+
+    pub fn init(gs: *GS) CreepSpawner {
+        return .{
+            .gs = gs,
+        };
+    }
+
+    pub fn startRound(self: *CreepSpawner) void {
+        self.spawnCount = self.gs.round;
+        self.spawned = 0;
+        self.spawnStartUS = self.gs.time;
+    }
+
+    pub fn tick(self: *CreepSpawner) !void {
+        if (self.spawned == self.spawnCount) {
+            return;
+        }
+
+        const dur = self.gs.time - self.spawnStartUS;
+        const norm = engine.utils.normalize(i64, dur, self.spawnDurationUS);
+
+        const count: usize = @intFromFloat(@as(f64, @floatFromInt(self.spawnCount)) * norm + 1);
+        const diff = @min(self.spawnCount - self.spawned, count - self.spawned);
+
+        for (0..diff) |_| {
+            try self.placeCreep(self.gs.oneCreepRange, Values.TEAM_ONE);
+            try self.placeCreep(self.gs.twoCreepRange, Values.TEAM_TWO);
+            self.spawned += 1;
+        }
+
+        assert(self.spawned <= self.spawnCount, "spawned too many creeps");
+    }
+
+    pub fn placeCreep(self: *CreepSpawner, range: math.Range, team: u8) !void {
+        const row = self.gs.values.randRange(usize, range.startRow, range.endRow);
+        _ = try gamestate.placeCreep(self.gs, .{
+            .col = 0,
+            .row = row,
+        }, team);
+    }
+};

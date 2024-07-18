@@ -19,7 +19,6 @@ pub fn main() !void {
     defer gs.deinit();
 
     engine.gamestate.init(&gs);
-    engine.gamestate.endRound(&gs);
 
     const gsDump = gs.dumper();
     assert.addDump(&gsDump);
@@ -35,6 +34,8 @@ pub fn main() !void {
     var render = try engine.renderer.Renderer.init(alloc, &values);
     defer render.deinit();
 
+    var spawner = engine.rounds.CreepSpawner.init(&gs);
+
     var count: usize = 0;
     while (args.runCount > count) : (count += 1) {
         var delta = args.fps;
@@ -45,7 +46,7 @@ pub fn main() !void {
 
         engine.stdout.resetColor();
         if (engine.gamestate.hasActiveCreeps(&gs)) {
-            //try creeper.tick();
+            try spawner.tick();
             try engine.gamestate.update(&gs, delta);
         } else {
             engine.gamestate.endRound(&gs);
@@ -61,6 +62,11 @@ pub fn main() !void {
             }
 
             engine.gamestate.startRound(&gs);
+            spawner.startRound();
+
+            // Note: Future me... remember my spawner spawns 2 creeps PER spawnCount
+            const creepCount: isize = @intCast(spawner.spawnCount);
+            engine.gamestate.setActiveCreeps(&gs, creepCount * 2);
         }
 
         if (args.viz.?) {

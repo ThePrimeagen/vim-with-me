@@ -11,17 +11,11 @@ pub fn humanTime(timeUS: isize) ![]u8 {
     return std.fmt.bufPrint(scratchBuf(50), "{}m {}s", .{minutes, seconds});
 }
 
-pub fn compare(expected: []const u8, value: []const u8) bool {
-    if (expected.len != value.len) {
-        return false;
-    }
+pub fn normalize(comptime t: type, current: t, total: t) f64 {
+    const cF: f64 = @floatFromInt(current);
+    const tF: f64 = @floatFromInt(total);
 
-    for (expected, 0..) |c, i| {
-        if (c != value[i]) {
-            return false;
-        }
-    }
-    return true;
+    return cF / tF;
 }
 
 test "displayTime" {

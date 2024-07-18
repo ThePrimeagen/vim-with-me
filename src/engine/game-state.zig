@@ -130,6 +130,9 @@ pub fn init(self: *GS) void {
 
     self.noBuildRange.startRow = self.oneCreepRange.endRow;
     self.noBuildRange.endRow = self.twoCreepRange.startRow;
+
+    self.playing = false;
+    self.round = 0;
 }
 
 pub fn towerDied(self: *GS, t: *Tower) void {
@@ -171,7 +174,7 @@ pub fn strike(self: *GS, p: *Projectile) void {
 }
 
 pub fn completed(self: *GS) bool {
-    return !self.noBuildZone and
+    return self.round > 1 and
         (self.oneTowerCount == 0 or self.twoTowerCount == 0);
 }
 
@@ -204,6 +207,10 @@ pub fn endRound(state: *GS) void {
 pub fn setTowerPlacementCount(state: *GS, count: usize) void {
     state.oneAvailableTower = @intCast(count);
     state.twoAvailableTower = @intCast(count);
+}
+
+pub fn setActiveCreeps(state: *GS, count: isize) void {
+    state.activeCreepCount = count;
 }
 
 pub fn hasActiveCreeps(state: *GS) bool {
