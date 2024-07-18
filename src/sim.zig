@@ -5,9 +5,12 @@ const objects = @import("objects/objects.zig");
 const engine = @import("engine/engine.zig");
 const assert = @import("assert/assert.zig");
 const math = @import("math/math.zig");
+const rand = @import("sim/rand.zig");
 const scratchBuf = @import("scratch/scratch.zig").scratchBuf;
-const Values = objects.Values;
+const simulation = @import("sim/sim.zig");
 
+const never = assert.never;
+const Values = objects.Values;
 const Allocator = std.mem.Allocator;
 
 pub fn main() !void {
@@ -40,7 +43,10 @@ const Timings = struct {
 fn runSimulation(alloc: Allocator, args: *Params) !Timings {
     var values = args.values();
     var gs = try objects.gamestate.GameState.init(alloc, &values);
+    var sim = try simulation.fromParams(args);
+
     defer gs.deinit();
+    defer args.deinit(alloc);
 
     engine.gamestate.init(&gs);
 
@@ -77,19 +83,17 @@ fn runSimulation(alloc: Allocator, args: *Params) !Timings {
             try spawner.tick();
             try engine.gamestate.update(&gs, delta);
         } else {
+
+            // TODO: Move tower count into end round and creeper spawn into
+            // start round
             engine.gamestate.endRound(&gs);
 
             const cnt = engine.rounds.towerCount(&gs);
             engine.gamestate.setTowerPlacementCount(&gs, cnt);
 
-            for (0..cnt) |_| {
-                const one = utils.positionInRange(&gs, Values.TEAM_ONE);
-                const two = utils.positionInRange(&gs, Values.TEAM_TWO);
-                try engine.gamestate.message(&gs, .{ .coord = .{ .pos = one, .team = Values.TEAM_ONE, }, });
-                try engine.gamestate.message(&gs, .{ .coord = .{ .pos = two, .team = Values.TEAM_TWO, }, });
-            }
-
+            try simulation.simulate(&sim, &gs);
             engine.gamestate.startRound(&gs);
+
             spawner.startRound();
 
             // Note: Future me... remember my spawner spawns 2 creeps PER spawnCount
