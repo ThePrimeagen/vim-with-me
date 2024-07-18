@@ -5,7 +5,10 @@ const objects = @import("objects/objects.zig");
 const engine = @import("engine/engine.zig");
 const assert = @import("assert/assert.zig");
 const math = @import("math/math.zig");
+const scratchBuf = @import("scratch/scratch.zig").scratchBuf;
 const Values = objects.Values;
+
+const Allocator = std.mem.Allocator;
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -13,8 +16,26 @@ pub fn main() !void {
 
     const alloc = gpa.allocator();
     var args = try Params.readFromArgs(alloc);
-    var values = args.values();
 
+    for (0..args.simCount) |_| {
+        args.seed.? += 1;
+
+        const timings = try runSimulation(alloc, &args);
+        std.debug.print("sim({}) = {s}\n", .{args.seed.?, try timings.string()});
+    }
+}
+
+const Timings = struct {
+    rounds: usize,
+    time: i64,
+
+    pub fn string(self: Timings) ![]u8 {
+        return std.fmt.bufPrint(scratchBuf(150), "round = {}, = time = {s}", .{self.rounds, try engine.utils.humanTime(self.time)});
+    }
+};
+
+fn runSimulation(alloc: Allocator, args: *Params) !Timings {
+    var values = args.values();
     var gs = try objects.gamestate.GameState.init(alloc, &values);
     defer gs.deinit();
 
@@ -22,6 +43,7 @@ pub fn main() !void {
 
     const gsDump = gs.dumper();
     assert.addDump(&gsDump);
+    defer assert.removeDump(&gsDump);
 
     const out = engine.stdout.output;
 
@@ -77,10 +99,16 @@ pub fn main() !void {
         engine.gamestate.validateState(&gs);
 
         if (engine.gamestate.completed(&gs)) {
-            try render.completed(&gs);
-            try out(render.output);
+            if (args.viz.?) {
+                try render.completed(&gs);
+                try out(render.output);
+            }
             break;
         }
     }
 
+    return .{
+        .time = gs.time,
+        .rounds = gs.round,
+    };
 }

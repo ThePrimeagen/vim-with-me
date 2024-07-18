@@ -5,6 +5,6 @@
     "runCount": 50000,
     "roundTimeUS": 3000000,
     "realtime": false,
-    "viz": true,
+    "viz": false,
     "seed": 1234
 }
