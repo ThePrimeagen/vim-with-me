@@ -119,6 +119,14 @@ func (c *ChatAggregator) Reset() Occurrence {
 	return *max
 }
 
+func (c *ChatAggregator) ResetWithAll() []*Occurrence {
+	all := c.occurrences
+	c.max = &defaultMax
+	c.occurrences = make([]*Occurrence, 0)
+
+	return all
+}
+
 func (c *ChatAggregator) Peak() []Occurrence {
     slices.SortFunc(c.occurrences, func(a, b *Occurrence) int {
         return b.Count - a.Count;

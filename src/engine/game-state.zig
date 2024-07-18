@@ -253,12 +253,25 @@ pub fn message(state: *GS, msg: Message) (Allocator.Error || std.fmt.BufPrintErr
                     towers.upgrade(&state.towers.items[idx]);
                     return;
                 }
-                a.never("haven't programmed this yet");
+
+                if (utils.aabbInValidRange(state, aabb, c.team)) {
+                    a.never("i haven't programmed this");
+                }
+
+                // this is fine because it means that we are going to randomly
+                // place the tower for you because you are incapable either
+                // chatGPT or twitch chat
             }
 
             if (try placeTower(state, aabb, c.team) == null)  {
-                std.debug.print("could not place tower: {s} {s}\n", .{try aabb.string(), try c.string()});
-                a.never("haven't programmed this yet also");
+                while (true) {
+                    // TODO: probably should consider upgrades and tower
+                    // destructive placements...
+                    const pos = utils.positionInRange(state, c.team);
+                    if (try placeTower(state, objects.tower.TOWER_AABB.move(pos.vec2()), c.team) != null)  {
+                        break;
+                    }
+                }
             }
 
         },
@@ -479,6 +492,7 @@ pub fn placeProjectile(self: *GS, t: *Tower, target: objects.Target) Allocator.E
     const speedDiff = speed - targetSpeed;
 
     const maxTime: i64 = @intFromFloat(len * speedDiff * utils.SECOND_F);
+
     const projectile = objects.projectile.Projectile {
         .pos = t.pos,
         .target = target,

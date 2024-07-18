@@ -106,6 +106,12 @@ pub const Range = struct {
     pub fn contains(self: Range, pos: Position) bool {
         return self.startRow <= pos.row and self.endRow > pos.row;
     }
+
+    pub fn containsAABB(self: Range, aabb: AABB) bool {
+        const mY: usize = @intFromFloat(aabb.min.y);
+        const xY: usize = @intFromFloat(aabb.max.y);
+        return self.startRow <= mY and self.endRow >= xY;
+    }
 };
 
 pub const Sized = struct {
@@ -162,6 +168,10 @@ pub const AABB = struct {
     pub fn contains(self: AABB, pos: Vec2) bool {
         return pos.x >= self.min.x and pos.x < self.max.x and
             pos.y >= self.min.y and pos.y < self.max.y;
+    }
+
+    pub fn containsAABB(self: AABB, other: AABB) bool {
+        return self.contains(other.min) and self.contains(other.max);
     }
 
     pub fn overlaps(self: AABB, other: AABB) bool {

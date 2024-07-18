@@ -19,7 +19,7 @@ pub fn main() !void {
     values.cols = 80;
     values.seed = 42069;
     values.fps = 33_333;
-    values.fps = 33_333;
+    values.realtimeMultiplier = 3;
     values.init();
 
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};

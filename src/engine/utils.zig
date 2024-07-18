@@ -1,5 +1,14 @@
+// TODO(probably not): Test this file
+
 const std = @import("std");
 const scratchBuf = @import("../scratch/scratch.zig").scratchBuf;
+const objects = @import("../objects/objects.zig");
+const a = @import("../assert/assert.zig");
+const math = @import("../math/math.zig");
+
+const never = a.never;
+const GameState = objects.gamestate.GameState;
+const Values = objects.Values;
 
 pub const MILLI: isize = 1000;
 pub const SECOND: isize = 1000 * 1000;
@@ -22,6 +31,32 @@ pub fn normalize(comptime t: type, current: t, total: t) f64 {
 
 pub fn scale(current: f64, total: f64, s: f64) f64 {
     return (current / total) * s;
+}
+
+pub fn getRangeByTeam(gs: *GameState, team: u8) math.Range {
+    return switch (team) {
+        Values.TEAM_ONE => gs.oneCreepRange,
+        Values.TEAM_TWO => gs.twoCreepRange,
+        else => {
+            never("invalid team id");
+            unreachable;
+        }
+    };
+}
+
+pub fn positionInRange(gs: *GameState, team: u8) math.Position {
+    const range = getRangeByTeam(gs, team);
+    const row = gs.values.randRange(usize, range.startRow, range.endRow);
+    const col = gs.values.randRange(usize, 2, gs.values.cols - objects.tower.TowerSize);
+
+    return .{
+        .row = row,
+        .col = col,
+    };
+}
+
+pub fn aabbInValidRange(gs: *GameState, aabb: math.AABB, team: u8) bool {
+    return getRangeByTeam(gs, team).containsAABB(aabb);
 }
 
 test "displayTime" {
