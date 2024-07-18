@@ -12,8 +12,8 @@ pub fn randPlacement(gs: *GS) (std.mem.Allocator.Error || std.fmt.BufPrintError)
 
     const cnt: usize = @intCast(@divFloor(engine.gamestate.getTotalTowerPlacement(gs), 2));
     for (0..cnt) |_| {
-        const one = utils.positionInRange(gs, TEAM_ONE);
-        const two = utils.positionInRange(gs, TEAM_TWO);
+        const one = engine.utils.positionInRange(gs, TEAM_ONE);
+        const two = engine.utils.positionInRange(gs, TEAM_TWO);
         try engine.gamestate.message(gs, .{ .coord = .{ .pos = one, .team = TEAM_ONE, }, });
         try engine.gamestate.message(gs, .{ .coord = .{ .pos = two, .team = TEAM_TWO, }, });
     }

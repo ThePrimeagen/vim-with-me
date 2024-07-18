@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/theprimeagen/vim-with-me/examples/v2/td"
@@ -17,24 +18,43 @@ func main() {
 
 	ctx := context.Background()
 
-	//doom create controller
 	twitchChat, err := chat.NewTwitchChat(ctx)
 	assert.NoError(err, "twitch cannot initialize")
 	chtAgg := chat.
 		NewChatAggregator().
-		WithFilter(td.TDFilter(10, 10)).
-		WithAfterMap(td.TDAfterMap)
+		WithFilter(td.TDFilter(24, 80));
 
 	go chtAgg.Pipe(twitchChat)
 
-    interval := time.NewTicker(time.Second * 3)
+    interval := time.NewTicker(time.Second * 15)
 
-    team := 0;
+    // STOP GAP
     for range interval.C {
-        out := chtAgg.Reset()
-        if len(out.Msg) > 0 {
-            fmt.Printf("%d%s\n", team % 2, out.Msg)
-            team++;
+        occurrences := chtAgg.ResetWithAll()
+        slices.SortFunc(occurrences, func(a, b *chat.Occurrence) int {
+            return b.Count - a.Count
+        });
+
+        one := false
+        two := false
+        for _, v := range occurrences {
+            coord, err := td.FromString(v.Msg)
+            if err != nil {
+                continue
+            }
+
+            if !one && coord.Team == 1 {
+                fmt.Printf("%s\n", coord.String())
+                one = true
+            }
+            if !two && coord.Team == 2 {
+                fmt.Printf("%s\n", coord.String())
+                two = true
+            }
+
+            if one && two {
+                break
+            }
         }
     }
 }

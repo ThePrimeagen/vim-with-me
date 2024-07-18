@@ -54,6 +54,14 @@ pub fn init(v: *Self) void {
     v._rand = RndGen.init(@intCast(v.seed));
 }
 
+pub fn logHeader(v: *Self) void {
+    assert(v.rows > 0, "must set rows");
+    assert(v.cols > 0, "must set cols");
+
+    //const rows = scratchBuf(50)
+    //std.io.getStdOut().write("rows = {}
+}
+
 pub fn copyInto(v: *const Self, other: *Self) void {
     other.rows = v.rows;
     other.cols = v.cols;

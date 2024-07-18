@@ -20,21 +20,3 @@ pub fn values() *const Values {
     return &testValues;
 }
 
-pub fn positionInRange(gs: *GS, team: u8) math.Position {
-    const range = switch (team) {
-        Values.TEAM_ONE => gs.oneCreepRange,
-        Values.TEAM_TWO => gs.twoCreepRange,
-        else => {
-            never("invalid team id");
-            unreachable;
-        }
-    };
-
-    const row = gs.values.randRange(usize, range.startRow, range.endRow);
-    const col = gs.values.randRange(usize, 2, gs.values.cols - objects.tower.TowerSize);
-
-    return .{
-        .row = row,
-        .col = col,
-    };
-}
