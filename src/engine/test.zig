@@ -23,6 +23,9 @@ test "find nearest creep" {
     gamestate.init(&gs);
     gs.noBuildZone = false;
     gs.playing = true;
+    gs.oneNoBuildTowerRange.endRow = 4;
+    gs.oneCreepRange.startRow = 0;
+    gs.oneCreepRange.endRow = 4;
 
     var gsDump = gs.dumper();
     a.addDump(&gsDump);
@@ -69,6 +72,9 @@ test "creep distance" {
     defer gs.deinit();
     gamestate.init(&gs);
     gs.noBuildZone = false;
+    gs.oneNoBuildTowerRange.endRow = 4;
+    gs.oneCreepRange.startRow = 0;
+    gs.oneCreepRange.endRow = 4;
 
     var gsDump = gs.dumper();
     a.addDump(&gsDump);

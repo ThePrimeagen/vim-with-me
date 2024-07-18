@@ -5,7 +5,6 @@ const RndGen = std.rand.DefaultPrng;
 
 pub const TEAM_ONE = '1';
 pub const TEAM_TWO = '2';
-pub const ROUND_TIME = 3_000_000;
 
 pub const TowerValues = struct {
     ammo: usize = 55,
@@ -31,13 +30,13 @@ pub const ProjectorValues = struct {
 rows: usize = 0,
 cols: usize = 0,
 size: usize = 0,
-roundTimeUS: i64 = ROUND_TIME,
+fps: i64 = 33_000,
+realtimeMultiplier: f64 = 1,
 debug: bool = false,
 tower: TowerValues = .{},
 creep: CreepValues = .{},
 projectile: ProjectorValues = .{},
 seed: usize = 69420,
-removeNoBuild: usize = 3,
 
 _rand: ?RndGen = null,
 

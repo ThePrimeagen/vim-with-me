@@ -1,6 +1,7 @@
 const assert = @import("../assert/assert.zig").assert;
 const std = @import("std");
 const objects = @import("../objects/objects.zig");
+const engine = @import("../engine/engine.zig");
 const scratchBuf = @import("../scratch/scratch.zig").scratchBuf;
 const utils = @import("utils.zig");
 
@@ -91,6 +92,7 @@ pub const Renderer = struct {
         self.count += 1;
     }
 
+    // WAP
     pub fn gameStateText(self: *Renderer, gs: *GameState) !void {
         const roundBuf = try std.fmt.bufPrint(scratchBuf(50), "round: {}", .{gs.round});
         var row: usize = 0;
@@ -106,6 +108,47 @@ pub const Renderer = struct {
             .row = row,
             .col = self.textOffset,
         }, elapsed, .{.r = 255, .g = 255, .b = 255});
+
+        if (engine.gamestate.waitingForTowers(gs)) {
+            const towersRemaining = try std.fmt.bufPrint(scratchBuf(50), "mode: Tower Selecting", .{});
+            self.canvas.writeText(.{
+                .row = row,
+                .col = self.textOffset,
+            }, towersRemaining, .{.r = 255, .g = 255, .b = 255});
+            row += 1;
+
+            const oneRemaining = try std.fmt.bufPrint(scratchBuf(50), "one: {}", .{gs.oneAvailableTower});
+            self.canvas.writeText(.{
+                .row = row,
+                .col = self.textOffset,
+            }, oneRemaining, .{.r = 255, .g = 255, .b = 255});
+            row += 1;
+
+            const twoRemaining = try std.fmt.bufPrint(scratchBuf(50), "two: {}", .{gs.twoAvailableTower});
+            self.canvas.writeText(.{
+                .row = row,
+                .col = self.textOffset,
+            }, twoRemaining, .{.r = 255, .g = 255, .b = 255});
+            row += 1;
+
+        } else {
+            const playing = try std.fmt.bufPrint(scratchBuf(50), "mode: Playing", .{});
+            self.canvas.writeText(.{
+                .row = row,
+                .col = self.textOffset,
+            }, playing, .{.r = 255, .g = 255, .b = 255});
+            row += 1;
+            self.canvas.writeText(.{
+                .row = row,
+                .col = self.textOffset,
+            }, "", .{.r = 255, .g = 255, .b = 255});
+            row += 1;
+            self.canvas.writeText(.{
+                .row = row,
+                .col = self.textOffset,
+            }, "", .{.r = 255, .g = 255, .b = 255});
+            row += 1;
+        }
     }
 
     pub fn completed(self: *Renderer, gs: *GameState) !void {

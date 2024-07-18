@@ -5,7 +5,6 @@ const print = std.debug.print;
 const objects = @import("objects/objects.zig");
 const math = @import("math/math.zig");
 
-//const engine = @import("engine/engine.zig");
 const engine = @import("engine/engine.zig");
 
 const GameState = objects.gamestate.GameState;
@@ -16,8 +15,11 @@ const NextRound = engine.input.NextRound;
 
 pub fn main() !void {
     var values = objects.Values{};
-    values.rows = 30;
+    values.rows = 24;
     values.cols = 80;
+    values.seed = 42069;
+    values.fps = 33_333;
+    values.fps = 33_333;
     values.init();
 
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -40,17 +42,16 @@ pub fn main() !void {
 
     const out = engine.stdout.output;
 
-    var fps = engine.time.FPS.init(166_666);
+    var fps = engine.time.FPS.init(values.fps);
     _ = fps.delta();
 
-    _ = try engine.gamestate.placeCreep(&gs, .{
-        .row = 0,
-        .col = 0,
-    }, 0);
+    // TODO: Figure out something better with the creep spawner... this sucks
+    var spawner = engine.rounds.CreepSpawner.init(&gs);
 
-    while (true) {
+    while (!engine.gamestate.completed(&gs)) {
         fps.sleep();
         const delta = fps.delta();
+        var multipliedDelta: isize = @intFromFloat(@as(f64, @floatFromInt(delta)) * values.realtimeMultiplier);
 
         const msgInput = inputter.pop();
         if (msgInput) |msg| {
@@ -59,11 +60,27 @@ pub fn main() !void {
             }
         }
 
-        try engine.gamestate.update(&gs, delta);
+        if (engine.gamestate.hasActiveCreeps(&gs)) {
+            while (multipliedDelta > 0) {
+                const innerDelta = @min(multipliedDelta, delta);
+                try engine.gamestate.update(&gs, innerDelta);
+                try spawner.tick();
+                multipliedDelta -= innerDelta;
+            }
+        } else if (gs.playing) {
+            engine.gamestate.endRound(&gs);
+        } else if (!engine.gamestate.waitingForTowers(&gs)) {
+            engine.gamestate.startRound(&gs, &spawner);
+        }
+
         try render.render(&gs);
         try out(render.output);
+
+        engine.gamestate.validateState(&gs);
     }
 
+    try render.completed(&gs);
+    try out(render.output);
 }
 
 test { _ = objects; }
