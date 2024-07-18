@@ -17,6 +17,7 @@ roundTimeUS: ?i64,
 seed: ?usize = 0,
 viz: ?bool = true,
 realtime: ?bool = false,
+simulationType: ?[]u8 = null,
 
 const Self = @This();
 pub fn readFromArgs(alloc: Allocator) !Self {
@@ -37,7 +38,19 @@ pub fn readFromArgs(alloc: Allocator) !Self {
         }
     }
 
+    if (self.value.simulationType) |sim| {
+        const str = try alloc.alloc(u8, sim.len);
+        @memcpy(str, sim);
+        self.value.simulationType = str;
+    }
+
     return self.value;
+}
+
+pub fn deinit(self: *Self, alloc: Allocator) void {
+    if (self.simulationType) |s| {
+        alloc.free(s);
+    }
 }
 
 fn readConfig(allocator: Allocator, path: []const u8) !std.json.Parsed(Self) {

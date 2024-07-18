@@ -4,7 +4,8 @@
     "fps": 33333,
     "runCount": 50000,
     "roundTimeUS": 3000000,
-    "realtime": false,
-    "viz": false,
+    "simulationType": "file:test.game",
+    "realtime": true,
+    "viz": true,
     "seed": 1234
 }

@@ -209,6 +209,10 @@ pub fn setTowerPlacementCount(state: *GS, count: usize) void {
     state.twoAvailableTower = @intCast(count);
 }
 
+pub fn getTotalTowerPlacement(state: *GS) isize {
+    return state.oneAvailableTower + state.twoAvailableTower;
+}
+
 pub fn setActiveCreeps(state: *GS, count: isize) void {
     state.activeCreepCount = count;
 }
@@ -217,7 +221,7 @@ pub fn hasActiveCreeps(state: *GS) bool {
     return state.activeCreepCount > 0;
 }
 
-pub fn message(state: *GS, msg: Message) !void {
+pub fn message(state: *GS, msg: Message) (Allocator.Error || std.fmt.BufPrintError)!void {
     switch (msg) {
         .coord => |c| {
 
@@ -407,7 +411,7 @@ fn canPlaceTower(self: *GS, aabb: math.AABB, team: u8) bool {
     return true;
 }
 
-pub fn placeTower(self: *GS, aabb: math.AABB, team: u8) !?usize {
+pub fn placeTower(self: *GS, aabb: math.AABB, team: u8) Allocator.Error!?usize {
     Values.assertTeam(team);
 
     const pos = aabb.min;
