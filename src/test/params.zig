@@ -31,7 +31,6 @@ pub fn readFromArgs(alloc: Allocator) !Self {
 
     // TODO: This could be a lot smarter....
     while (args.next()) |k| {
-        std.debug.print("arg: {s}\n", .{k});
         if (std.mem.eql(u8, "--seed", k)) {
             const v = try std.fmt.parseInt(usize, args.next().?, 10);
             self.value.seed = v;

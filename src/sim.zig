@@ -17,20 +17,15 @@ pub fn main() !void {
     const alloc = gpa.allocator();
     var args = try Params.readFromArgs(alloc);
 
-    const start = std.time.microTimestamp();
     var inGameTime: i64 = 0;
     for (0..args.simCount) |_| {
         args.seed.? += 1;
 
         const timings = try runSimulation(alloc, &args);
-        std.debug.print("sim({}) = {s}\n", .{args.seed.?, try timings.string()});
+        std.debug.print("{}\n", .{timings.rounds});
 
         inGameTime += timings.time;
     }
-    std.debug.print("sim total time = {s} in game = {s}\n", .{
-        try engine.utils.humanTime(std.time.microTimestamp() - start),
-        try engine.utils.humanTime(inGameTime),
-    });
 }
 
 const Timings = struct {
@@ -74,7 +69,10 @@ fn runSimulation(alloc: Allocator, args: *Params) !Timings {
             delta = f.delta();
         }
 
-        engine.stdout.resetColor();
+        if (args.viz.?) {
+            engine.stdout.resetColor();
+        }
+
         if (engine.gamestate.hasActiveCreeps(&gs)) {
             try spawner.tick();
             try engine.gamestate.update(&gs, delta);

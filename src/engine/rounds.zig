@@ -15,7 +15,7 @@ pub fn towerCount(gs: *GS) usize {
 
 pub fn creepCount(values: *const Values, round: usize) usize {
     _ = values;
-    return 1 + @divFloor(round, 2);
+    return 1 + @divFloor(round, 3);
 }
 
 pub fn placeRandomCreep(gs: *GS, range: math.Range, team: u8) !void {
