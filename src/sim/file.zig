@@ -47,6 +47,11 @@ pub fn fromParams(params: *const Params) !Self {
     assert(params.simulationType != null, "simulationType cannot be null");
 
     const st = params.simulationType.?;
+    if (std.mem.eql(u8, st, "stdin")) {
+        return .{
+            .fh = std.io.getStdIn(),
+        };
+    }
     assert(std.mem.startsWith(u8, st, "file:"), "expected simulationType to have \"file:\" beginning");
 
     const path = st[5..];
