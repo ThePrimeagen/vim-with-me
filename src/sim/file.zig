@@ -20,17 +20,13 @@ pub fn next(self: *Self, gs: *GS) !void {
     var count: usize = 0;
     const total: usize = @intCast(engine.gamestate.getTotalTowerPlacement(gs));
 
-    std.debug.print("trying to read {} lines\n", .{total});
-
-    for (0..total) |idx| {
+    for (0..total) |_| {
         const lineMaybe = try in_stream.readUntilDelimiterOrEof(&buf, '\n');
         if (lineMaybe == null) {
-            std.debug.print("line is null\n", .{});
             break;
         }
         const line = lineMaybe.?;
         count += 1;
-        std.debug.print("in({}): {s}\n", .{idx, line});
         const msg = Message.init(line);
         if (msg) |m| {
             try engine.gamestate.message(gs, m);

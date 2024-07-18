@@ -6,6 +6,7 @@
     "roundTimeUS": 3000000,
     "simulationType": "file:test.game",
     "realtime": true,
+    "realtimeMultiplier": 5,
     "viz": true,
     "seed": 1234
 }

@@ -17,6 +17,7 @@ roundTimeUS: ?i64,
 seed: ?usize = 0,
 viz: ?bool = true,
 realtime: ?bool = false,
+realtimeMultiplier: f64 = 1,
 simulationType: ?[]u8 = null,
 
 const Self = @This();

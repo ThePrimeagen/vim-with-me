@@ -70,9 +70,11 @@ fn runSimulation(alloc: Allocator, args: *Params) !Timings {
     var count: usize = 0;
     while (args.runCount > count) : (count += 1) {
         var delta = args.fps;
+        var multipliedDelta = delta;
         if (fps) |*f| {
             f.sleep();
             delta = f.delta();
+            multipliedDelta = @intFromFloat(@as(f64, @floatFromInt(delta)) * args.realtimeMultiplier);
         }
 
         if (args.viz.?) {
@@ -80,8 +82,13 @@ fn runSimulation(alloc: Allocator, args: *Params) !Timings {
         }
 
         if (engine.gamestate.hasActiveCreeps(&gs)) {
-            try spawner.tick();
-            try engine.gamestate.update(&gs, delta);
+            while (multipliedDelta > 0) {
+                const innerDelta = @min(multipliedDelta, delta);
+                try engine.gamestate.update(&gs, innerDelta);
+                try spawner.tick();
+
+                multipliedDelta -= innerDelta;
+            }
         } else {
 
             // TODO: Move tower count into end round and creeper spawn into
