@@ -19,6 +19,7 @@ pub fn main() !void {
 
     const alloc = gpa.allocator();
     var args = try Params.readFromArgs(alloc);
+    defer args.deinit(alloc);
 
     var inGameTime: i64 = 0;
     for (0..args.simCount) |_| {
@@ -46,7 +47,6 @@ fn runSimulation(alloc: Allocator, args: *Params) !Timings {
     var sim = try simulation.fromParams(args);
 
     defer gs.deinit();
-    defer args.deinit(alloc);
 
     engine.gamestate.init(&gs);
 

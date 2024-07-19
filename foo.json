@@ -3,8 +3,9 @@
     "cols": 80,
     "fps": 33333,
     "runCount": 50000,
-    "simulationType": "stdin",
-    "realtime": true,
+    "simCount": 1,
+    "simulationType": "rand",
+    "realtime": false,
     "realtimeMultiplier": 5,
     "viz": true,
     "seed": 1234
