@@ -16,3 +16,32 @@ pub fn resetColor() void {
     };
 }
 
+
+pub fn hideCursor() void {
+    _ = std.io.getStdOut().write("\x1b[?25l") catch |e| {
+        std.debug.print("error while clearing stdout: {}\n", .{e});
+    };
+}
+
+pub fn showCursor() void {
+    _ = std.io.getStdOut().write("\x1b[?25h") catch |e| {
+        std.debug.print("error while clearing stdout: {}\n", .{e});
+    };
+}
+
+const os = std.posix;
+pub fn showCursorOnSigInt() !void {
+    const internal_handler = struct {
+        fn internal_handler(sig: c_int) callconv(.C) void {
+            _ = sig;
+            showCursor();
+            std.process.exit(0);
+        }
+    }.internal_handler;
+    const act = os.Sigaction{
+        .handler = .{ .handler = internal_handler },
+        .mask = os.empty_sigset,
+        .flags = 0,
+    };
+    try os.sigaction(os.SIG.INT, &act, null);
+}

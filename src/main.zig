@@ -14,6 +14,9 @@ const Coord = engine.input.Coord;
 const NextRound = engine.input.NextRound;
 
 pub fn main() !void {
+    engine.stdout.hideCursor();
+    try engine.stdout.showCursorOnSigInt();
+
     var values = objects.Values{};
     values.rows = 24;
     values.cols = 80;
@@ -81,6 +84,7 @@ pub fn main() !void {
 
     try render.completed(&gs);
     try out(render.output);
+    engine.stdout.showCursor();
 }
 
 test { _ = objects; }

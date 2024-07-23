@@ -19,7 +19,7 @@ const Allocator = std.mem.Allocator;
 const GameState = gamestate.GameState;
 const TEXT_AREA_COLS = 30;
 const GRID_AREA_COLS = 2;
-const GRID_AREA_ROWS = 1;
+const GRID_AREA_ROWS = 2; //  top rows and bottom rows
 const PLAYER_ONE = "Player One";
 const PLAYER_TWO = "Player Two";
 const scratchBuf = scratch.scratchBuf;
@@ -116,8 +116,13 @@ pub const Renderer = struct {
 
         const columns = @divFloor(gs.values.cols, 5);
         var offset: math.Position = .{.row = 0, .col = 0};
+
         for (0..columns) |idx| {
+            offset.row = 0;
             offset.col = self.gridOffsetX + idx * 5;
+            self.canvas.writeText(offset, try toNumber(idx * 5), colors.White);
+
+            offset.row = self.rendererValues.rows - 1;
             self.canvas.writeText(offset, try toNumber(idx * 5), colors.White);
         }
 
