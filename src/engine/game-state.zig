@@ -59,7 +59,7 @@ pub fn update(state: *GS, delta: i64) !void {
     if (state.boardChanged > changed) {
         updateBoard(state);
         for (state.creeps.items) |*c| {
-            creeps.calculatePath(c, state.board);
+            try creeps.calculatePath(c, state.board);
         }
     }
 
@@ -380,7 +380,7 @@ pub fn placeCreep(self: *GS, pos: math.Position, team: u8) !usize {
     errdefer c.deinit();
     try self.creeps.append(c);
 
-    creeps.calculatePath(&self.creeps.items[id], self.board);
+    try creeps.calculatePath(&self.creeps.items[id], self.board);
     creeps.scale(&self.creeps.items[id], self.round);
 
     return id;
@@ -464,7 +464,7 @@ pub fn placeTower(self: *GS, aabb: math.AABB, team: u8) Allocator.Error!?usize {
     updateBoard(self);
 
     for (self.creeps.items) |*c| {
-        creeps.calculatePath(c, self.board);
+        try creeps.calculatePath(c, self.board);
     }
 
     return id;
