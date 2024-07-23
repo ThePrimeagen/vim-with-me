@@ -6,7 +6,7 @@
     "simCount": 1,
     "simulationType": "rand",
     "realtime": false,
-    "realtimeMultiplier": 5,
+    "realtimeMultiplier": 8,
     "viz": true,
     "seed": 1234
 }

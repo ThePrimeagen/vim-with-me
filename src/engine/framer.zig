@@ -14,7 +14,8 @@ const clear: [4]u8 = .{'', '[', '2', 'J'};
 const newFrame: [4]u8 = .{ '', '[', ';', 'H', };
 const initialClear: [14]u8 = topLeftFull ++ clear ++ newFrame;
 const foregroundColor: [7]u8 = .{ '', '[', '3', '8', ';', '2', ';', };
-const backgroundColor: [7]u8 = .{ '', '[', '4', '8', ';', '5', ';', };
+const backgroundColor: [7]u8 = .{ '', '[', '4', '8', ';', '2', ';', };
+const backgroundClear: [5]u8 = .{ '', '[', '4', '9', 'm' };
 const newline: [2]u8 = .{ '\r', '\n', };
 
 fn writeAnsiColor(color: Color, ansiColor: []const u8, out: []u8, o: usize) !usize {
@@ -75,6 +76,10 @@ fn ansiCodeLength(buffer: []const u8) usize {
     return 0;
 }
 
+fn ansiBackgroundClear(buffer: []u8, offset: usize) !usize {
+    return write(buffer, offset, &backgroundClear);
+}
+
 pub const AnsiFramer = struct {
     firstPrint: bool,
     previous: Cell = undefined,
@@ -107,6 +112,8 @@ pub const AnsiFramer = struct {
                 offset = try writeAnsiColor(c.color, &foregroundColor, out, offset);
                 if (c.background) |b| {
                     offset = try writeAnsiColor(b, &backgroundColor, out, offset);
+                } else {
+                    offset = try ansiBackgroundClear(out, offset);
                 }
             }
 

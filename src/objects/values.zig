@@ -24,7 +24,7 @@ pub const CreepValues = struct {
 };
 
 pub const ProjectorValues = struct {
-    speed: f64 = 4,
+    speed: f64 = 15,
 };
 
 rows: usize = 0,
