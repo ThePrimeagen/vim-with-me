@@ -12,6 +12,7 @@ pub const time = @import("time.zig");
 pub const tests = @import("test.zig");
 pub const utils = @import("utils.zig");
 pub const rounds = @import("rounds.zig");
+pub const reportState = @import("report-state.zig");
 
 test { _ = rounds; }
 test { _ = tower; }

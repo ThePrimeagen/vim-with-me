@@ -122,15 +122,17 @@ pub fn init(self: *GS) void {
 
     const rows = self.values.rows;
 
-    self.oneCreepRange.endRow = objects.tower.TOWER_ROW_COUNT;
+    self.oneCreepRange.endRow = objects.tower.TOWER_ROW_COUNT + 1;
     self.oneNoBuildTowerRange = self.oneCreepRange;
 
-    self.twoCreepRange.startRow = rows - objects.tower.TOWER_ROW_COUNT;
+    self.twoCreepRange.startRow = rows - objects.tower.TOWER_ROW_COUNT - 1;
     self.twoCreepRange.endRow = rows;
     self.twoNoBuildTowerRange = self.twoCreepRange;
 
     self.noBuildRange.startRow = self.oneCreepRange.endRow;
     self.noBuildRange.endRow = self.twoCreepRange.startRow;
+
+    setTowerPlacementCount(self, rounds.towerCount(self));
 
     self.playing = false;
     self.round = 0;
@@ -195,6 +197,7 @@ pub fn waitingForTowers(state: *GS) bool {
 }
 
 pub fn endRound(state: *GS) void {
+    assert(state.playing, "endRound can only be called after startRound");
     state.playing = false;
     state.round += 1;
 
@@ -235,6 +238,8 @@ pub fn hasActiveCreeps(state: *GS) bool {
 }
 
 pub fn message(state: *GS, msg: Message) (Allocator.Error || std.fmt.BufPrintError)!void {
+    assert(state.playing == false, "cannot receive messages while playing");
+
     switch (msg) {
         .coord => |c| {
 
@@ -268,6 +273,7 @@ pub fn message(state: *GS, msg: Message) (Allocator.Error || std.fmt.BufPrintErr
                     // TODO: probably should consider upgrades and tower
                     // destructive placements...
                     const pos = utils.positionInRange(state, c.team);
+                    std.debug.print("WTF: {s}", .{try pos.string()});
                     if (try placeTower(state, objects.tower.TOWER_AABB.move(pos.vec2()), c.team) != null)  {
                         break;
                     }
@@ -425,8 +431,13 @@ fn canPlaceTower(self: *GS, aabb: math.AABB, team: u8) bool {
         }
     }
 
-    if (pos.col <= 0 or pos.col >= self.values.cols - objects.tower.TowerSize) {
-        std.debug.print("on outside of accepted range: col <= 0, col => {}\n", .{self.values.cols - objects.tower.TowerSize});
+    if (pos.col <= 0 or pos.col >= self.values.cols - objects.tower.TOWER_COL_COUNT) {
+        std.debug.print("on outside of accepted range: col <= 0, col => {}\n", .{self.values.cols - objects.tower.TOWER_COL_COUNT});
+        return false;
+    }
+
+    if (pos.row < 0 or pos.row >= self.values.rows - objects.tower.TOWER_ROW_COUNT) {
+        std.debug.print("on outside of accepted range: row <= 0, row => {}\n", .{self.values.rows - objects.tower.TOWER_ROW_COUNT});
         return false;
     }
 

@@ -50,6 +50,9 @@ pub fn main() !void {
 
     // TODO: Figure out something better with the creep spawner... this sucks
     var spawner = engine.rounds.CreepSpawner.init(&gs);
+    var reportState = engine.reportState.ReportState{};
+
+    try reportState.waiting(&gs);
 
     while (!engine.gamestate.completed(&gs)) {
         fps.sleep();
@@ -72,8 +75,13 @@ pub fn main() !void {
             }
         } else if (gs.playing) {
             engine.gamestate.endRound(&gs);
+
+            // TODO: this sucks... but it rocks...
+            try reportState.waiting(&gs);
+
         } else if (!engine.gamestate.waitingForTowers(&gs)) {
             engine.gamestate.startRound(&gs, &spawner);
+            try reportState.playing();
         }
 
         try render.render(&gs);

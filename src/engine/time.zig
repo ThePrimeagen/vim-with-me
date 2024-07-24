@@ -75,7 +75,7 @@ pub const FPS = struct {
     pub fn sleep(self: *FPS) void {
         assert(self.time != null, "called sleep before delta");
         const since = self.time.?.since();
-        const remaining: u64 = @intCast(self.fps - since);
+        const remaining: u64 = @intCast(@max(0, self.fps - since));
 
         if (remaining > 0) {
             std.time.sleep(remaining * 1_000);
