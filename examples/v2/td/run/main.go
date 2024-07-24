@@ -2,12 +2,15 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
+	"log"
 	"slices"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/theprimeagen/vim-with-me/examples/v2/td"
 	"github.com/theprimeagen/vim-with-me/pkg/testies"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
@@ -15,9 +18,28 @@ import (
 	"github.com/theprimeagen/vim-with-me/pkg/v2/cmd"
 )
 
+func getDebug(name string) (*testies.DebugFile, error) {
+    if name == "" {
+        return testies.EmptyDebugFile(), nil
+    }
+    return testies.NewDebugFile(name)
+}
+
 func main() {
 
     testies.SetupLogger()
+
+	godotenv.Load()
+
+	debugFile := ""
+	flag.StringVar(&debugFile, "debug", "", "runs the file like the program instead of running doom")
+	flag.Parse()
+    debug, err := getDebug(debugFile)
+    if err != nil {
+        log.Fatalf("could not open up debug file: %v\n", err)
+    }
+    defer debug.Close()
+    debug.WriteLine([]byte("hello world"))
 
 	ctx := context.Background()
 
@@ -34,7 +56,7 @@ func main() {
             str := string(b)
             parts := strings.Split(str, "-")
 
-            fmt.Printf("state: %s\n", str)
+            debug.WriteLine([]byte(fmt.Sprintf("state: %s\n", str)))
 
             if parts[0] == "waiting" {
                 assert.Assert(len(parts) == 2, "somehow i didn't communicate back with 2 pieces", "parts", parts)
@@ -43,8 +65,10 @@ func main() {
                 count, err := strconv.Atoi(parts[1])
                 assert.NoError(err, "zig program gave me a non number")
 
-                for range count {
+                for i := range count {
+                    debug.WriteLine([]byte(fmt.Sprintf("getting input for item %d out of %d", i, count)))
                     ch<-struct{}{}
+                    debug.WriteLine([]byte(fmt.Sprintf("got input for %d", i)))
                 }
             }
 
@@ -58,10 +82,8 @@ func main() {
     go cmdr.Run()
 	go chtAgg.Pipe(twitchChat)
 
-    interval := time.NewTicker(time.Second * 10)
-
     for range ch {
-        <-interval.C
+        <-time.NewTimer(time.Second * 10).C
         occurrences := chtAgg.ResetWithAll()
         slices.SortFunc(occurrences, func(a, b *chat.Occurrence) int {
             return b.Count - a.Count
@@ -76,12 +98,12 @@ func main() {
             }
 
             if !one && coord.Team == 1 {
-                fmt.Printf("COORD %s\n", coord.String())
+                debug.WriteLine([]byte(fmt.Sprintf("COORD %s\n", coord.String())))
                 cmdr.WriteLine([]byte(coord.String()))
                 one = true
             }
             if !two && coord.Team == 2 {
-                fmt.Printf("COORD %s\n", coord.String())
+                debug.WriteLine([]byte(fmt.Sprintf("COORD %s\n", coord.String())))
                 cmdr.WriteLine([]byte(coord.String()))
                 two = true
             }
@@ -92,10 +114,12 @@ func main() {
         }
 
         if !one {
+            debug.WriteLine([]byte(fmt.Sprintf("No Coord for team one so default coord selected\n")))
             cmdr.WriteLine([]byte("13,5"))
         }
         if !two {
-            cmdr.WriteLine([]byte("13,5"))
+            debug.WriteLine([]byte(fmt.Sprintf("No Coord for team two so default coord selected\n")))
+            cmdr.WriteLine([]byte("222,5"))
         }
     }
 }
