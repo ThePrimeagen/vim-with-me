@@ -143,7 +143,7 @@ pub const Renderer = struct {
                     .row = 1 + row,
                     .col = 2 + col,
                 };
-                self.canvas.background(pos, colors.Slate);
+                self.canvas.background(pos, colors.DarkGrey);
             }
         }
     }
