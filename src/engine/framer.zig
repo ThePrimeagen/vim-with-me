@@ -21,7 +21,7 @@ const backgroundClear: [5]u8 = .{ '', '[', '4', '9', 'm' };
 const newline: [2]u8 = .{ '\r', '\n', };
 const clearStyle = .{'', '[', '0', 'm'};
 
-const UNDEFINED_CELL: Cell = undefined;
+const DEFAULT_CELL: Cell = .{.text=' ', .color = undefined, .background = null};
 
 pub fn writeAnsiColor(color: Color, ansiColor: []const u8, out: []u8, o: usize) !usize {
     var offset = o;
@@ -89,7 +89,7 @@ pub fn ansiBackgroundClear(buffer: []u8, offset: usize) !usize {
 
 pub const AnsiFramer = struct {
     firstPrint: bool,
-    previous: Cell = .{.text=' ', .color = undefined, .background = null},
+    previous: Cell = DEFAULT_CELL,
     values: *const Values,
 
     pub fn init(values: *const Values) AnsiFramer {
@@ -140,7 +140,7 @@ pub const AnsiFramer = struct {
         // clear everything at the end
         offset = write(out, offset, "\x1b[0m");
         assert(newLineCount == self.values.rows, "should have produced self.rows amount of rows, did not");
-        self.previous = undefined;
+        self.previous = DEFAULT_CELL;
         return offset;
     }
 
@@ -201,17 +201,19 @@ test "AnsiFramer should color and newline a 3x3" {
     _ = AnsiFramer.parseText(out[0..len1], &text);
     try testing.expectEqualStrings("abc\r\ndef\r\nghi\r\n", &text);
 
-//    var colors2 = [_]Cell{
-//        .{.text = 'i', .color = .{.r = 71, .g = 44, .b = 2}}
-//    } ** 9;
-//
-    //const expected2 =
-    //    newFrame ++
-    //    "iii\r\niii\r\niii\r\n".*;
-    //
-    //const len2 = try frame.frame(&colors2, &out);
-    //try testing.expectEqualSlices(u8, &expected2, out[0..len2]);
-    //
-    //_ = AnsiFramer.parseText(out[0..len2], &text);
-    //try testing.expectEqualStrings("iii\r\niii\r\niii\r\n", &text);
+    var colors2 = [_]Cell{
+        .{.text = 'i', .color = .{.r = 71, .g = 44, .b = 2}}
+    } ** 9;
+
+    const expected2 =
+        newFrame ++
+        foregroundColor ++
+        "71;44;2miii\r\niii\r\niii\r\n".* ++
+        clearStyle;
+
+    const len2 = try frame.frame(&colors2, &out);
+    try testing.expectEqualSlices(u8, &expected2, out[0..len2]);
+
+    _ = AnsiFramer.parseText(out[0..len2], &text);
+    try testing.expectEqualStrings("iii\r\niii\r\niii\r\n", &text);
 }
