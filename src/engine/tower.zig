@@ -9,7 +9,7 @@ const creeps = @import("creep.zig");
 const never = a.never;
 const unwrap = a.unwrap;
 const assert = a.assert;
-const Values = objects.tower.Tower;
+const Values = objects.Values;
 const Tower = objects.tower.Tower;
 const colors = objects.colors;
 const Color = colors.Color;
@@ -40,10 +40,7 @@ const TowerCell: [objects.tower.TOWER_CELL_COUNT]Cell = .{
 };
 
 pub fn placementAABB(pos: math.Vec2) math.AABB {
-    return objects.tower.TOWER_AABB.move(pos).add(.{
-        .x = -1,
-        .y = 0,
-    });
+    return objects.tower.TOWER_AABB.move(pos);
 }
 
 pub fn contains(self: *Tower, pos: math.Vec2) bool {
@@ -271,18 +268,22 @@ fn createTestTower() Tower {
 const testing = std.testing;
 test "tower contains" {
     var t = createTestTower();
+    const X = 0;
+    const Y = 0;
+    const ROW = objects.tower.TOWER_ROW_COUNT;
+    const COL = objects.tower.TOWER_COL_COUNT;
+    const SMALL = 0.0001;
 
-    try testing.expect(!contains(&t, .{.x = -0.9999, .y = 0}));
-
-    try testing.expect(contains(&t, .{.x = 0.9999, .y = 0}));
-    try testing.expect(contains(&t, .{.x = 0, .y = 0}));
+    try testing.expect(!contains(&t, .{.x = -SMALL, .y = Y}));
+    try testing.expect(contains(&t, .{.x = SMALL, .y = Y}));
+    try testing.expect(contains(&t, .{.x = X, .y = Y}));
 
     // col
-    try testing.expect(contains(&t, .{.x = 2.99, .y = 0}));
-    try testing.expect(!contains(&t, .{.x = 3.1, .y = 0}));
+    try testing.expect(contains(&t, .{.x = COL - SMALL, .y = Y}));
+    try testing.expect(!contains(&t, .{.x = COL + SMALL, .y = Y}));
 
     // row
-    try testing.expect(!contains(&t, .{.x = 0, .y = 1}));
-    try testing.expect(!contains(&t, .{.x = 0, .y = -1}));
+    try testing.expect(contains(&t, .{.x = X, .y = ROW - SMALL}));
+    try testing.expect(!contains(&t, .{.x = X, .y = ROW + SMALL}));
 }
 

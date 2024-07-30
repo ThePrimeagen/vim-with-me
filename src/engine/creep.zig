@@ -382,19 +382,16 @@ pub fn render(self: *Creep, gs: *GS) void {
 
 const t = std.testing;
 const testBoaordSize = 3;
-const testBoard = [9]bool{
+const testBoard = [15]bool{
     true, false, true,
     true, false, true,
-    true, true, true,
-};
-const testEmptyBoard = [9]bool{
-    true, true, true,
-    true, true, true,
+    true, false, true,
+    true, false, true,
     true, true, true,
 };
 var testValues = blk: {
     var values = objects.Values{
-        .rows = 3,
+        .rows = 5,
         .cols = 3,
     };
     values.init();
@@ -402,25 +399,27 @@ var testValues = blk: {
 };
 
 test "bfs" {
-    testValues.init();
-    var seen: [9]isize = .{-1} ** 9;
+    var parents: [15]isize = .{-1} ** 15;
+    var seen: [15]bool = .{false} ** 15;
 
-    const out = walk(0, 0, 3, &testBoard, &seen);
-    try t.expect(out == 8);
+    const out = try walk(0, 0, &testValues, &testBoard, &parents, &seen);
+    try t.expect(out == 14);
 
-    var expected: [9]isize = .{
+    var expected: [15]isize = .{
         0, -1, -1,
         0, -1, -1,
-        3, 6, 7,
+        3, -1, -1,
+        6, -1, -1,
+        9, 12, 13,
     };
 
-    try t.expectEqualSlices(isize, &expected, &seen);
+    try t.expectEqualSlices(isize, &expected, &parents);
 
     var p: [9]usize = .{0} ** 9;
-    const len = path(&seen, out, &p);
-    var pExpect = [_]usize{ 3, 6, 7, 8 };
+    const len = path(&parents, out, &p);
+    var pExpect = [_]usize{ 3, 6, 9, 12, 13, 14 };
 
-    try t.expect(len == 4);
+    try t.expect(len == 6);
     try t.expectEqualSlices(usize, &pExpect, p[0..len]);
 }
 
@@ -430,39 +429,6 @@ fn runUntil(creep: *Creep, gs: *GS, to: usize, maxRun: usize) void {
         update(creep, gs);
     }
 }
-
-//test "creep movement" {
-//    var gs = try GS.init(t.allocator, &testValues);
-//    defer gs.deinit();
-//
-//    var creep = try create(t.allocator, 0, Values.TEAM_ONE, &testValues, .{.x = 0, .y = 0});
-//    defer creep.deinit();
-//    _ = calculatePath(&creep, &testBoard);
-//
-//    gs.loopDeltaUS = 16_000;
-//
-//    // Note: with how update works we can "bleed" a bit over
-//    // I find that this amount captures any oopsy amount of movement.
-//    const closeEnough = 0.05;
-//    try t.expect(creep.pathIdx == 0);
-//
-//    runUntil(&creep, &gs, 1, 1500);
-//    try t.expect(creep.pos.closeEnough(.{.x = 0, .y = 1}, closeEnough));
-//    try t.expect(creep.pathIdx == 1);
-//
-//    runUntil(&creep, &gs, 2, 1500);
-//    try t.expect(creep.pathIdx == 2);
-//    try t.expect(creep.pos.closeEnough(.{.x = 0, .y = 2}, closeEnough));
-//
-//    runUntil(&creep, &gs, 3, 1500);
-//    try t.expect(creep.pathIdx == 3);
-//    try t.expect(creep.pos.closeEnough(.{.x = 1, .y = 2}, closeEnough));
-//
-//    runUntil(&creep, &gs, 4, 1500);
-//    try t.expect(creep.pathIdx == 4);
-//    try t.expect(creep.pos.closeEnough(.{.x = 2, .y = 2}, closeEnough));
-//
-//}
 
 test "creep contains" {
     var creep = try create(t.allocator, 0, Values.TEAM_ONE, &testValues, .{.y = 1, .x = 1});
@@ -482,6 +448,4 @@ test "creep walk astar" {
     var creep = try create(t.allocator, 0, Values.TEAM_ONE, &testValues, .{.x = 0, .y = 0});
     defer creep.deinit();
     _ = try calculatePath(&creep, &testBoard);
-
-    std.debug.print("path: {any}\n", .{creep.path});
 }

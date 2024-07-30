@@ -1,7 +1,7 @@
 const std = @import("std");
 const assert = @import("../assert/assert.zig");
 const objects = @import("../objects/objects.zig");
-const Params = @import("../test/params.zig");
+const Params = @import("../params.zig");
 const SimFile = @import("file.zig");
 const RandSim = @import("rand.zig");
 

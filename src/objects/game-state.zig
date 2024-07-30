@@ -57,6 +57,7 @@ pub const GameState = struct {
     oneStats: Stats = Stats{},
     oneCreepRange: Range = Range{},
     oneNoBuildTowerRange: Range = Range{},
+    oneCreepDamage: usize = 1,
 
     twoAvailableTower: isize = 0,
     twoTowerCount: usize = 0,
@@ -64,6 +65,7 @@ pub const GameState = struct {
     twoStats: Stats = Stats{},
     twoCreepRange: Range = Range{},
     twoNoBuildTowerRange: Range = Range{},
+    twoCreepDamage: usize = 1,
 
     time: i64 = 0,
     loopDeltaUS: i64 = 0,

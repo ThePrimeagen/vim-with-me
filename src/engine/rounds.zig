@@ -40,7 +40,9 @@ pub const CreepSpawner = struct {
     }
 
     pub fn startRound(self: *CreepSpawner) void {
-        self.spawnCount = self.gs.round;
+        const rr: f64 = @floatFromInt(self.gs.round * self.gs.round);
+        self.spawnCount = @as(usize,
+            @intFromFloat(rr * self.gs.values.creep.scaleSpawnRate)) + self.gs.round;
         self.spawned = 0;
         self.spawnStartUS = self.gs.time;
     }
