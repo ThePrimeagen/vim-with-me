@@ -1,10 +1,12 @@
 const std = @import("std");
 const math = @import("../math/math.zig");
 const objects = @import("../objects/objects.zig");
+const framer = @import("framer.zig");
 const a = @import("../assert/assert.zig");
 const assert = a.assert;
 const u = a.u;
 const scratchBuf = @import("../scratch/scratch.zig").scratchBuf;
+const debug = @import("debug.zig");
 
 const Values = objects.Values;
 const Allocator = std.mem.Allocator;
@@ -48,13 +50,13 @@ pub fn create(alloc: Allocator, id: usize, team: u8, values: *const Values, pos:
     return creep;
 }
 
-fn path(seen: []const isize, pos: usize, out: []usize) usize {
+fn path(parents: []const isize, pos: usize, out: []usize) usize {
     var idx: usize = 0;
 
     var p = pos;
-    while (seen[p] != p) {
+    while (parents[p] != p) {
         out[idx] = p;
-        p = @intCast(seen[p]);
+        p = @intCast(parents[p]);
 
         idx += 1;
     }
@@ -63,15 +65,18 @@ fn path(seen: []const isize, pos: usize, out: []usize) usize {
     return idx;
 }
 
-fn walk(from: usize, pos: usize, cols: usize, board: []const bool, seen: []isize) usize {
+fn walk(from: usize, pos: usize, values: *const Values, board: []const bool, parents: []isize, seen: []bool) !usize {
+    const cols = values.cols;
     assert(board.len % cols == 0, "board is not a rectangle");
+    assert(board.len == parents.len, "board and parents should have the same size");
     assert(board.len == seen.len, "board and seen should have the same size");
 
-    if (pos >= seen.len or seen[pos] != -1 or board[pos] == false) {
+    if (pos >= parents.len or parents[pos] != -1 or board[pos] == false) {
         return 0;
     }
 
-    seen[pos] = @intCast(from);
+    parents[pos] = @intCast(from);
+    seen[pos] = true;
 
     // I am at the end
     if (pos % cols == cols - 1) {
@@ -86,7 +91,7 @@ fn walk(from: usize, pos: usize, cols: usize, board: []const bool, seen: []isize
             continue;
         }
 
-        const out = walk(pos, @intCast(iPos + d), cols, board, seen);
+        const out = try walk(pos, @intCast(iPos + d), values, board, parents, seen);
         if (out != 0) {
             return out;
         }
@@ -111,8 +116,9 @@ fn printWalk(at: usize, dists: []isize, cols: usize) void {
     std.debug.print("\n", .{});
 }
 
-fn walkAStar(start: usize, p: usize, cols: usize, board: []const bool, parents: []isize, alloc: Allocator) !usize {
+pub fn walkAStar(start: usize, p: usize, v: *const Values, board: []const bool, parents: []isize, alloc: Allocator) !usize {
     var pos = p;
+    const cols = v.cols;
 
     assert(board.len % cols == 0, "board is not a rectangle");
     assert(board.len == parents.len, "board and seen should have the same size");
@@ -123,7 +129,7 @@ fn walkAStar(start: usize, p: usize, cols: usize, board: []const bool, parents: 
     defer alloc.free(seen);
 
     for (0..dists.len) |idx| {
-        dists[idx] = 255;
+        dists[idx] = -1;
         seen[idx] = false;
     }
 
@@ -133,8 +139,6 @@ fn walkAStar(start: usize, p: usize, cols: usize, board: []const bool, parents: 
     parents[pos] = @intCast(start);
 
     while (true) {
-        //printWalk(pos, dists, cols);
-
         const directions: [4]isize = .{1, -iCols, iCols, -1};
         const iPos: isize = @intCast(pos);
 
@@ -143,32 +147,37 @@ fn walkAStar(start: usize, p: usize, cols: usize, board: []const bool, parents: 
             const nextPos: isize = iPos + d;
 
             if (nextPos < 0 or
-                nextPos >= board.len or
+                nextPos >= board.len) {
+                continue;
+            }
+
+            const nextPosU: usize = @intCast(nextPos);
+            if (
                 board[@intCast(nextPos)] == false or
                 parents[@intCast(nextPos)] != -1 or
                 seen[@intCast(nextPos)]) {
                 continue;
             }
 
-            const nextPosU: usize = @intCast(nextPos);
             const isizeCols: isize = @intCast(cols);
             const posDist = @abs(@divFloor(nextPos, isizeCols) - @divFloor(iPos, isizeCols)) +
                 @abs(@mod(nextPos, isizeCols) - @mod(iPos, isizeCols));
+
             if (posDist > 1) {
                 continue;
             }
 
             //std.debug.print("parents[{}] = {}\n", .{nextPosU, iPos});
-            dists[nextPosU] = @intCast(cols - nextPosU % cols);
+            const dist: isize = @intCast(cols - nextPosU % cols);
+            const city: isize = @intCast(math.getCityDistanceFromIdx(start, nextPosU, cols));
+            dists[nextPosU] = dist * 2 + city;
             parents[nextPosU] = iPos;
         }
-        //std.debug.print("PARENTS\n", .{});
-        //printWalk(pos, parents, cols);
 
         var lowest: isize = 255;
         var lowestIdx: isize = 0;
         for (0..dists.len) |idx| {
-            if (dists[idx] < lowest and parents[idx] != -1 and seen[idx] == false) {
+            if (dists[idx] < lowest and dists[idx] != -1 and parents[idx] != -1 and seen[idx] == false) {
                 lowest = dists[idx];
                 lowestIdx = @intCast(idx);
             }
@@ -182,10 +191,71 @@ fn walkAStar(start: usize, p: usize, cols: usize, board: []const bool, parents: 
         pos = @intCast(lowestIdx);
         seen[pos] = true;
 
-        //std.debug.print("DISTS\n", .{});
-        //printWalk(pos, dists, cols);
+        // I am at the end
+        if (pos % cols == cols - 1) {
+            return pos;
+        }
 
-        //std.debug.print("pos: {}, cols: {}, pos % cols = {}\n", .{pos, cols, pos % cols});
+    }
+
+    return 0;
+}
+
+pub fn walkBFS(start: usize, p: usize, v: *const Values, board: []const bool, parents: []isize, alloc: Allocator) !usize {
+    var pos = p;
+    const cols = v.cols;
+
+    assert(board.len % cols == 0, "board is not a rectangle");
+    assert(board.len == parents.len, "board and seen should have the same size");
+
+    const seen: []bool = try alloc.alloc(bool, board.len);
+    defer alloc.free(seen);
+
+    const iCols: isize = @intCast(cols);
+    seen[pos] = true;
+    parents[pos] = @intCast(start);
+
+    const PosList = std.ArrayList(usize);
+    var queue = PosList.init(alloc);
+    defer queue.deinit();
+    try queue.append(pos);
+
+    while (queue.items.len > 0) {
+
+        pos = queue.orderedRemove(0);
+        seen[pos] = true;
+
+        const directions: [4]isize = .{1, -iCols, iCols, -1};
+        const iPos: isize = @intCast(pos);
+
+        // activate new position
+        for (directions) |d| {
+            const nextPos: isize = iPos + d;
+
+            if (nextPos < 0 or
+                nextPos >= board.len) {
+                continue;
+            }
+
+            const nextPosU: usize = @intCast(nextPos);
+            if (
+                board[@intCast(nextPos)] == false or
+                parents[@intCast(nextPos)] != -1 or
+                seen[@intCast(nextPos)]) {
+                continue;
+            }
+
+            const isizeCols: isize = @intCast(cols);
+            const posDist = @abs(@divFloor(nextPos, isizeCols) - @divFloor(iPos, isizeCols)) +
+                @abs(@mod(nextPos, isizeCols) - @mod(iPos, isizeCols));
+
+            if (posDist > 1) {
+                continue;
+            }
+
+            parents[nextPosU] = iPos;
+            try queue.append(nextPosU);
+        }
 
         // I am at the end
         if (pos % cols == cols - 1) {
@@ -193,9 +263,9 @@ fn walkAStar(start: usize, p: usize, cols: usize, board: []const bool, parents: 
         }
 
     }
+
     return 0;
 }
-
 
 pub fn contains(self: *Creep, pos: math.Vec2) bool {
     if (!self.alive) {
@@ -224,7 +294,14 @@ pub fn calculatePath(self: *Creep, board: []const bool) !void {
     }
 
     const pos = self.aabb.min.position().toIdx(cols);
-    const last = try walkAStar(pos, pos, cols, board, self.scratch, self.alloc);
+    var seen: [10000]bool = undefined;
+    for (0..board.len) |idx| {
+        seen[idx] = false;
+    }
+
+    //const last = a.unwrap(usize, walk(pos, pos, self.values, board, self.scratch[0..board.len], seen[0..board.len]));
+    //const last = a.unwrap(usize, walkBFS(pos, pos, self.values, board, self.scratch, self.alloc));
+    const last = a.unwrap(usize, walkAStar(pos, pos, self.values, board, self.scratch, self.alloc));
 
     if (last == 0) {
         a.never("unable to move creep forward");

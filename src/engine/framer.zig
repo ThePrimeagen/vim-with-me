@@ -18,7 +18,7 @@ const backgroundColor: [7]u8 = .{ '', '[', '4', '8', ';', '2', ';', };
 const backgroundClear: [5]u8 = .{ '', '[', '4', '9', 'm' };
 const newline: [2]u8 = .{ '\r', '\n', };
 
-fn writeAnsiColor(color: Color, ansiColor: []const u8, out: []u8, o: usize) !usize {
+pub fn writeAnsiColor(color: Color, ansiColor: []const u8, out: []u8, o: usize) !usize {
     var offset = o;
 
     const maxOffset = offset + 12 + ansiColor.len;
@@ -32,7 +32,7 @@ fn writeAnsiColor(color: Color, ansiColor: []const u8, out: []u8, o: usize) !usi
     return offset;
 }
 
-fn write(out: []u8, o: usize, bytes: []const u8) usize {
+pub fn write(out: []u8, o: usize, bytes: []const u8) usize {
     assert(out.len > o + bytes.len, "buffer overflowed");
 
     var offset = o;
@@ -44,13 +44,13 @@ fn write(out: []u8, o: usize, bytes: []const u8) usize {
     return offset;
 }
 
-fn writeByte(out: []u8, offset: usize, byte: u8) usize {
+pub fn writeByte(out: []u8, offset: usize, byte: u8) usize {
     assert(out.len > offset, "buffer overflowed");
     out[offset] = byte;
     return offset + 1;
 }
 
-fn ansiCodeLength(buffer: []const u8) usize {
+pub fn ansiCodeLength(buffer: []const u8) usize {
     const items: []const []const u8 = &.{
         &topLeftFull,
         &clear,
@@ -76,7 +76,7 @@ fn ansiCodeLength(buffer: []const u8) usize {
     return 0;
 }
 
-fn ansiBackgroundClear(buffer: []u8, offset: usize) !usize {
+pub fn ansiBackgroundClear(buffer: []u8, offset: usize) !usize {
     return write(buffer, offset, &backgroundClear);
 }
 
@@ -92,7 +92,7 @@ pub const AnsiFramer = struct {
         };
     }
 
-    pub fn frame(self: *AnsiFramer, f: []Cell, out: []u8) !usize {
+    pub fn frame(self: *AnsiFramer, f: []const Cell, out: []u8) !usize {
         assert(f.len == self.values.size, "you must hand in a frame that matches rows and cols");
 
         var offset: usize = 0;
@@ -125,7 +125,10 @@ pub const AnsiFramer = struct {
             }
         }
 
+        // clear everything at the end
+        offset = write(out, offset, "\x1b[0m");
         assert(newLineCount == self.values.rows, "should have produced self.rows amount of rows, did not");
+        self.previous = undefined;
         return offset;
     }
 

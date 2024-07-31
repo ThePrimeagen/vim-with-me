@@ -7,6 +7,7 @@ const a = @import("../assert/assert.zig");
 const math = @import("../math/math.zig");
 
 const never = a.never;
+const assert = a.assert;
 const GameState = objects.gamestate.GameState;
 const Values = objects.Values;
 

@@ -197,7 +197,7 @@ pub fn waitingForTowers(state: *GS) bool {
 }
 
 pub fn endRound(state: *GS) void {
-    assert(state.playing, "endRound can only be called after startRound");
+    assert(state.playing or state.round == 0, "endRound can only be called after startRound");
     state.playing = false;
     state.round += 1;
 

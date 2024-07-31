@@ -22,6 +22,17 @@ pub fn usizeToIsizeSub(a: usize, b: usize) isize {
     return ai - bi;
 }
 
+pub fn getCityDistanceFromIdx(a: usize, b: usize, cols: usize) usize {
+    const ai: isize = @intCast(a);
+    const bi: isize = @intCast(b);
+    const colsi: isize = @intCast(cols);
+
+    const rowDiff = @abs(@divFloor(ai, colsi) - @divFloor(bi, colsi));
+    const colDiff = @abs(@mod(ai, colsi) - @mod(bi, colsi));
+
+    return  rowDiff + colDiff;
+}
+
 pub fn absUsize(a: usize, b: usize) usize {
     if (a > b) {
         return a - b;

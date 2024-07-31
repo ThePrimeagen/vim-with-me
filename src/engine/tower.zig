@@ -39,19 +39,6 @@ const TowerCell: [objects.tower.TOWER_CELL_COUNT]Cell = .{
     .{.text = '\\', .color = Black },
 };
 
-const TowerOneColor: Color = .{
-    .r = 0x3f,
-    .g = 0xa9,
-    .b = 0xff,
-};
-
-const TowerTwoColor: Color = .{
-    .r = 245,
-    .g = 164,
-    .b = 66,
-};
-
-
 pub fn placementAABB(pos: math.Vec2) math.AABB {
     return objects.tower.TOWER_AABB.move(pos).add(.{
         .x = -1,
@@ -214,8 +201,8 @@ pub fn render(self: *Tower, gs: *GS) !void {
     }
 
     const c = switch (self.team) {
-        '1' => TowerOneColor,
-        '2' => TowerTwoColor,
+        '1' => colors.Blue,
+        '2' => colors.Orange,
         else => {
             never("unknown tower team");
             unreachable;
