@@ -15,6 +15,14 @@ import (
 type DebugFile struct {
     fh io.WriteCloser
 }
+type NumberedDebugFile struct {
+    n uint8
+    df *DebugFile
+}
+type LineWriter interface {
+    WriteLine(b []byte) error
+    WriteStrLine(b string) error
+}
 
 func NewDebugFile(name string) (*DebugFile, error) {
     f, err := os.OpenFile(name, os.O_RDWR|os.O_CREATE, 0755)
@@ -27,8 +35,36 @@ func NewDebugFile(name string) (*DebugFile, error) {
     }, nil
 }
 
+func (d *DebugFile) AsNumberedDebugFile(n uint8) *NumberedDebugFile {
+    return &NumberedDebugFile{
+        n: n,
+        df: d,
+    }
+}
+
+func (d *NumberedDebugFile) WriteStrLine(b string) error {
+    return d.df.WriteStrLine(b)
+}
+
+func (d *NumberedDebugFile) WriteLine(b []byte) error {
+    _, err := d.df.fh.Write([]byte{d.n, ':', ' '})
+    if err != nil {
+        return err
+    }
+
+    return d.df.WriteLine(b)
+}
+
+func (d *NumberedDebugFile) Close() error {
+    return d.Close()
+}
+
 func EmptyDebugFile() *DebugFile {
     return &DebugFile{fh: nil}
+}
+
+func (d *DebugFile) WriteStrLine(b string) error {
+    return d.WriteLine([]byte(b))
 }
 
 func (d *DebugFile) WriteLine(b []byte) error {

@@ -50,6 +50,7 @@ pub fn main() !void {
     try reportState.waiting(&gs);
 
     try engine.ai.printPrompt(&gs);
+    try values.printSize();
 
     while (!engine.gamestate.completed(&gs)) {
         fps.sleep();
@@ -92,6 +93,7 @@ pub fn main() !void {
 
     try render.completed(&gs);
     try out(render.output);
+    try reportState.final(&gs);
     engine.stdout.showCursor();
 }
 
