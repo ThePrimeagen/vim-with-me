@@ -87,3 +87,9 @@ pub fn randBool(self: *Self) bool {
 pub fn string(v: *const Self) ![]u8 {
     return std.fmt.bufPrint(scratchBuf(75), "rows = {}, cols = {}, size = {}", .{v.rows, v.cols, v.size});
 }
+
+pub fn printSize(v: *const Self) !void {
+    const f = std.io.getStdOut();
+    try f.writeAll(try std.fmt.bufPrint(scratchBuf(50), "rows = {}\n", .{v.rows}));
+    try f.writeAll(try std.fmt.bufPrint(scratchBuf(50), "cols = {}\n", .{v.cols}));
+}

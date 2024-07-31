@@ -119,11 +119,9 @@ pub const AnsiFramer = struct {
                 self.previous = c.*;
                 offset = try writeAnsiColor(c.color, &foregroundColor, out, offset);
                 if (c.background) |b| {
-                    std.debug.print("background: {s}\n", .{try c.background.?.string()});
                     offset = try writeAnsiColor(b, &backgroundColor, out, offset);
                     hasBackground = true;
                 } else if (hasBackground) {
-                    std.debug.print("has background\n", .{});
                     offset = try ansiBackgroundClear(out, offset);
                     hasBackground = false;
                 }

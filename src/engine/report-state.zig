@@ -29,6 +29,20 @@ pub const ReportState = struct {
         const contents = try std.fmt.bufPrint(scratchBuf(50), "{s}-{}\n", .{WAITING_TO_PLAY, gs.oneAvailableTower});
         _ = try std.io.getStdErr().write(contents);
     }
+
+    pub fn final(self: *ReportState, gs: *GS) !void {
+        _ = self;
+        const err = std.io.getStdErr();
+
+        try err.writeAll("final\n");
+        if (gs.oneTowerCount == 0) {
+            try err.writeAll("1: lost\n");
+            try err.writeAll("2: won\n");
+        } else {
+            try err.writeAll("1: lost\n");
+            try err.writeAll("2: won\n");
+        }
+    }
 };
 
 
