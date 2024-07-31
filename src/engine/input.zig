@@ -133,9 +133,10 @@ pub const InputRunner = struct {
             }
 
             var buf: [InputSize]u8 = undefined;
-            const n = inputter.next(&buf) catch |e| {
-                never(try std.fmt.bufPrint(scratchBuf(250), "some how got an error: {any}", .{e}));
-                unreachable;
+            const n = inputter.next(&buf) catch |e| blk: {
+                std.debug.print("read error: {any}\n", .{e});
+                std.time.sleep(1_000_000_000);
+                break :blk null;
             };
 
             if (n == null) {

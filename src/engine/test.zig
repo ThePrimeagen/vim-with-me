@@ -26,6 +26,8 @@ test "find nearest creep" {
     gs.oneNoBuildTowerRange.endRow = 4;
     gs.oneCreepRange.startRow = 0;
     gs.oneCreepRange.endRow = 4;
+    gs.oneAvailableTower = 0;
+    gs.twoAvailableTower = 0;
 
     var gsDump = gs.dumper();
     a.addDump(&gsDump);
@@ -52,7 +54,7 @@ test "find nearest creep" {
     try testing.expect(creep != null);
     try testing.expect(creep.?.id == three);
 
-    try gamestate.update(&gs, 3_990_000);
+    try gamestate.update(&gs, 5_990_000);
 
     creep = towers.creepWithinRange(tower, &gs);
     a.assert(creep != null, "expected to find the creep");

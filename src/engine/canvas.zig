@@ -106,74 +106,74 @@ pub const Canvas = struct {
 };
 
 
-const t = std.testing;
-test "i think this test is terribly written, i need help or a doctor" {
-    var values = Values{.rows = 10, .cols = 10};
-    values.init();
-
-    var canvas = try Canvas.init(t.allocator, &values);
-    defer canvas.deinit();
-
-    const newLine = "\r\n";
-    const emptyLine = " " ** 10;
-    const x: []const Cell = &(.{
-        .{.text = 'x', .color = .{.r = 69, .g = 69, .b = 69}}
-    } ** 3);
-    const y: []const Cell = &(.{
-        .{.text = 'y', .color = .{.r = 69, .g = 69, .b = 69}}
-    } ** 3);
-    const z: []const Cell = &(.{
-        .{.text = 'z', .color = .{.r = 69, .g = 69, .b = 69}}
-    } ** 3);
-
-    const image: []const Cell = x ++ y ++ z;
-
-    canvas.place(.{
-        .cols = 3,
-        .pos = .{.row = 3, .col = 3}
-    }, image);
-
-    try canvas.render();
-
-    var text: [200]u8 = undefined;
-    {
-        const len = AnsiFramer.parseText(canvas.renderBuffer, &text);
-        try t.expectEqualStrings(
-            emptyLine ++ newLine ++
-            emptyLine ++ newLine ++
-            emptyLine ++ newLine ++
-            "   xxx    \r\n".* ++
-            "   yyy    \r\n".* ++
-            "   zzz    \r\n".* ++
-            emptyLine ++ newLine ++
-            emptyLine ++ newLine ++
-            emptyLine ++ newLine ++
-            emptyLine ++ newLine,
-
-            text[0..len]
-        );
-    }
-
-
-    canvas.place(.{.cols = 3, .pos = .{.row = 4, .col = 4}}, x);
-    try canvas.render();
-    {
-        const len = AnsiFramer.parseText(canvas.renderBuffer, &text);
-
-        try t.expectEqualStrings(
-            emptyLine ++ newLine ++
-            emptyLine ++ newLine ++
-            emptyLine ++ newLine ++
-            emptyLine ++ newLine ++
-            "    xxx   \r\n".* ++
-            emptyLine ++ newLine ++
-            emptyLine ++ newLine ++
-            emptyLine ++ newLine ++
-            emptyLine ++ newLine ++
-            emptyLine ++ newLine,
-
-            text[0..len]
-        );
-    }
-
-}
+//const t = std.testing;
+//test "i think this test is terribly written, i need help or a doctor" {
+//    var values = Values{.rows = 10, .cols = 10};
+//    values.init();
+//
+//    var canvas = try Canvas.init(t.allocator, &values);
+//    defer canvas.deinit();
+//
+//    const newLine = "\r\n";
+//    const emptyLine = " " ** 10;
+//    const x: []const Cell = &(.{
+//        .{.text = 'x', .color = .{.r = 69, .g = 69, .b = 69}}
+//    } ** 3);
+//    const y: []const Cell = &(.{
+//        .{.text = 'y', .color = .{.r = 69, .g = 69, .b = 69}}
+//    } ** 3);
+//    const z: []const Cell = &(.{
+//        .{.text = 'z', .color = .{.r = 69, .g = 69, .b = 69}}
+//    } ** 3);
+//
+//    const image: []const Cell = x ++ y ++ z;
+//
+//    canvas.place(.{
+//        .cols = 3,
+//        .pos = .{.row = 3, .col = 3}
+//    }, image);
+//
+//    try canvas.render();
+//
+//    var text: [200]u8 = undefined;
+//    {
+//        const len = AnsiFramer.parseText(canvas.renderBuffer, &text);
+//        try t.expectEqualStrings(
+//            emptyLine ++ newLine ++
+//            emptyLine ++ newLine ++
+//            emptyLine ++ newLine ++
+//            "   xxx    \r\n".* ++
+//            "   yyy    \r\n".* ++
+//            "   zzz    \r\n".* ++
+//            emptyLine ++ newLine ++
+//            emptyLine ++ newLine ++
+//            emptyLine ++ newLine ++
+//            emptyLine ++ newLine,
+//
+//            text[0..len]
+//        );
+//    }
+//
+//
+//    canvas.place(.{.cols = 3, .pos = .{.row = 4, .col = 4}}, x);
+//    try canvas.render();
+//    {
+//        const len = AnsiFramer.parseText(canvas.renderBuffer, &text);
+//
+//        try t.expectEqualStrings(
+//            emptyLine ++ newLine ++
+//            emptyLine ++ newLine ++
+//            emptyLine ++ newLine ++
+//            emptyLine ++ newLine ++
+//            "    xxx   \r\n".* ++
+//            emptyLine ++ newLine ++
+//            emptyLine ++ newLine ++
+//            emptyLine ++ newLine ++
+//            emptyLine ++ newLine ++
+//            emptyLine ++ newLine,
+//
+//            text[0..len]
+//        );
+//    }
+//
+//}

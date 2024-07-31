@@ -1,6 +1,6 @@
 const a = @import("../assert/assert.zig");
 const std = @import("std");
-const Params = @import("../test/params.zig");
+const Params = @import("../params.zig");
 const objects = @import("../objects/objects.zig");
 const engine = @import("../engine/engine.zig");
 const math = @import("../math/math.zig");

@@ -13,6 +13,7 @@ pub const tests = @import("test.zig");
 pub const utils = @import("utils.zig");
 pub const rounds = @import("rounds.zig");
 pub const reportState = @import("report-state.zig");
+pub const ai = @import("ai.zig");
 
 test { _ = rounds; }
 test { _ = tower; }

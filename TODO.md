@@ -1,16 +1,19 @@
 ## Tower Defense V1 completion
-* Communicate game state
+* Communicate Prompt (done)
+  * Golang process prompt
 * Twitch chat places one or more tower
     * sending multiple updates to the game of twitch decisions
     * allow multiple twitch chats
     * same thing should be used for chat gpt
     * timing controlled by go
     * throbber to show where twitch chat is selecting
-* creep crossing end should cause distributive damage instead
 * towers attack towers
 * tower place on tower causes damage if enemy
 * log file from golang for the input received and output
 * save/replay twitch chat
+* end of input message type
+* Tower placement range, once fully available, doesn't go to the max size
+* bug or feature, intersection???
 
 v2 stuff
 ---

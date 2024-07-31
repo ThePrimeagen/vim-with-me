@@ -1,7 +1,7 @@
-const Values = @import("../objects/objects.zig").Values;
-const scratchBuf = @import("../scratch/scratch.zig").scratchBuf;
+const Values = @import("objects/objects.zig").Values;
+const scratchBuf = @import("scratch/scratch.zig").scratchBuf;
 const std = @import("std");
-const a = @import("../assert/assert.zig");
+const a = @import("assert/assert.zig");
 const assert = a.assert;
 const never = a.never;
 
@@ -72,6 +72,7 @@ pub fn values(self: *const Self) Values {
         .rows = self.rows,
         .cols = self.cols,
         .seed = self.seed orelse 42069,
+        .realtimeMultiplier = self.realtimeMultiplier,
     };
 
     Values.init(&v);

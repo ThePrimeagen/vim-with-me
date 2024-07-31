@@ -46,8 +46,20 @@ pub fn update(state: *GS, delta: i64) !void {
 
         if (creeps.completed(c) and c.alive) {
             creeps.kill(c, state);
-            if (getRandomTower(state, c.team)) |tid| {
-                towers.killById(tid, state);
+            const d = switch (c.team) {
+                Values.TEAM_ONE => state.oneCreepDamage,
+                Values.TEAM_TWO => state.twoCreepDamage,
+                else => unreachable,
+            };
+            for (state.towers.items) |*t| {
+                if (t.team == c.team and t.alive) {
+                    t.ammo -|= d;
+                }
+            }
+            switch (c.team) {
+                Values.TEAM_ONE => state.oneCreepDamage += 1,
+                Values.TEAM_TWO => state.twoCreepDamage += 1,
+                else => unreachable,
             }
         }
     }
@@ -252,6 +264,8 @@ pub fn message(state: *GS, msg: Message) (Allocator.Error || std.fmt.BufPrintErr
             assert(state.oneAvailableTower >= 0, "one cannot place more towers than allowed");
             assert(state.twoAvailableTower >= 0, "two cannot place more towers than allowed");
 
+            std.debug.print("message received: {s}\n", .{try c.string()});
+
             const aabb = towers.placementAABB(c.pos.vec2());
             if (towerByAABB(state, aabb)) |idx| {
                 if (state.towers.items[idx].team == c.team) {
@@ -432,7 +446,12 @@ fn canPlaceTower(self: *GS, aabb: math.AABB, team: u8) bool {
     }
 
     if (pos.col <= 0 or pos.col >= self.values.cols - objects.tower.TOWER_COL_COUNT) {
-        std.debug.print("on outside of accepted range: col <= 0, col => {}\n", .{self.values.cols - objects.tower.TOWER_COL_COUNT});
+        std.debug.print("on outside of accepted range: col={}, {}: col <= 0, {}: col => {}\n", .{
+            pos.col,
+            pos.col <= 0,
+            pos.col >= self.values.cols - objects.tower.TOWER_COL_COUNT,
+            self.values.cols - objects.tower.TOWER_COL_COUNT
+        });
         return false;
     }
 
@@ -579,7 +598,7 @@ test "calculate the board" {
 }
 
 test "place creep calculates positions" {
-    var values = objects.Values{.rows = 3, .cols = 3};
+    var values = objects.Values{.rows = 5, .cols = 3};
     values.init();
 
     var gs = try GS.init(testing.allocator, &values);

@@ -1,5 +1,5 @@
 const std = @import("std");
-const Params = @import("test/params.zig");
+const Params = @import("params.zig");
 const utils = @import("test/utils.zig");
 const objects = @import("objects/objects.zig");
 const engine = @import("engine/engine.zig");
