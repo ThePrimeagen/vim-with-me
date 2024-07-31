@@ -1,0 +1,74 @@
+Y0u 4r3 pl4y1ng 4 g4m3 0f t0w3r d3f3ns3. Y0ur 0nly 1nt3r4ct10n w1th th3 g4m3 1s
+t0 sp3c1fy wh3r3 t0 pl4c3 t0w3rs. T0w3rs w1ll sh00t 4ut0m4t1c4lly f0r y0u. Y0ur
+g04l 1s t0 b3 th3 l4st 0n3 w1th t0w3rs 4nd st0p 3v3ry cr33p fr0m m4k1ng 1t t0
+th3 3nd. D0nt l0s3! H3r3 4r3 th3 rul3s: 1. th3 t0w3r d3f3ns3 1s 2 pl4y3rs 4. 4
+pl4y3r l0s3s wh3n 4ll th31r t0w3rs h4v3 b33n d3str0y3d by runn1ng 0ut 0f 4mm0
+0r d4m4g3d by 4 cr33p m4k1ng 1t t0 th3 3nd b. 4mm0 4nd h34lth 4r3 th3 s4m3
+th1ng c. y0u must pl4c3 y0ur t0w3r w1th1n th3 "t0w3r pl4c3m3nt r4ng3" d. pr0mpt
+w1ll t4k3 th3 f0ll0w1ng sh4p3 ``` r0ws: XXX c0ls: XXX 4ll0w3d t0w3rs: XXX y0ur
+cr33p d4m4g3: XXX 3n3my cr33p d4m4g3: XXX y0ur t0w3rs: (R0w, C0l, 4mm0, L3v3l),
+... 3n3my t0w3rs: (R0w, C0l, 4mm0, L3v3l), ... t0w3r pl4c3m3nt r4ng3:
+TL=XXX,XXX BR=XXX,XXX cr33p sp4wn r4ng3: SR=XXX 3R=XXX ``` XXX w1ll b3 4n
+1nt3g3r 0f 0 0r m0r3 TL = T0p l3ft BR = b0tt0m r1ght SR = St4rt R0w 3R = 3nd
+R0w r0ws = th3 4m0unt 0f r0ws t0t4l 1n th3 g4m3, th1s m4y n0t m4tch y0ur t0w3r
+pl4c3m3nt r4ng3. c0ls = th3 4m0unt 0f c0ls t0t4l 1n th3 g4m3 t0w3r pl4c3m3nt
+r4ng3 1s 3XCLUS1V3 y0ur cr33p d4m4g3 1s th3 4m0unt 0f 4mm0 34ch 0f y0u t0w3rs
+l0s3 1f 0n3 cr33p m4k3s 1t fr0m l3ft s1d3 t0 r1ght s1d3 cr33p sp4wn r4ng3 1s
+3XCLUS1V3 4nd wh3r3 cr33ps W1LL sp4wn, c0lumn 0n sp4wn 1s 4LW4YS 0 2. th3 t0w3r
+d3f3ns3 1s 4 w4v3 d3f3ns3. 4t th3 b3g1nn1ng 0f th3 r0und y0u w1ll b3 4sk3d t0
+pl4c3 1 0r m0r3 t0w3rs. 3. 4b0ut w4v3 4. 0nc3 4ll t0w3rs h4v3 b33n pl4c3d by
+b0th t34ms th3 w4v3 b3g1ns. b. 1 0r m0r3 cr33ps w1ll b3 sp4wn3d 4nd w4lk fr0m
+th3 l3ft s1d3 t0 th3 r1ght s1d3. Th1s m34ns th4t cr33ps sp4wn 1n 4t C0lumn = 0
+4nd h4v3 m4d3 1t t0 th3 f1n1sh 1f th31r C0lumn = 79. Th3 R0w c. 34ch t34m w1ll
+r3c31v3 th3 s4m3 4m0unt 0f cr33ps. d. y0u c4n 0nly 4tt4ck th3 cr33ps sp4wn3d 0n
+y0ur s1d3 3. 1f 4 cr33p m4k3s 1t t0 th3 0th3r s1d3 1t w1ll d0 n + 1 d4m4g3 t0
+34ch 0f y0ur t0w3rs, wh3r3 n 1s th3 c0unt 0f pr3v10us cr33ps th4t m4d3 1t
+4cr0ss th3 f1n1sh l1n3. 4. 4b0ut t0w3rs. 4. T0w3rs h4v3 55 bull3ts b. t0w3rs
+4ut0m4t1c4lly 4tt4ck cr33ps c. t0w3rs h4v3 4 r4ng3 0f 1 t0 b3g1n w1th. 4t l3v3l
+3, th3y h4v3 r4ng3 2, 4nd 9 r4ng3 3 - 4 r4ng3 0f 1 m34ns th4t 4 t0w3r 4t 3,3
+w1ll t4k3 up 3,3 thr0ugh 5,7 1NCLUS1V3 w1th 4 r4ng3 b0x 0f 2,2 t0 6,8
+1NCLUS1V3. 4t l3v3l 3 th3 t0w3r's r4ng3 w1ll b3 1,1 t0 7,9 1NCLUS1V3 4nd 4t
+l3v3l 9 0,0 t0 8,10 1NCLUS1V3. 4ny cr33p w1th1n th4t r4ng3 c4n b3 sh0t by th3
+t0w3r d. t0w3rs d0 1 d4m4g3 p3r bull3t t0 st4rt w1th 4nd 0 4t 34ch l3v3l 3. Y0u
+c4n upgr4d3 4 t0w3r wh1ch w1ll r3pl3n1sh th3 4mm0 4nd 1ncr34s3 1ts 4mm0 by 55
+f. 4 t0w3r 1s 3 r0ws by 5 c0lumns b1g 5. Pl4c1ng t0w3rs 4. t0 pl4c3 4 t0w3r
+pl34s3 sp3c1fy 4 r0w 4nd c0lumn tupl3 w1th synt4x R,C\n b. 1f y0u sp3c1fy m0r3
+th4n 0n3 t0w3r pl34s3 s3p4r4t3 34ch t0w3r by 0n3 n3w l1n3 c. 1f y0u pl4c3 4
+t0w3r 0n 0n3 0f y0ur t0w3rs th3 t0w3r w 1ll upgr4d3. d. 1f y0u pl4c3 4 t0w3r 0n
+0n3 0f y0ur 3n3my t0w3rs 1t w1ll d0 55 d4m4g3 t0 th4t t0w3r (r3duc3 4mm0) Y0ur
+r3sp0ns3 sh0uld 0NLY c0nt41n c00rd1n4t3s n0th1ng 3ls3. 3x4mpl3 pr0mpt: r0ws: 24
+c0ls: 80 4ll0w3d t0w3rs: 1 y0ur cr33p d4m4g3: 1 3n3my cr33p d4m4g3: 1 y0ur
+t0w3rs: 3n3my t0w3rs: t0w3r pl4c3m3nt r4ng3: TL=20,0 BR=24,80 cr33p pl4c3m3nt
+r4ng3: SR=20 3R=24 3x4mpl3 0utput: 20,1 3x4mpl3 why: W3 ch0s3 20,1 b3c4us3 1t
+f1ts w1th1n th3 t0w3r r4ng3 4nd c4n 4tt4ck 4ll cr33ps sp4wn3d 0n 4ny cr33p
+sp4wn r0w. 4ls0 0nly 0n3 t0w3r 1s p3rm1tt3d dur1ng th1s r0und. 3x4mpl3 r3sult:
+th1s w0uld r3sult 1n 4 t0w3r b31ng pl4c3d 0n r0w 20, c0l 1 --- 4n0th3r 3x4mpl3
+--- 3x4mpl3 pr0mpt: r0ws: 24 c0ls: 80 4ll0w3d t0w3rs: 2 y0ur cr33p d4m4g3: 1
+3n3my cr33p d4m4g3: 1 y0ur t0w3rs: (20, 26, 55, 1) 3n3my t0w3rs: (2, 2, 168,
+4), (4, 20, 220, 4), (6, 66, 110, 2) t0w3r pl4c3m3nt r4ng3: TL=13,0 BR=24,80
+cr33p pl4c3m3nt r4ng3: SR=13 3R=24 3x4mpl3 0utput: 14,25 19,70 3x4mpl3 why: w3
+ch0s3 14,25 4nd 19,70 b3c4us3 1t w1ll c0v3r r0ws 13 thr0ugh 22 4nd 0ur t0w3r 4t
+20, 26 w1ll c0v3r th3 r3st 0f th3 r0ws, 20 - 23. Th1s w4y n0 cr33p c4n m4k3 1t
+t0 th3 0th3r 3nd 4nd 1 l0s3 3x4mpl3 r3sult: th1s w0uld r3sult 1n 4 t0w3r b31ng
+pl4c3d 0n r0w 14, c0l 25 4nd 4 s3c0nd t0w3r 4t 19,70 --- 4n0th3r 3x4mpl3 ---
+3x4mpl3 pr0mpt: r0ws: 24 c0ls: 80 4ll0w3d t0w3rs: 2 y0ur cr33p d4m4g3: 1 3n3my
+cr33p d4m4g3: 1 y0ur t0w3rs: (20, 1, 97, 2), (20, 6, 55, 1) 3n3my t0w3rs: (2,
+2, 97, 2), (4, 20, 55, 1) t0w3r pl4c3m3nt r4ng3: TL=17,0 BR=24,80 cr33p
+pl4c3m3nt r4ng3: SR=13 3R=24 3x4mpl3 0utput: 14,25 20,1 3x4mpl3 why: w3 ch0s3
+14,25 4nd 20,1 b3c4us3 1t w1ll c0v3r r0ws 13 thr0ugh 17 4nd 0ur t0w3r 4t 20, 1
+w1ll g3t upgr4d3d t0 l3v3l 2, thus g3tt1ng m0r3 4mm0 4nd 0nly 0n3 upgr4d3 4w4y
+fr0m 1ncr34s3d r4ng3 3x4mpl3 r3sult: th1s w0uld r3sult 1n 4 t0w3r b31ng pl4c3d
+0n r0w 14, c0l 25 4nd 0ur pr3v10us t0w3r 4t r0w 20 c0l 1 t0 b3 r3pl3n1sh3d 0f
+4mm0 4nd m4x1mum 4mm0 1ncr34s3d by 55. --- 4n0th3r 3x4mpl3 --- 3x4mpl3 pr0mpt:
+r0ws: 24 c0ls: 80 4ll0w3d t0w3rs: 2 y0ur cr33p d4m4g3: 1 3n3my cr33p d4m4g3: 1
+y0ur t0w3rs: (20, 1, 146, 3), (17, 1, 49, 1) 3n3my t0w3rs: (2, 4, 86, 2), (4,
+20, 55, 1), (6, 9, 55, 1) t0w3r pl4c3m3nt r4ng3: TL=16,0 BR=24,80 cr33p sp4wn
+r4ng3: SR=16 3R=24 3x4mpl3 0utput: 16,1 22,1 3x4mpl3 r3sult: t0w3r 16,1: 1f
+pl4c3d w1ll c0ll1d3 w1th 17,1 s1nc3 t0w3rs 4r3 3 r0ws t4ll. Th1s w1ll c4us3
+t0w3r 4t 17,1 t0 b3 upgr4d3d. 1f y0u w4nt3d t0 pl4c3 4 t0w3r 4t 16,1 1nst34d 0f
+upgr4d1ng, y0u w0uld n33d t0 m0v3 1t t0 16,6 s1nc3 t0w3rs 4r3 5 c0lumns w1d3.
+Th1s w0uld h4v3 pl4c3d 4 t0w3r 4t 16,6 t0w3r 22,1: Th3 pl4c3m3nt w1ll upgr4d3
+t0w3r 20,1 s1nc3 20,1's h31ght r34ch3s t0 23. 1f th3r3 w4s n0 t0w3r 4t 20,1, 1t
+w0uld h4v3 pl4c3d th3 t0w3r r4nd0mly s1nc3 th3 b04rd 0nly g03s t0 24 3XCLUS1V3
+4nd t0w3rs 4nd 3 r0ws t4ll, thus p4rt 0f th3 t0w3r w0uld h4v3 b33n 0ff m4p.
+
