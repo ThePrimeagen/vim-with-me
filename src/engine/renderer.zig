@@ -2,10 +2,12 @@ const assert = @import("../assert/assert.zig").assert;
 const std = @import("std");
 const objects = @import("../objects/objects.zig");
 const engine = @import("../engine/engine.zig");
-const scratchBuf = @import("../scratch/scratch.zig").scratchBuf;
+const scratch = @import("../scratch/scratch.zig");
 const utils = @import("utils.zig");
+const math = @import("../math/math.zig");
 
 const gamestate = objects.gamestate;
+const colors = objects.colors;
 const Values = objects.Values;
 const canvas = @import("canvas.zig");
 
@@ -16,14 +18,20 @@ const projectiles = @import("projectile.zig");
 const Allocator = std.mem.Allocator;
 const GameState = gamestate.GameState;
 const TEXT_AREA_COLS = 30;
+const GRID_AREA_COLS = 2;
+const GRID_AREA_ROWS = 1;
 const PLAYER_ONE = "Player One";
 const PLAYER_TWO = "Player Two";
+const scratchBuf = scratch.scratchBuf;
+const toNumber = scratch.toNumber;
 
 pub const Renderer = struct {
     canvas: canvas.Canvas,
     output: []u8,
     count: u32,
     values: *const objects.Values,
+    gridOffsetX: usize,
+    gridOffsetY: usize,
     textOffset: usize,
     rendererValues: *objects.Values,
     alloc: Allocator,
@@ -33,17 +41,20 @@ pub const Renderer = struct {
 
         var rendererValues: *Values = try alloc.create(Values);
         Values.copyInto(values, rendererValues);
-        rendererValues.cols = values.cols + TEXT_AREA_COLS;
+        rendererValues.cols = values.cols + TEXT_AREA_COLS + GRID_AREA_COLS;
+        rendererValues.rows = values.rows + GRID_AREA_ROWS;
         Values.init(rendererValues);
 
         return .{
-            .textOffset = values.cols,
+            .textOffset = values.cols + 2,
             .values = values,
             .canvas = try canvas.Canvas.init(alloc, rendererValues),
             .output = undefined,
             .count = 0,
             .rendererValues = rendererValues,
             .alloc = alloc,
+            .gridOffsetX = 2,
+            .gridOffsetY = 1,
         };
     }
 
@@ -53,11 +64,15 @@ pub const Renderer = struct {
     }
 
     pub fn render(self: *Renderer, gs: *GameState) !void {
+        const gridOffset = .{.row = self.gridOffsetY, .col = self.gridOffsetX};
+
         if (gs.noBuildZone) {
             const cells = objects.nobuild.createCells(gs.noBuildRange, gs.values.cols);
-            const sized = gs.noBuildRange.sized(gs.values.cols);
+            const sized = gs.noBuildRange.sized(gs.values.cols).add(gridOffset);
             self.canvas.place(sized, cells);
         }
+
+        try self.renderGrid(gs);
 
         for (gs.towers.items) |*t| {
             if (!t.alive) {
@@ -65,7 +80,7 @@ pub const Renderer = struct {
             }
 
             towers.render(t, gs);
-            self.canvas.place(t.rSized, &t.rCells);
+            self.canvas.place(t.rSized.add(gridOffset), &t.rCells);
         }
 
         for (gs.creeps.items) |*c| {
@@ -74,7 +89,7 @@ pub const Renderer = struct {
             }
 
             creeps.render(c, gs);
-            self.canvas.place(c.rSized, &c.rCells);
+            self.canvas.place(c.rSized.add(gridOffset), &c.rCells);
         }
 
         for (gs.projectile.items) |*p| {
@@ -83,7 +98,7 @@ pub const Renderer = struct {
             }
 
             projectiles.render(p, gs);
-            self.canvas.place(p.rSized, &p.rCells);
+            self.canvas.place(p.rSized.add(gridOffset), &p.rCells);
         }
 
         try self.gameStateText(gs);
@@ -92,8 +107,29 @@ pub const Renderer = struct {
         self.count += 1;
     }
 
+    fn renderGrid(self: *Renderer, gs: *GameState) !void {
+
+        const columns = @divFloor(gs.values.cols, 5);
+        var offset: math.Position = .{.row = 0, .col = 0};
+        for (0..columns) |idx| {
+            offset.col = self.gridOffsetX + idx * 5;
+            self.canvas.writeText(offset, try toNumber(idx * 5), colors.White);
+        }
+
+        const rows = @divFloor(gs.values.rows, 3);
+        offset.col = 0;
+        for (0..rows) |idx| {
+            offset.row = self.gridOffsetY + idx * 3;
+            self.canvas.writeText(offset, try toNumber(idx * 3), colors.White);
+        }
+
+
+        for (0..self.values.size) |idx| {
+        }
+    }
+
     // WAP
-    pub fn gameStateText(self: *Renderer, gs: *GameState) !void {
+    fn gameStateText(self: *Renderer, gs: *GameState) !void {
         const roundBuf = try std.fmt.bufPrint(scratchBuf(50), "round: {}", .{gs.round});
         var row: usize = 0;
         self.canvas.writeText(.{

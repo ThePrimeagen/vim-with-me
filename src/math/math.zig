@@ -46,6 +46,13 @@ pub const Position = struct {
         return self.row * cols + self.col;
     }
 
+    pub fn add(self: Position, other: Position) Position {
+        return .{
+            .row = self.row + other.row,
+            .col = self.col + other.col,
+        };
+    }
+
     pub fn fromIdx(idx: usize, cols: usize) Position {
         return .{
             .row = idx / cols,
@@ -123,6 +130,12 @@ pub const Sized = struct {
             self.cols,
             try self.pos.string(),
         });
+    }
+
+    pub fn add(self: Sized, pos: Position) Sized {
+        var s = self;
+        s.pos = s.pos.add(pos);
+        return s;
     }
 };
 
