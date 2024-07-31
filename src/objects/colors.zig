@@ -19,6 +19,15 @@ pub const White: Color = .{.r = 255, .g = 255, .b = 255 };
 pub const Cell = struct {
     text: u8,
     color: Color,
+    background: ?Color = null,
+
+    pub fn sameColors(self: Cell, other: Cell) bool {
+        return self.color.equal(other.color) and (
+            (self.background == null and other.background == null) or
+            (self.background != null and other.background != null and
+             self.background.?.equal(other.background.?))
+        );
+    }
 };
 
 

@@ -14,15 +14,16 @@ const clear: [4]u8 = .{'', '[', '2', 'J'};
 const newFrame: [4]u8 = .{ '', '[', ';', 'H', };
 const initialClear: [14]u8 = topLeftFull ++ clear ++ newFrame;
 const foregroundColor: [7]u8 = .{ '', '[', '3', '8', ';', '2', ';', };
+const backgroundColor: [7]u8 = .{ '', '[', '4', '8', ';', '5', ';', };
 const newline: [2]u8 = .{ '\r', '\n', };
 
-fn writeAnsiColor(color: Color, out: []u8, o: usize) !usize {
+fn writeAnsiColor(color: Color, ansiColor: []const u8, out: []u8, o: usize) !usize {
     var offset = o;
 
-    const maxOffset = offset + 12 + foregroundColor.len;
+    const maxOffset = offset + 12 + ansiColor.len;
     assert(maxOffset < out.len, "potential buffer overflow");
 
-    offset = write(out, offset, &foregroundColor);
+    offset = write(out, offset, ansiColor);
     const slice = try std.fmt.bufPrint(out[offset..], "{};{};{}m", .{color.r, color.g, color.b});
 
     offset += slice.len;
@@ -76,7 +77,7 @@ fn ansiCodeLength(buffer: []const u8) usize {
 
 pub const AnsiFramer = struct {
     firstPrint: bool,
-    previous: Color = undefined,
+    previous: Cell = undefined,
     values: *const Values,
 
     pub fn init(values: *const Values) AnsiFramer {
@@ -101,9 +102,12 @@ pub const AnsiFramer = struct {
         for (f, 1..) |*c, idx| {
             const text = c.text;
 
-            if (!self.previous.equal(c.color)) {
-                self.previous = c.color;
-                offset = try writeAnsiColor(c.color, out, offset);
+            if (!self.previous.sameColors(c.*)) {
+                self.previous = c.*;
+                offset = try writeAnsiColor(c.color, &foregroundColor, out, offset);
+                if (c.background) |b| {
+                    offset = try writeAnsiColor(b, &backgroundColor, out, offset);
+                }
             }
 
             offset = writeByte(out, offset, text);

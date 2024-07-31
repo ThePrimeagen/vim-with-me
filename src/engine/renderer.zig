@@ -45,7 +45,7 @@ pub const Renderer = struct {
         rendererValues.rows = values.rows + GRID_AREA_ROWS;
         Values.init(rendererValues);
 
-        return .{
+        var out: Renderer = .{
             .textOffset = values.cols + 2,
             .values = values,
             .canvas = try canvas.Canvas.init(alloc, rendererValues),
@@ -56,6 +56,18 @@ pub const Renderer = struct {
             .gridOffsetX = 2,
             .gridOffsetY = 1,
         };
+
+        for (0..values.size) |idx| {
+            if (idx & 1 == 0) {
+                const pos: math.Position = .{
+                    .row = 1 + @divFloor(idx, values.cols),
+                    .col = 2 + idx % values.cols,
+                };
+                out.canvas.background(pos, colors.DarkSlate);
+            }
+        }
+
+        return out;
     }
 
     pub fn deinit(self: *Renderer) void {
@@ -121,10 +133,6 @@ pub const Renderer = struct {
         for (0..rows) |idx| {
             offset.row = self.gridOffsetY + idx * 3;
             self.canvas.writeText(offset, try toNumber(idx * 3), colors.White);
-        }
-
-
-        for (0..self.values.size) |idx| {
         }
     }
 

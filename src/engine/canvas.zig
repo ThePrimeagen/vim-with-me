@@ -10,7 +10,8 @@ const Values = objects.Values;
 
 const AnsiFramer = framer.AnsiFramer;
 const Allocator = std.mem.Allocator;
-const Position = math.Vec2;
+const Vec2 = math.Vec2;
+const Position = math.Position;
 const Sized = math.Sized;
 const Color = colors.Color;
 const Cell = colors.Cell;
@@ -35,7 +36,7 @@ pub const Canvas = struct {
 
     pub fn init(alloc: Allocator, values: *const Values) !Canvas {
         var canvas: Canvas = .{
-            .buffer = try alloc.alloc(u8, values.size * 16), // no idea how big ansi encoding is
+            .buffer = try alloc.alloc(u8, values.size * 32), // no idea how big ansi encoding is
             .renderBuffer = undefined,
             .bufferLen = 0,
             .cells = try alloc.alloc(Cell, values.size),
@@ -59,16 +60,21 @@ pub const Canvas = struct {
 
         const offset = pos.row * self.values.cols + pos.col;
         for (text, offset..) |txt, idx| {
-            self.cells[idx] = .{
-                .text = txt,
-                .color = color,
-            };
+            self.cells[idx].text = txt;
+            self.cells[idx].color = color;
         }
+    }
+
+    pub fn background(self: *Canvas, pos: Position, col: Color) void {
+        assert(pos.row < self.values.rows, "background color set off the grid");
+        assert(pos.col < self.values.cols, "background color set off the grid");
+
+        const offset = pos.row * self.values.cols + pos.col;
+        self.cells[offset].background = col;
     }
 
     // TODO: I think that position could be swapped here
     pub fn place(self: *Canvas, sized: Sized, cells: []const Cell) void {
-
         assert(sized.cols != 0, "cannot render a 0 sized object");
         assert(cells.len > 0, "writing an empty object");
         assert(cells.len % sized.cols == 0, "must provide a square");
@@ -76,12 +82,12 @@ pub const Canvas = struct {
         // TODO: rethink these?  Just have the canvas draw what it can?
         assert(sized.pos.row + (cells.len / sized.cols - 1) < self.values.rows, "cannot write text off the screen rows");
         assert(sized.pos.col + sized.cols < self.values.cols, "cannot paint object off screen cols");
-
         for (cells, 0..) |cell, idx| {
             const col = idx % sized.cols;
             const row = idx / sized.cols;
             const offset = (sized.pos.row + row) * self.values.cols + sized.pos.col + col;
-            self.cells[offset] = cell;
+            self.cells[offset].text = cell.text;
+            self.cells[offset].color = cell.color;
         }
     }
 
