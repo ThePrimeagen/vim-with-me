@@ -28,7 +28,6 @@ func getDebug(name string) (*testies.DebugFile, error) {
 
 type CmdErrParser struct {
     debug *testies.DebugFile
-    round chan int
     prompt chan string
     done chan string
     doneStr string
@@ -41,7 +40,6 @@ type CmdErrParser struct {
 func newCmdErrParser(debug *testies.DebugFile) CmdErrParser {
     return CmdErrParser{
         debug: debug,
-        round: make(chan int, 1),
         prompt: make(chan string, 1),
         done: make(chan string, 1),
         doneReadCount: 0,
@@ -51,14 +49,6 @@ func newCmdErrParser(debug *testies.DebugFile) CmdErrParser {
         empty: false,
 
     }
-}
-
-func (c *CmdErrParser) parseWait(countStr string) {
-    countStrTrimmed := strings.TrimSpace(countStr)
-    count, err := strconv.Atoi(countStrTrimmed)
-    assert.NoError(err, "zig program gave me a non number", "parts", countStr)
-
-    c.round <- count
 }
 
 func (c *CmdErrParser) parse(b []byte) (int, error) {
@@ -90,10 +80,6 @@ func (c *CmdErrParser) parse(b []byte) (int, error) {
                 c.promptStr += curr + "\n"
             }
 
-        } else if strings.Contains(line, "waiting") {
-            parts := strings.Split(line, "-")
-            assert.Assert(len(parts) == 2, "somehow i didn't communicate back with 2 pieces", "parts", parts)
-            c.parseWait(parts[1])
         } else if line == "prompt:" {
             c.readingPrompt = true
             c.promptStr = ""
@@ -124,12 +110,12 @@ func (c *CmdErrParser) parse(b []byte) (int, error) {
 type OpenAIChat struct {
     client *openai.Client
     system string
-    ctx context.Context
 }
 
-func (o *OpenAIChat) chat(chat string) (string, error) {
-    resp, err := o.client.CreateChatCompletion(o.ctx, openai.ChatCompletionRequest{
-        Model: openai.GPT4oMini,
+func (o *OpenAIChat) chat(chat string, ctx context.Context) (string, error) {
+    resp, err := o.client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
+        Model: openai.GPT4oMini20240718,
+        Temperature: 0,
         Messages: []openai.ChatCompletionMessage{
             {
                 Role: openai.ChatMessageRoleSystem,
@@ -148,48 +134,47 @@ func (o *OpenAIChat) chat(chat string) (string, error) {
     return resp.Choices[0].Message.Content, nil
 }
 
-func NewOpenAIChat(secret string, system string, ctx context.Context) *OpenAIChat {
+func NewOpenAIChat(secret string, system string) *OpenAIChat {
     client := openai.NewClient(secret)
     return &OpenAIChat{
         system: system,
         client: client,
-        ctx: ctx,
     }
 }
 
 type StatefulOpenAIChat struct {
     ai *OpenAIChat
-    out chan string
     ctx context.Context
 }
 
 func newStatefulOpenAIChat(secret string, system string, ctx context.Context) *StatefulOpenAIChat {
     return &StatefulOpenAIChat{
-        ai: NewOpenAIChat(secret, system, ctx),
-        out: make(chan string, 10),
+        ai: NewOpenAIChat(secret, system),
         ctx: ctx,
     }
 }
 
-func (s *StatefulOpenAIChat) prompt(p string) error {
-    str, err := s.ai.chat(p)
+func (s *StatefulOpenAIChat) prompt(p string, ctx context.Context) (string, error) {
+    str, err := s.ai.chat(p, ctx)
     if err != nil {
-        return err
+        return "", err
     }
-
-    s.out <- str
-    return nil
+    return str, err
 }
 
-func (s *StatefulOpenAIChat) ReadWithTimeout(timeout time.Duration) string {
-    select {
-    case <-s.ctx.Done():
-        return ""
-    case <-time.NewTimer(timeout).C:
-        return ""
-    case resp := <-s.out:
-        return resp
+func (s *StatefulOpenAIChat) ReadWithTimeout(p string, t time.Duration) (string, error) {
+    ctx, cancel := context.WithCancel(s.ctx)
+    go func() {
+        time.Sleep(t)
+        cancel()
+    }()
+
+    str, err := s.ai.chat(p, ctx)
+    if err != nil {
+        return "", err
     }
+
+    return str, err
 }
 
 type RandomPos struct {
@@ -206,7 +191,122 @@ func (r *RandomPos) NextPos() string {
     return r.outOfBounds
 }
 
+type BoxPos struct {
+    maxRows int
+    position int
+}
+
+func NewBoxPos(maxRows int) BoxPos {
+    return BoxPos{
+        maxRows: maxRows,
+        position: 0,
+    }
+}
+
+// As of right now, out of bounds guesses will place a tower within your area
+// randomly
+func (r *BoxPos) NextPos() string {
+    col := 6
+    if r.position & 0x1 == 0 {
+        col = 12
+    }
+
+    row := ((r.position % 4) / 2) * 5
+    r.position++
+
+    return fmt.Sprintf("%d,%d", row, col)
+}
+
+
+type PositionGenerator interface  {
+    NextPos() string
+}
+
+type Tower struct {
+    row int
+    col int
+    ammo int
+    level int
+}
+
+func NewTower(str string) Tower {
+    assert.Assert(str[0] == '(' && str[len(str) - 1] == ')', "expected tower string to start and end with a paran", "str", str)
+
+    parts := strings.Split(str[1:len(str) - 1], ",")
+    assert.Assert(len(parts) == 4, "the tower definition did not contain 4 parts", "str", str)
+
+    out := make([]int, 0, 4)
+    for i, v := range parts {
+        num, err := strconv.Atoi(v)
+        assert.NoError(err, "unable to convert the number", "err", err)
+        out[i] = num
+    }
+
+    return Tower{
+        row: out[0],
+        col: out[1],
+        ammo: out[2],
+        level: out[3],
+    }
+}
+
+func NewTowers(str string) []Tower {
+    out := []Tower{}
+    start := 0
+    for {
+        start = strings.Index(str[start:], "(")
+        if start == -1 {
+            return out
+        }
+
+        end := strings.Index(str[start:], ")")
+        assert.Assert(end != -1, "the tower string was incomplete", str)
+        out = append(out, NewTower(str[start:start + end + 1]))
+
+        start += end
+    }
+}
+
 type GameState struct {
+    rows string
+    cols string
+    allowedTowers int
+    yourCreepDamage string
+    enemyCreepDamage string
+    yourTowers string
+    enemyTowers string
+    towerPlacement string
+    creepSpawnRange string
+}
+
+func GameStateFromString(str string) GameState {
+    lines := strings.Split(str, "\n")
+    allowed, err := strconv.Atoi(strings.Split(lines[2], ": ")[1])
+    assert.NoError(err, "unable to parse prompt allowed towers", "str", str)
+    return GameState{
+        rows: lines[0],
+        cols: lines[1],
+        allowedTowers: allowed,
+        yourCreepDamage: lines[3],
+        enemyCreepDamage: lines[4],
+        yourTowers: lines[5],
+        enemyTowers: lines[6],
+        towerPlacement: lines[7],
+        creepSpawnRange: lines[8],
+    }
+}
+
+func (g *GameState) String() string {
+    return fmt.Sprintf(`%s
+%s
+allowed towers: %d
+%s
+%s
+%s
+%s
+%s
+%s
+`, g.rows, g.cols, g.allowedTowers, g.yourCreepDamage, g.enemyCreepDamage, g.yourTowers, g.enemyTowers, g.towerPlacement, g.creepSpawnRange)
 }
 
 type PosGenerator interface {
@@ -216,20 +316,24 @@ type PosGenerator interface {
 // if the ai provides some line that is unreadable i will just provide a value too large and thus random placement
 func getPosFromAIResponse(line string) string {
     parts := strings.Split(line, ",")
+    for i, p := range parts {
+        parts[i] = strings.TrimSpace(p)
+    }
+
     if len(parts) != 2 {
         return "999,999"
     }
 
-    _, err := strconv.Atoi(parts[0])
+    row, err := strconv.Atoi(parts[0])
     if err != nil {
         return "999,999"
     }
 
-    _, err = strconv.Atoi(parts[1])
+    col, err := strconv.Atoi(parts[1])
     if err != nil {
         return "999,999"
     }
-    return line
+    return fmt.Sprintf("%d,%d", row, col)
 }
 
 func main() {
@@ -241,8 +345,12 @@ func main() {
 	debugFile := ""
 	flag.StringVar(&debugFile, "debug", "", "runs the file like the program instead of running doom")
 
-	systemPromptFile := "PROMPT"
-	flag.StringVar(&systemPromptFile, "system", "PROMPT", "the system prompt to use")
+	systemPromptFile := "THEPRIMEAGEN"
+	flag.StringVar(&systemPromptFile, "system", "THEPRIMEAGEN", "the system prompt to use")
+
+	viz := false
+	flag.BoolVar(&viz, "viz", false, "displays the game")
+
 
 	seed := 1337
 	flag.IntVar(&seed, "seed", 69420, "the seed value for the game")
@@ -280,16 +388,21 @@ func main() {
         AddKVArg("--seed", fmt.Sprintf("%d", seed)).
         WithErrFn(errParser.parse).
         WithOutFn(func(b []byte) (int, error) {
-            //fmt.Printf("%s\n", string(b))
+            if viz {
+                fmt.Printf("%s\n", string(b))
+            }
             return len(b), nil
         })
 
     go cmdr.Run()
 	go chtAgg.Pipe(twitchChat)
 
-    ai := newStatefulOpenAIChat(os.Getenv("OPENAI_API_KEY"), string(systemPrompt), ctx)
-
+    ai := newStatefulOpenAIChat(os.Getenv("OPENAI_API_KEY"), string(systemPrompt), ctxWithCancel)
     done := make(chan struct{}, 1)
+    aiRandomGuesses := 0
+    aiBadParse := 0
+    aiTotalTowers := 0
+    fmt.Printf("won,prompt file,seed,ai total towers,ai guesses,ai bad parses\n")
     go func() {
         for doneStr := range errParser.done {
             debug.WriteLine([]byte("------------------------------------------"))
@@ -303,26 +416,12 @@ func main() {
             debug.WriteStrLine(fmt.Sprintf("Results: %s", doneStr))
 
             if strings.Contains(doneStr, "1: won") {
-                fmt.Printf("%s %d 1\n", systemPromptFile, seed)
+                fmt.Printf("1,%s,%d,%d,%d,%d\n", systemPromptFile, seed, aiTotalTowers, aiRandomGuesses, aiBadParse)
             } else {
-                fmt.Printf("%s %d 2\n", systemPromptFile, seed)
+                fmt.Printf("2,%s,%d,%d,%d,%d\n", systemPromptFile, seed, aiTotalTowers, aiRandomGuesses, aiBadParse)
             }
 
             done<-struct{}{}
-        }
-    }()
-
-    go func() {
-        outer:
-        for {
-            select {
-            case p := <-errParser.prompt:
-                debug.WriteLine([]byte("prompt received"))
-                err := ai.prompt(p)
-                assert.NoError(err, "error when prompting", "err", err)
-            case <-ctxWithCancel.Done():
-                break outer;
-            }
         }
     }()
 
@@ -330,7 +429,7 @@ func main() {
         fmt.Println("\x1b[?25h")
     }()
 
-    posGen := NewRandomPos(24)
+    posGen := NewBoxPos(24)
     roundCount := 0
     outer:
     for {
@@ -338,36 +437,63 @@ func main() {
         select {
         case <-ctxWithCancel.Done():
             break outer;
-        case count := <- errParser.round:
-            resp := ai.ReadWithTimeout(time.Second * 15)
-            assert.Assert(resp != "", "i got an empty response from the ai???")
-            roundCount++
+        case promptStr := <- errParser.prompt:
+            prompt := GameStateFromString(promptStr)
+            count := prompt.allowedTowers
+            aiResponses := 0
+            tries := 0
+            for aiResponses < count && tries < 3 {
+                resp, err := ai.ReadWithTimeout(promptStr, time.Second * 5)
+                roundCount++
+                tries++
 
-            sent := 0
-            for _, line := range strings.Split(resp, "\n") {
-                if line == "" || sent == count {
-                    break;
+                if err != nil {
+                    continue
                 }
 
-                line = getPosFromAIResponse(line)
+                for _, line := range strings.Split(resp, "\n") {
+                    line = strings.TrimSpace(line)
+                    if line == "" || aiResponses == count {
+                        break;
+                    }
 
-                sent++
-                debug.WriteStrLine(fmt.Sprintf("ai-placement(%d): %s\n", roundCount, line))
-                err := cmdr.WriteLine([]byte(fmt.Sprintf("2%s\n", line)))
+                    parsedLine := getPosFromAIResponse(line)
+                    if parsedLine == "999,999" {
+                        debug.WriteStrLine(fmt.Sprintf("ai-placement BAD FORMAT: %s\n", line))
+                        aiBadParse++
+                        continue
+                    }
+
+                    aiTotalTowers++
+                    aiResponses++
+
+                    debug.WriteStrLine(fmt.Sprintf("ai-placement(%d): %s\n", roundCount, parsedLine))
+                    err := cmdr.WriteLine([]byte(fmt.Sprintf("2%s\n", parsedLine)))
+                    if err != nil {
+                        debug.WriteStrLine(fmt.Sprintf("error writing ai coord: %+v", err))
+                    }
+                    assert.NoError(err, "error trying to write line to program", "err", err)
+                }
+
+            }
+
+            for aiResponses < count {
+                err := cmdr.WriteLine([]byte("2999,999"))
                 if err != nil {
                     debug.WriteStrLine(fmt.Sprintf("error writing ai coord: %+v", err))
                 }
-                assert.NoError(err, "error trying to write line to program", "err", err)
+                aiResponses++
+                aiRandomGuesses++
+                aiTotalTowers++
             }
 
-            assert.Assert(sent == count, "we sent incorrect amount of positions", "sent", sent, "count", count)
-
             for range count {
-                cmdr.WriteLine([]byte(fmt.Sprintf("1%s\n", posGen.NextPos())))
+                next := fmt.Sprintf("1%s\n", posGen.NextPos())
+                debug.WriteStrLine(fmt.Sprintf("PLAYER MOVE: %s", next))
+                cmdr.WriteLine([]byte(next))
             }
         }
     }
-
 
     <-done
 }

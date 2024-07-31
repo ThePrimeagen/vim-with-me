@@ -14,14 +14,14 @@ pub const TowerValues = struct {
 };
 
 pub const CreepValues = struct {
-    life: usize = 8,
+    life: usize = 7,
     speed: f64 = 2,
 
     scaleSpeed: f64 = 0.15,
     scaleSpeedRounds: usize = 2,
     scaleLife: usize = 1,
     scaleLifeRounds: usize = 2,
-    scaleSpawnRate: f64 = 0.15,
+    scaleSpawnRate: f64 = 0.07,
 };
 
 pub const ProjectorValues = struct {

@@ -1,0 +1,12 @@
+{GAME:tower_defense} {PLAYERS:2} {INTERACTION:place_towers}
+{GOAL:survive_longest,stop_all_creeps} {LOSS_CONDITION:all_towers_destroyed}
+{TOWER_STATS:ammo=health} {INPUT_FORMAT: rows:int cols:int allowed_towers:int
+your_creep_damage:int enemy_creep_damage:int
+your_towers:(Row,Col,Ammo,Level),... enemy_towers:(Row,Col,Ammo,Level),...
+tower_placement_range:TL=int,int BR=int,int creep_spawn_range:SR=int ER=int }
+{RULES: -place_within_range -wave_defense -creeps_left_to_right
+-equal_creeps_per_team -attack_own_creeps -creep_damage=n+1
+-tower_stats:ammo=55,range=1(lvl1),2(lvl3),3(lvl9),damage=1+0/lvl
+-tower_size:3x5 -upgrade:replenish+55ammo -placement_on_enemy=-55ammo }
+{OUTPUT:R,C\n(multiple_towers:separate_by_newline)}
+

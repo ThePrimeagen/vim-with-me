@@ -39,8 +39,8 @@ pub const ReportState = struct {
             try err.writeAll("1: lost\n");
             try err.writeAll("2: won\n");
         } else {
-            try err.writeAll("1: lost\n");
-            try err.writeAll("2: won\n");
+            try err.writeAll("1: won\n");
+            try err.writeAll("2: lost\n");
         }
     }
 };

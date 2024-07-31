@@ -85,8 +85,10 @@ pub fn main() !void {
             try reportState.playing();
         }
 
-        try render.render(&gs);
-        try out(render.output);
+        if (args.viz == null or args.viz.?) {
+            try render.render(&gs);
+            try out(render.output);
+        }
 
         engine.gamestate.validateState(&gs);
     }

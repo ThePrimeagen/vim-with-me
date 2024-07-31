@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-for i in {0..10}; do
-    LEVEL=error go run ./examples/v2/td/run/main.go --system $1 --seed $i --debug /tmp/td -- ./zig-out/bin/to main.json
+for i in {0..99}; do
+    echo "running $1 at round $i"
+    LEVEL=error go run ./examples/v2/td/run/main.go --system $1 --seed $i --debug /tmp/td -- ./zig-out/bin/to main.json >> $1_results
 done
-
 
