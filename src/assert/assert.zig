@@ -2,6 +2,17 @@ const std = @import("std");
 
 const print = std.debug.print;
 
+fn clear() void {
+    std.debug.print("\x1b[?25h", .{});
+    std.debug.print("\x1b[0m", .{});
+    _ = std.io.getStdOut().write("\x1b[?25h") catch |e| {
+        std.debug.print("error while clearing stdout: {}\n", .{e});
+    };
+    _ = std.io.getStdOut().write("\x1b[0m") catch |e| {
+        std.debug.print("error while clearing stdout: {}\n", .{e});
+    };
+}
+
 pub const Dump = struct {
     ptr: *anyopaque,
     vtab: *const VTab,
@@ -70,10 +81,7 @@ pub fn unwrap(comptime T: type, val: anyerror!T) T {
 }
 
 pub fn never(msg: []const u8) void {
-    std.debug.print("\x1b[0m", .{});
-    _ = std.io.getStdOut().write("\x1b[0m") catch |e| {
-        std.debug.print("error while clearing stdout: {}\n", .{e});
-    };
+    clear();
 
     for (0..dumpLen) |dump| {
         if (dumps[dump]) |d| {

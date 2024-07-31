@@ -14,6 +14,9 @@ const Values = objects.Values;
 const Allocator = std.mem.Allocator;
 
 pub fn main() !void {
+    engine.stdout.hideCursor();
+    try engine.stdout.showCursorOnSigInt();
+
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
 
@@ -30,6 +33,7 @@ pub fn main() !void {
 
         inGameTime += timings.time;
     }
+    engine.stdout.showCursor();
 }
 
 const Timings = struct {
