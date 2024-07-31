@@ -1,6 +1,4 @@
 ## Tower Defense V1 completion
-* Communicate Prompt (done)
-  * Golang process prompt
 * Twitch chat places one or more tower
     * sending multiple updates to the game of twitch decisions
     * allow multiple twitch chats
@@ -9,11 +7,11 @@
     * throbber to show where twitch chat is selecting
 * towers attack towers
 * tower place on tower causes damage if enemy
-* log file from golang for the input received and output
 * save/replay twitch chat
 * end of input message type
+  * enumify input
 * Tower placement range, once fully available, doesn't go to the max size
-* bug or feature, intersection???
+* stats stats stats
 
 v2 stuff
 ---

@@ -129,7 +129,7 @@ type OpenAIChat struct {
 
 func (o *OpenAIChat) chat(chat string) (string, error) {
     resp, err := o.client.CreateChatCompletion(o.ctx, openai.ChatCompletionRequest{
-        Model: openai.GPT4o,
+        Model: openai.GPT4oMini,
         Messages: []openai.ChatCompletionMessage{
             {
                 Role: openai.ChatMessageRoleSystem,
@@ -206,8 +206,11 @@ func (r *RandomPos) NextPos() string {
     return r.outOfBounds
 }
 
+type GameState struct {
+}
+
 type PosGenerator interface {
-    NextPos() string
+    GetPositions(count int, promptState GameState) []string
 }
 
 // if the ai provides some line that is unreadable i will just provide a value too large and thus random placement
@@ -237,11 +240,14 @@ func main() {
 
 	debugFile := ""
 	flag.StringVar(&debugFile, "debug", "", "runs the file like the program instead of running doom")
-	flag.Parse()
 
 	systemPromptFile := "PROMPT"
 	flag.StringVar(&systemPromptFile, "system", "PROMPT", "the system prompt to use")
+
+	seed := 1337
+	flag.IntVar(&seed, "seed", 69420, "the seed value for the game")
 	flag.Parse()
+
 
 	args := flag.Args()
     assert.Assert(len(args) >= 2, "you must provide path to exec and json file")
@@ -271,10 +277,10 @@ func main() {
     errParser := newCmdErrParser(debug)
     cmdr := cmd.NewCmder(name, ctxWithCancel).
         AddVArg(json).
-        AddKVArg("--seed", "1444").
+        AddKVArg("--seed", fmt.Sprintf("%d", seed)).
         WithErrFn(errParser.parse).
         WithOutFn(func(b []byte) (int, error) {
-            fmt.Printf("%s\n", string(b))
+            //fmt.Printf("%s\n", string(b))
             return len(b), nil
         })
 
@@ -283,17 +289,26 @@ func main() {
 
     ai := newStatefulOpenAIChat(os.Getenv("OPENAI_API_KEY"), string(systemPrompt), ctx)
 
+    done := make(chan struct{}, 1)
     go func() {
-        for done := range errParser.done {
+        for doneStr := range errParser.done {
             debug.WriteLine([]byte("------------------------------------------"))
             debug.WriteLine([]byte("-------------- game over -----------------"))
             debug.WriteLine([]byte("------------------------------------------"))
-            debug.WriteLine([]byte(done))
+            debug.WriteLine([]byte(doneStr))
             cancel();
 
             // note: waiting a moment to prevent any more IO to screw up my printing
             <-time.NewTimer(time.Millisecond * 250).C
-            debug.WriteStrLine(fmt.Sprintf("Results: %s", done))
+            debug.WriteStrLine(fmt.Sprintf("Results: %s", doneStr))
+
+            if strings.Contains(doneStr, "1: won") {
+                fmt.Printf("%s %d 1\n", systemPromptFile, seed)
+            } else {
+                fmt.Printf("%s %d 2\n", systemPromptFile, seed)
+            }
+
+            done<-struct{}{}
         }
     }()
 
@@ -353,5 +368,7 @@ func main() {
         }
     }
 
+
+    <-done
 }
 
