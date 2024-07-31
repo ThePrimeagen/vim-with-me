@@ -8,13 +8,13 @@ pub const TEAM_TWO = '2';
 
 pub const TowerValues = struct {
     ammo: usize = 55,
-    fireRateUS: i64 = 280_000,
+    fireRateUS: i64 = 380_000,
     firingDurationUS: i64 = 150_000,
     scaleFireRateUS: i64 = 10_000,
 };
 
 pub const CreepValues = struct {
-    life: usize = 5,
+    life: usize = 4,
     speed: f64 = 2,
 
     scaleSpeed: f64 = 0.1,

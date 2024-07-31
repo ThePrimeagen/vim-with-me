@@ -133,7 +133,7 @@ fn walkAStar(start: usize, p: usize, cols: usize, board: []const bool, parents: 
     parents[pos] = @intCast(start);
 
     while (true) {
-        printWalk(pos, dists, cols);
+        //printWalk(pos, dists, cols);
 
         const directions: [4]isize = .{1, -iCols, iCols, -1};
         const iPos: isize = @intCast(pos);
