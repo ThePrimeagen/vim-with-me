@@ -122,10 +122,10 @@ pub fn init(self: *GS) void {
 
     const rows = self.values.rows;
 
-    self.oneCreepRange.endRow = 1;
+    self.oneCreepRange.endRow = objects.tower.TOWER_ROW_COUNT;
     self.oneNoBuildTowerRange = self.oneCreepRange;
 
-    self.twoCreepRange.startRow = rows - 1;
+    self.twoCreepRange.startRow = rows - objects.tower.TOWER_ROW_COUNT;
     self.twoCreepRange.endRow = rows;
     self.twoNoBuildTowerRange = self.twoCreepRange;
 
@@ -398,9 +398,9 @@ pub fn updateBoard(self: *GS) void {
 
         const start = t.rSized.pos.row * self.values.cols + t.rSized.pos.col;
 
-        for (0..t.rows) |r| {
+        for (0..t.rRows) |r| {
             const rowStart = start + r * self.values.cols;
-            for (0..t.cols) |c| {
+            for (0..t.rCols) |c| {
                 self.board[rowStart + c] = false;
             }
         }

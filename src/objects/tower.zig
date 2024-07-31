@@ -5,12 +5,15 @@ const math = @import("../math/math.zig");
 const colors = @import("colors.zig");
 const Values = @import("values.zig");
 
-pub const TowerSize = 3;
+pub const TOWER_ROW_COUNT = 3;
+pub const TOWER_COL_COUNT = 5;
+pub const TOWER_CELL_COUNT = TOWER_ROW_COUNT * TOWER_COL_COUNT;
+pub const TowerSize = 5;
 pub const TOWER_AABB: math.AABB = .{
     .min = math.ZERO_VEC2,
     .max = .{
-        .y = 1,
-        .x = TowerSize,
+        .y = TOWER_ROW_COUNT,
+        .x = TOWER_COL_COUNT,
     },
 };
 
@@ -40,11 +43,11 @@ pub const Tower = struct {
     // rendered
     rSized: math.Sized = math.ZERO_SIZED,
     rAmmo: u16 = 0,
-    rCells: [3]colors.Cell,
+    rCells: [TOWER_CELL_COUNT]colors.Cell,
 
     // TODO(render): THis is a bad plan
-    rows: usize = 1,
-    cols: usize = 3,
+    rRows: usize = TOWER_ROW_COUNT,
+    rCols: usize = TOWER_COL_COUNT,
 
     values: *const Values,
 

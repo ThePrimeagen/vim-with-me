@@ -57,15 +57,7 @@ pub const Renderer = struct {
             .gridOffsetY = 1,
         };
 
-        for (0..values.size) |idx| {
-            if (idx & 1 == 0) {
-                const pos: math.Position = .{
-                    .row = 1 + @divFloor(idx, values.cols),
-                    .col = 2 + idx % values.cols,
-                };
-                out.canvas.background(pos, colors.DarkSlate);
-            }
-        }
+        try out.resetGridBackground(values);
 
         return out;
     }
@@ -91,7 +83,7 @@ pub const Renderer = struct {
                 continue;
             }
 
-            towers.render(t, gs);
+            try towers.render(t, gs);
             self.canvas.place(t.rSized.add(gridOffset), &t.rCells);
         }
 
@@ -117,6 +109,7 @@ pub const Renderer = struct {
         try self.canvas.render();
         self.output = self.canvas.renderBuffer;
         self.count += 1;
+        try self.resetGridBackground(gs.values);
     }
 
     fn renderGrid(self: *Renderer, gs: *GameState) !void {
@@ -133,6 +126,20 @@ pub const Renderer = struct {
         for (0..rows) |idx| {
             offset.row = self.gridOffsetY + idx * 3;
             self.canvas.writeText(offset, try toNumber(idx * 3), colors.White);
+        }
+    }
+
+    fn resetGridBackground(self: *Renderer, values: *const Values) !void {
+        for (0..values.size) |idx| {
+            const row = @divFloor(idx, values.cols);
+            const col = idx % values.cols;
+            if (col % 5 == 0 or row % 3 == 0) {
+                const pos: math.Position = .{
+                    .row = 1 + row,
+                    .col = 2 + col,
+                };
+                self.canvas.background(pos, colors.Slate);
+            }
         }
     }
 

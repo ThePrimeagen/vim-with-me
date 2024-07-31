@@ -1,12 +1,14 @@
+const scratchBuf = @import("../scratch/scratch.zig").scratchBuf;
 const utils = @import("../test/utils.zig");
 const math = @import("../math/math.zig");
 const objects = @import("../objects/objects.zig");
 const std = @import("std");
 const a = @import("../assert/assert.zig");
-const unwrap = a.unwrap;
-const assert = a.assert;
 const creeps = @import("creep.zig");
 
+const never = a.never;
+const unwrap = a.unwrap;
+const assert = a.assert;
 const Values = objects.tower.Tower;
 const Tower = objects.tower.Tower;
 const colors = objects.colors;
@@ -17,11 +19,38 @@ const GS = objects.gamestate.GameState;
 const Target = objects.gamestate.Target;
 const Creep = objects.creep.Creep;
 
-const TowerCell: [objects.tower.TowerSize]Cell = .{
+const TowerCell: [objects.tower.TOWER_CELL_COUNT]Cell = .{
+    .{.text = ' ', .color = Black },
+    .{.text = ' ', .color = Black },
+    .{.text = '^', .color = Black },
+    .{.text = ' ', .color = Black },
+    .{.text = ' ', .color = Black },
+
+    .{.text = ' ', .color = Black },
     .{.text = '/', .color = Black },
     .{.text = '*', .color = Black },
     .{.text = '\\', .color = Black },
+    .{.text = ' ', .color = Black },
+
+    .{.text = '/', .color = Black },
+    .{.text = '*', .color = Black },
+    .{.text = '*', .color = Black },
+    .{.text = '*', .color = Black },
+    .{.text = '\\', .color = Black },
 };
+
+const TowerOneColor: Color = .{
+    .r = 0x3f,
+    .g = 0xa9,
+    .b = 0xff,
+};
+
+const TowerTwoColor: Color = .{
+    .r = 245,
+    .g = 164,
+    .b = 66,
+};
+
 
 pub fn placementAABB(pos: math.Vec2) math.AABB {
     return objects.tower.TOWER_AABB.move(pos).add(.{
@@ -94,7 +123,7 @@ pub const TowerBuilder = struct {
             // TODO(render): when i make the tower pretty... this will change
             .firingRangeAABB = t._pos.
                 sub(.{.x = 1, .y = 1}).
-                aabb(.{.x = objects.tower.TowerSize + 2, .y = 3}),
+                aabb(.{.x = objects.tower.TOWER_COL_COUNT + 2, .y = objects.tower.TOWER_ROW_COUNT + 2}),
 
             .rCells = TowerCell,
 
@@ -174,33 +203,26 @@ pub fn update(self: *Tower, gs: *GS) !void {
     self.firing = true;
 }
 
-pub fn render(self: *Tower, gs: *GS) void {
+pub fn render(self: *Tower, gs: *GS) !void {
+    _ = gs;
 
-    if (self.firing) {
-        const delta: f64 = @floatFromInt(gs.time - self.lastFiringUS);
-        const fDuration: f64 = @floatFromInt(self.firingDurationUS);
-        const percent = @min(1, delta / fDuration);
-        const sqrt = @sqrt(percent);
-        const sq = percent * percent;
-
-        color(self, .{
-            .r = @intFromFloat(255.0 * sqrt),
-            .g = @intFromFloat(255.0 * sqrt),
-            .b = @intFromFloat(255.0 * sq),
-        });
-
-        return;
+    self.rCells[7].text = '0' + self.level;
+    const buf = try std.fmt.bufPrint(scratchBuf(3), "{:03}", .{@min(999, self.ammo)});
+    const offset = 11;
+    for (offset..offset + 3) |idx| {
+        self.rCells[idx].text = buf[idx - offset];
     }
 
-    const life = getLifePercent(self);
-    const sqLife = life * life;
+    const c = switch (self.team) {
+        '1' => TowerOneColor,
+        '2' => TowerTwoColor,
+        else => {
+            never("unknown tower team");
+            unreachable;
+        }
+    };
 
-    self.rCells[1].text = '0' + self.level;
-    color(self, .{
-        .r = @intFromFloat(255.0 * life),
-        .g = @intFromFloat(255.0 * sqLife),
-        .b = @intFromFloat(255.0 * sqLife),
-    });
+    color(self, c);
 }
 
 fn getLifePercent(self: *Tower) f64 {

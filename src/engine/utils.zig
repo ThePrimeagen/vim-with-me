@@ -46,8 +46,8 @@ pub fn getRangeByTeam(gs: *GameState, team: u8) math.Range {
 
 pub fn positionInRange(gs: *GameState, team: u8) math.Position {
     const range = getRangeByTeam(gs, team);
-    const row = gs.values.randRange(usize, range.startRow, range.endRow);
-    const col = gs.values.randRange(usize, 2, gs.values.cols - objects.tower.TowerSize);
+    const row = gs.values.randRange(usize, range.startRow, range.endRow - objects.tower.TOWER_ROW_COUNT);
+    const col = gs.values.randRange(usize, objects.tower.TOWER_COL_COUNT, gs.values.cols - objects.tower.TOWER_COL_COUNT);
 
     return .{
         .row = row,
