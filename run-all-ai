@@ -6,3 +6,5 @@ for f in $files; do
     ./run-ai $f
 done
 
+wait
+

@@ -133,7 +133,7 @@ pub fn upgrade(self: *Tower) void {
     }
 
 
-    const ammo = self.values.tower.ammo * self.level;
+    const ammo = self.values.tower.ammo + (self.level - 1) * self.values.tower.ammoPerLevel;
     self.ammo = ammo;
     self.maxAmmo = ammo;
 
@@ -207,6 +207,10 @@ pub fn render(self: *Tower, gs: *GS) !void {
     };
 
     color(self, c);
+}
+
+pub fn hurt(self: *Tower, damage: usize) void {
+    self.ammo -|= damage;
 }
 
 fn getLifePercent(self: *Tower) f64 {
