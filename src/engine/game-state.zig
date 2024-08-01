@@ -274,12 +274,9 @@ pub fn message(state: *GS, msg: Message) (Allocator.Error || std.fmt.BufPrintErr
                 }
 
                 if (utils.aabbInValidRange(state, aabb, c.team)) {
-                    a.never("i haven't programmed this");
+                    towers.hurt(&state.towers.items[idx], state.values.tower.ammo);
+                    return;
                 }
-
-                // this is fine because it means that we are going to randomly
-                // place the tower for you because you are incapable either
-                // chatGPT or twitch chat
             }
 
             if (try placeTower(state, aabb, c.team) == null)  {

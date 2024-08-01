@@ -8,20 +8,21 @@ pub const TEAM_TWO = '2';
 
 pub const TowerValues = struct {
     ammo: usize = 55,
+    ammoPerLevel: usize = 25,
     fireRateUS: i64 = 380_000,
     firingDurationUS: i64 = 150_000,
     scaleFireRateUS: i64 = 10_000,
 };
 
 pub const CreepValues = struct {
-    life: usize = 7,
-    speed: f64 = 2,
+    life: usize = 6,
+    speed: f64 = 1.5,
 
     scaleSpeed: f64 = 0.15,
     scaleSpeedRounds: usize = 2,
     scaleLife: usize = 1,
-    scaleLifeRounds: usize = 2,
-    scaleSpawnRate: f64 = 0.07,
+    scaleLifeRounds: usize = 3,
+    scaleSpawnRate: f64 = 0.08,
 };
 
 pub const ProjectorValues = struct {

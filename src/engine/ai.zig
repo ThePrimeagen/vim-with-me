@@ -54,6 +54,7 @@ pub fn printPrompt(gs: *GS) !void {
         gs.twoCreepRange.endRow,
     }));
 
+    try err.writeAll(try std.fmt.bufPrint(scratchBuf(50), "round: {}", .{gs.round}));
     try err.writeAll("\n");
     try err.writeAll("\n");
 

@@ -23,6 +23,7 @@ your towers: (Row, Col, Ammo, Level), ...
 enemy towers: (Row, Col, Ammo, Level), ...
 tower placement range: TL=XXX,XXX BR=XXX,XXX
 creep spawn range: SR=XXX ER=XXX
+round: XXX
 ```
 
 XXX will be an integer of 0 or more
@@ -35,6 +36,7 @@ cols = the amount of cols total in the game
 tower placement range is EXCLUSIVE
 your creep damage is the amount of ammo each of you towers lose if one creep makes it from left side to right side
 creep spawn range is EXCLUSIVE and where creeps WILL spawn, column on spawn is ALWAYS 0
+round = the current round.  the number of creeps and the strength of creeps goes up every round.
 
 2. the tower defense is a wave defense.  At the beginning of the round you will be asked to place 1 or more towers.
 3. about wave
@@ -72,6 +74,7 @@ your towers:
 enemy towers:
 tower placement range: TL=20,0 BR=24,80
 creep placement range: SR=20 ER=24
+round: 1
 
 example output:
 20,1
@@ -94,6 +97,7 @@ your towers: (20, 26, 55, 1)
 enemy towers: (2, 2, 168, 4), (4, 20, 220, 4), (6, 66, 110, 2)
 tower placement range: TL=13,0 BR=24,80
 creep placement range: SR=13 ER=24
+round: 5
 
 example output:
 14,25
@@ -120,6 +124,7 @@ your towers: (20, 1, 97, 2), (20, 6, 55, 1)
 enemy towers: (2, 2, 97, 2), (4, 20, 55, 1)
 tower placement range: TL=17,0 BR=24,80
 creep placement range: SR=13 ER=24
+round: 2
 
 example output:
 14,25
@@ -145,6 +150,7 @@ your towers: (20, 1, 146, 3), (17, 1, 49, 1)
 enemy towers: (2, 4, 86, 2), (4, 20, 55, 1), (6, 9, 55, 1)
 tower placement range: TL=16,0 BR=24,80
 creep spawn range: SR=16 ER=24
+round: 3
 
 example output:
 16,1
@@ -153,3 +159,6 @@ example output:
 example result:
 tower 16,1: if placed will collide with 17,1 since towers are 3 rows tall.  This will cause tower at 17,1 to be upgraded.  If you wanted to place a tower at 16,1 instead of upgrading, you would need to move it to 16,6 since towers are 5 columns wide.  This would have placed a tower at 16,6
 tower 22,1: The placement will upgrade tower 20,1 since 20,1's height reaches to 23.  If there was no tower at 20,1, it would have placed the tower randomly since the board only goes to 24 EXCLUSIVE and towers and 3 rows tall, thus part of the tower would have been off map.
+
+tips:
+building new towers vs upgrading towers is the mainstay of the game.  if you spend too much time building new towers you will likely lose due.  If you have a tower with low ammo.  remember, each round makes creeps more abundant and stronger.  You don't want to lose towers
