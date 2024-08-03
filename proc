@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+files=$(find prompt -type f | grep processed)
+
+for f in $files; do
+    {
+        echo -n 'won,round,prompt file,seed,ai total towers,ai guesses,ai bad parses\n';
+        cat $f;
+    } > $f.csv
+done
+
+
