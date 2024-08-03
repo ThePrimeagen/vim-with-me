@@ -123,7 +123,13 @@ func (o *OpenAIChat) chat(chat string, ctx context.Context) (string, error) {
             },
             {
                 Role: openai.ChatMessageRoleSystem,
-                Content: "Response Format MUST BE line separated Row,Col tuples",
+                Content: `Response Format MUST BE line separated Row,Col tuples
+Example output with 2 positions specified
+20,3
+12,4
+
+This specified position of row 20 col 3 and second, separated by new line, row 12 and col 4
+`,
             },
             {
                 Role: openai.ChatMessageRoleUser,
@@ -429,7 +435,7 @@ func main() {
         fmt.Println("\x1b[?25h")
     }()
 
-    posGen := NewBoxPos(24)
+    posGen := NewRandomPos(24)
     outer:
     for {
         debug.WriteStrLine(fmt.Sprintf("------------- waiting on game round: %d -----------------", roundCount))
