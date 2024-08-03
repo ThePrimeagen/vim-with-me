@@ -122,13 +122,17 @@ func (o *OpenAIChat) chat(chat string, ctx context.Context) (string, error) {
                 Content: o.system,
             },
             {
+                Role: openai.ChatMessageRoleSystem,
+                Content: "Response Format MUST BE line separated Row,Col tuples",
+            },
+            {
                 Role: openai.ChatMessageRoleUser,
                 Content: chat,
             },
         },
     })
     if err != nil {
-        return "", nil
+        return "", err
     }
 
     return resp.Choices[0].Message.Content, nil
@@ -165,16 +169,11 @@ func (s *StatefulOpenAIChat) prompt(p string, ctx context.Context) (string, erro
 func (s *StatefulOpenAIChat) ReadWithTimeout(p string, t time.Duration) (string, error) {
     ctx, cancel := context.WithCancel(s.ctx)
     go func() {
-        time.Sleep(t)
+        <-time.NewTimer(t).C
         cancel()
     }()
 
-    str, err := s.ai.chat(p, ctx)
-    if err != nil {
-        return "", err
-    }
-
-    return str, err
+    return s.ai.chat(p, ctx)
 }
 
 type RandomPos struct {
@@ -402,7 +401,8 @@ func main() {
     aiRandomGuesses := 0
     aiBadParse := 0
     aiTotalTowers := 0
-    fmt.Printf("won,prompt file,seed,ai total towers,ai guesses,ai bad parses\n")
+    roundCount := 0
+    fmt.Printf("won,round,prompt file,seed,ai total towers,ai guesses,ai bad parses\n")
     go func() {
         for doneStr := range errParser.done {
             debug.WriteLine([]byte("------------------------------------------"))
@@ -416,9 +416,9 @@ func main() {
             debug.WriteStrLine(fmt.Sprintf("Results: %s", doneStr))
 
             if strings.Contains(doneStr, "1: won") {
-                fmt.Printf("1,%s,%d,%d,%d,%d\n", systemPromptFile, seed, aiTotalTowers, aiRandomGuesses, aiBadParse)
+                fmt.Printf("1,%d,%s,%d,%d,%d,%d\n", roundCount, systemPromptFile, seed, aiTotalTowers, aiRandomGuesses, aiBadParse)
             } else {
-                fmt.Printf("2,%s,%d,%d,%d,%d\n", systemPromptFile, seed, aiTotalTowers, aiRandomGuesses, aiBadParse)
+                fmt.Printf("2,%d,%s,%d,%d,%d,%d\n", roundCount, systemPromptFile, seed, aiTotalTowers, aiRandomGuesses, aiBadParse)
             }
 
             done<-struct{}{}
@@ -430,7 +430,6 @@ func main() {
     }()
 
     posGen := NewBoxPos(24)
-    roundCount := 0
     outer:
     for {
         debug.WriteStrLine(fmt.Sprintf("------------- waiting on game round: %d -----------------", roundCount))
@@ -442,13 +441,29 @@ func main() {
             count := prompt.allowedTowers
             aiResponses := 0
             tries := 0
+            roundCount++
+
             for aiResponses < count && tries < 3 {
                 resp, err := ai.ReadWithTimeout(promptStr, time.Second * 5)
-                roundCount++
                 tries++
 
                 if err != nil {
+                    debug.WriteStrLine(fmt.Sprintf("ai-placement response: \"%s\" err: \"%s\"", resp, err.Error()))
+                    parts := strings.Split(err.Error(), "try again in ")
+                    if len(parts) == 2 {
+                        secsStr := strings.Split(parts[1], " ")[0]
+                        secs, err := strconv.ParseFloat(secsStr[0:len(secsStr) - 2], 64)
+                        if err == nil {
+                            dur := time.Duration(float64(time.Second) * secs)
+                            debug.WriteStrLine(fmt.Sprintf("ai-placement wait time required: %d", dur))
+                            <-time.NewTimer(dur).C
+                        }
+                    }
                     continue
+                }
+
+                if resp == "" {
+                    <-time.NewTimer(time.Second).C
                 }
 
                 for _, line := range strings.Split(resp, "\n") {
@@ -458,8 +473,8 @@ func main() {
                     }
 
                     parsedLine := getPosFromAIResponse(line)
+                    debug.WriteStrLine(fmt.Sprintf("ai-placement: %s - %s", line, parsedLine))
                     if parsedLine == "999,999" {
-                        debug.WriteStrLine(fmt.Sprintf("ai-placement BAD FORMAT: %s\n", line))
                         aiBadParse++
                         continue
                     }
