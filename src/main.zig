@@ -46,10 +46,9 @@ pub fn main() !void {
 
     // TODO: Figure out something better with the creep spawner... this sucks
     var spawner = engine.rounds.CreepSpawner.init(&gs);
-    var reportState = engine.reportState.ReportState{};
-    try reportState.waiting(&gs);
 
-    try engine.ai.printPrompt(&gs);
+    const stderr = std.io.getStdErr();
+    try engine.output.writeState(allocator, &gs, stderr);
     try values.printSize();
 
     while (!engine.gamestate.completed(&gs)) {
@@ -75,14 +74,10 @@ pub fn main() !void {
             }
         } else if (gs.playing) {
             engine.gamestate.endRound(&gs);
-
-            // TODO: this sucks... but it rocks...
-            try reportState.waiting(&gs);
-            try engine.ai.printPrompt(&gs);
-
+            try engine.output.writeState(allocator, &gs, stderr);
         } else if (!engine.gamestate.waitingForTowers(&gs)) {
             engine.gamestate.startRound(&gs, &spawner);
-            try reportState.playing();
+            try engine.output.writeState(allocator, &gs, stderr);
         }
 
         if (args.viz == null or args.viz.?) {
@@ -95,7 +90,8 @@ pub fn main() !void {
 
     try render.completed(&gs);
     try out(render.output);
-    try reportState.final(&gs);
+    try engine.output.writeState(allocator, &gs, stderr);
+
     engine.stdout.showCursor();
 }
 
