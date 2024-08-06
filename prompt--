@@ -1,0 +1,9 @@
+waiting-1
+{"rows":24,"cols":80,"allowedTowers":1,"yourCreepDamage":1,"enemyCreepDamage":1,"yourTowers":[],"enemyTowers":[],"towerPlacementRange":{"startRow":20,"endRow":24},"creepSpawnRange":{"startRow":20,"endRow":24},"round":0}
+message received: choord(team = 49 pos = vec(r = 15, c = 2))
+outside range
+WTF: vec(r = 0, c = 73)message received: choord(team = 50 pos = vec(r = 2, c = 2))
+outside range
+WTF: vec(r = 20, c = 62)playing
+waiting-1
+{"rows":24,"cols":80,"allowedTowers":1,"yourCreepDamage":1,"enemyCreepDamage":1,"yourTowers":[{"row":0,"col":73,"level":1,"ammo":55}],"enemyTowers":[{"row":20,"col":62,"level":1,"ammo":55}],"towerPlacementRange":{"startRow":19,"endRow":24},"creepSpawnRange":{"startRow":19,"endRow":24},"round":1}

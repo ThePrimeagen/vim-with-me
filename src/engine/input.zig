@@ -7,6 +7,7 @@ const Allocator = std.mem.Allocator;
 
 // ASSUMPTION: no input should be bigger than 256 characters
 pub const InputSize = 4096;
+
 pub const Input = struct {
     input: [InputSize]u8,
     length: usize,
@@ -19,6 +20,7 @@ pub const Input = struct {
         return std.fmt.bufPrint(scratchBuf(10 + self.length), "{}: \"{s}\"", .{self.length, self.slice()});
     }
 };
+
 pub const InputList = std.ArrayList(Input);
 
 pub const BufferedInputter = struct {
