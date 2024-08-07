@@ -261,51 +261,71 @@ pub fn message(state: *GS, msg: Message) (Allocator.Error || std.fmt.BufPrintErr
     assert(state.playing == false, "cannot receive messages while playing");
 
     switch (msg) {
-        .coord => |c| {
-
-            if (c.team == objects.Values.TEAM_ONE) {
-                state.oneAvailableTower -= 1;
+        .positions => |posSet| {
+            if (posSet.team == Values.TEAM_ONE) {
+                state.onePositions = posSet;
             } else {
-                state.twoAvailableTower -= 1;
-            }
-
-            assert(state.oneAvailableTower >= 0, "one cannot place more towers than allowed");
-            assert(state.twoAvailableTower >= 0, "two cannot place more towers than allowed");
-
-            std.debug.print("message received: {s}\n", .{try c.string()});
-
-            const aabb = towers.placementAABB(c.pos.vec2());
-            if (towerByAABB(state, aabb)) |idx| {
-                if (state.towers.items[idx].team == c.team) {
-                    towers.upgrade(&state.towers.items[idx]);
-                    return;
-                }
-
-                if (utils.aabbInValidRange(state, aabb, c.team)) {
-                    towers.hurt(&state.towers.items[idx], state.values.tower.ammo);
-                    return;
-                }
-            }
-
-            if (try placeTower(state, aabb, c.team) == null)  {
-                while (true) {
-                    // TODO: probably should consider upgrades and tower
-                    // destructive placements...
-                    const pos = utils.positionInRange(state, c.team);
-                    std.debug.print("WTF: {s}", .{try pos.string()});
-                    if (try placeTower(state, objects.tower.TOWER_AABB.move(pos.vec2()), c.team) != null)  {
-                        break;
-                    }
-                }
+                state.twoPositions = posSet;
             }
 
         },
+
         .round => |_| {
-            // not sure what to do here...
-            // probably need to think about "playing/pausing"
-            // play(state);
+            assert(state.onePositions.len >= state.oneAvailableTower, "there are not enough one positions");
+            assert(state.twoPositions.len >= state.twoAvailableTower, "there are not enough two positions");
+
+            const oneTowerCount: usize = @intCast(state.oneAvailableTower);
+            for (0..oneTowerCount) |idx| {
+                const p = state.onePositions.positions[idx];
+                assert(p != null, "position is null when placing tower for tower one");
+                try place(state, state.onePositions.team, p.?);
+            }
+
+            const twoTowerCount: usize = @intCast(state.twoAvailableTower);
+            for (0..twoTowerCount) |idx| {
+                const p = state.twoPositions.positions[idx];
+                assert(p != null, "position is null when placing tower for tower two");
+                try place(state, state.twoPositions.team, p.?);
+            }
+
+            state.onePositions = math.PossiblePositions.empty();
+            state.twoPositions = math.PossiblePositions.empty();
+            state.oneAvailableTower = 0;
+            state.twoAvailableTower = 0;
         },
+
+        .countdown => |c| {
+            state.countdown = c.countdownUS;
+        }
     }
+}
+
+fn place(self: *GS, team: u8, pos: math.Position) !void {
+
+    const aabb = towers.placementAABB(pos.vec2());
+    if (towerByAABB(self, aabb)) |idx| {
+        if (self.towers.items[idx].team == team) {
+            towers.upgrade(&self.towers.items[idx]);
+            return;
+        }
+
+        if (utils.aabbInValidRange(self, aabb, team)) {
+            towers.hurt(&self.towers.items[idx], self.values.tower.ammo);
+            return;
+        }
+    }
+
+    if (try placeTower(self, aabb, team) == null)  {
+        while (true) {
+            // TODO: probably should consider upgrades and tower
+            // destructive placements...
+            const randPos = utils.positionInRange(self, team);
+            if (try placeTower(self, objects.tower.TOWER_AABB.move(randPos.vec2()), team) != null)  {
+                break;
+            }
+        }
+    }
+
 }
 
 pub fn clone(self: *GS) !GS {
@@ -320,10 +340,10 @@ pub fn clone(self: *GS) !GS {
         .values = self.values,
 
         .one = self.one,
-        .oneCoords = self.oneCoords,
+        .oneCoords = self.onePositions,
 
         .two = self.two,
-        .twoCoords = self.twoCoords,
+        .twoCoords = self.foo,
 
         .time = self.time,
         .loopDeltaUS = self.time,
