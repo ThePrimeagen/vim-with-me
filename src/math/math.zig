@@ -1,5 +1,5 @@
 const std = @import("std");
-const assert = @import("../assert/assert.zig").assert;
+const assert = @import("../assert/assert.zig");
 const scratchBuf = @import("../scratch/scratch.zig").scratchBuf;
 
 pub const ZERO_POS: Position = .{.row = 0, .col = 0};
@@ -71,19 +71,28 @@ pub const Position = struct {
         };
     }
 
-    pub fn init(str: []const u8) ?Position {
-        const idx = std.mem.indexOf(u8, str, ",") orelse return null;
+    pub fn init(str: []const u8, pos: *?Position) usize {
+        const idx = std.mem.indexOf(u8, str, ",") orelse return 0;
+        if (str.len <= idx + 1) {
+            return 0;
+        }
+
+        const endIdx = idx + 1 + (std.mem.indexOf(u8, str[idx + 1..], ",") orelse str[idx + 1..].len);
+
+        assert.unwrap(void, std.io.getStdErr().writeAll(assert.u(std.fmt.bufPrint(scratchBuf(100), "str = {s} idx = {}, endIdx = {}", .{str, idx, endIdx}))));
         const row = std.fmt.parseInt(usize, str[0..idx], 10) catch {
-            return null;
+            return 0;
         };
-        const col = std.fmt.parseInt(usize, str[idx + 1..], 10) catch {
-            return null;
+        const col = std.fmt.parseInt(usize, str[idx + 1..endIdx], 10) catch {
+            return 0;
         };
 
-        return .{
+        pos.* = .{
             .row = row,
             .col = col,
         };
+
+        return endIdx;
     }
 
     pub fn string(self: Position) ![]u8 {
@@ -150,33 +159,58 @@ pub const Sized = struct {
     }
 };
 
-pub const Coord = struct {
-    pos: Position,
+pub const PossiblePositions = struct {
+    positions: [10]?Position,
+    len: usize,
     team: u8,
 
-    pub fn string(self: Coord) ![]u8 {
-        return try std.fmt.bufPrint(scratchBuf(120), "choord(team = {} pos = {s})", .{
-            self.team,
-            try self.pos.string(),
-        });
+    pub fn init(msg: []const u8) ?PossiblePositions {
+        if (msg.len == 0 or msg[0] != '1' and msg[0] != '2') {
+            return null;
+        }
+
+        const team = msg[0];
+        var posSet: PossiblePositions = .{
+            .team = team,
+            .len = 0,
+            .positions = undefined,
+        };
+
+        var curr = msg[1..];
+        while (true) {
+            var pos: ?Position = null;
+            const nextOffset = Position.init(curr, &pos);
+
+            if (nextOffset == 0) {
+                break;
+            }
+
+            posSet.positions[posSet.len] = pos;
+            posSet.len += 1;
+
+            if (curr.len <= nextOffset + 1) {
+                break;
+            }
+
+            curr = curr[nextOffset + 1..];
+        }
+
+        if (posSet.len == 0) {
+            return null;
+        }
+
+        return posSet;
     }
 
-    pub fn init(msg: []const u8) ?Coord {
-        const teamNumber = msg[0];
-        if (teamNumber != '1' and teamNumber != '2') {
-            return null;
-        }
-        const pos = Position.init(msg[1..]);
-        if (pos == null) {
-            return null;
-        }
-
+    pub fn empty() PossiblePositions {
         return .{
-            .pos = pos.?,
-            .team = teamNumber,
+            .positions = undefined,
+            .len = 0,
+            .team = 0,
         };
     }
 };
+
 
 pub const AABB = struct {
     min: Vec2,
@@ -301,8 +335,8 @@ pub const Vec2 = struct {
     }
 
     pub fn position(self: *const Vec2) Position {
-        assert(self.x >= 0, "x cannot be negative");
-        assert(self.y >= 0, "y cannot be negative");
+        assert.assert(self.x >= 0, "x cannot be negative");
+        assert.assert(self.y >= 0, "y cannot be negative");
 
         return .{
             .row = @intFromFloat(self.y),

@@ -27,7 +27,7 @@ pub fn next(self: *Self, gs: *GS) !void {
         }
         const line = lineMaybe.?;
         count += 1;
-        const msg = Message.init(line);
+        const msg = try Message.init(line);
         if (msg) |m| {
             try engine.gamestate.message(gs, m);
         } else {
