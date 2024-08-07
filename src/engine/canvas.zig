@@ -88,6 +88,10 @@ pub const Canvas = struct {
             const offset = (sized.pos.row + row) * self.values.cols + sized.pos.col + col;
             self.cells[offset].text = cell.text;
             self.cells[offset].color = cell.color;
+
+            if (cell.background) |b| {
+                self.cells[offset].background = b;
+            }
         }
     }
 

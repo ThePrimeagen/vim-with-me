@@ -19,6 +19,46 @@ const GS = objects.gamestate.GameState;
 const Target = objects.gamestate.Target;
 const Creep = objects.creep.Creep;
 
+pub const OnePlacementTowerCell: [objects.tower.TOWER_CELL_COUNT]Cell = .{
+    .{.text = ' ', .color = Black, .background = colors.TeamOneTowerColor},
+    .{.text = ' ', .color = Black, .background = colors.TeamOneTowerColor},
+    .{.text = ' ', .color = Black, .background = colors.TeamOneTowerColor},
+    .{.text = ' ', .color = Black, .background = colors.TeamOneTowerColor},
+    .{.text = ' ', .color = Black, .background = colors.TeamOneTowerColor},
+
+    .{.text = ' ', .color = Black, .background = colors.TeamOneTowerColor},
+    .{.text = ' ', .color = Black, .background = colors.TeamOneTowerColor},
+    .{.text = ' ', .color = Black, .background = colors.TeamOneTowerColor},
+    .{.text = ' ', .color = Black, .background = colors.TeamOneTowerColor},
+    .{.text = ' ', .color = Black, .background = colors.TeamOneTowerColor},
+
+    .{.text = ' ', .color = Black, .background = colors.TeamOneTowerColor},
+    .{.text = ' ', .color = Black, .background = colors.TeamOneTowerColor},
+    .{.text = ' ', .color = Black, .background = colors.TeamOneTowerColor},
+    .{.text = ' ', .color = Black, .background = colors.TeamOneTowerColor},
+    .{.text = ' ', .color = Black, .background = colors.TeamOneTowerColor},
+};
+
+pub const TwoPlacementTowerCell: [objects.tower.TOWER_CELL_COUNT]Cell = .{
+    .{.text = ' ', .color = Black, .background = colors.TeamTwoTowerColor},
+    .{.text = ' ', .color = Black, .background = colors.TeamTwoTowerColor},
+    .{.text = ' ', .color = Black, .background = colors.TeamTwoTowerColor},
+    .{.text = ' ', .color = Black, .background = colors.TeamTwoTowerColor},
+    .{.text = ' ', .color = Black, .background = colors.TeamTwoTowerColor},
+
+    .{.text = ' ', .color = Black, .background = colors.TeamTwoTowerColor},
+    .{.text = ' ', .color = Black, .background = colors.TeamTwoTowerColor},
+    .{.text = ' ', .color = Black, .background = colors.TeamTwoTowerColor},
+    .{.text = ' ', .color = Black, .background = colors.TeamTwoTowerColor},
+    .{.text = ' ', .color = Black, .background = colors.TeamTwoTowerColor},
+
+    .{.text = ' ', .color = Black, .background = colors.TeamTwoTowerColor},
+    .{.text = ' ', .color = Black, .background = colors.TeamTwoTowerColor},
+    .{.text = ' ', .color = Black, .background = colors.TeamTwoTowerColor},
+    .{.text = ' ', .color = Black, .background = colors.TeamTwoTowerColor},
+    .{.text = ' ', .color = Black, .background = colors.TeamTwoTowerColor},
+};
+
 const TowerCell: [objects.tower.TOWER_CELL_COUNT]Cell = .{
     .{.text = ' ', .color = Black },
     .{.text = ' ', .color = Black },

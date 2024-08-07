@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"time"
+	"os"
 
 	"github.com/joho/godotenv"
 	"github.com/theprimeagen/vim-with-me/examples/v2/td"
@@ -22,20 +22,26 @@ func getDebug(name string) (*testies.DebugFile, error) {
     return testies.NewDebugFile(name)
 }
 
-func occurrencesToPositions(occ []chat.Occurrence, gs *td.GameState) []td.Position {
-    out := []td.Position{}
-    for i := range gs.AllowedTowers {
-        if len(occ) <= i {
-            break
-        }
-        pos, err := td.PositionFromString(occ[i].Msg)
-        if err != nil {
-            continue
-        }
-        out = append(out, pos)
-    }
+type RandomPos struct {
+    outOfBounds string
+}
 
-    return out
+func NewRandomPos(maxRows int) RandomPos {
+    return RandomPos{outOfBounds: fmt.Sprintf("%d,69", maxRows + 1)}
+}
+
+// As of right now, out of bounds guesses will place a tower within your area
+// randomly
+func (r *RandomPos) NextPos() string {
+    return r.outOfBounds
+}
+
+type PositionGenerator interface  {
+    NextPos() string
+}
+
+type PosGenerator interface {
+    GetPositions(count int, promptState td.GameState) []string
 }
 
 func main() {
@@ -69,7 +75,7 @@ func main() {
     }
     defer debug.Close()
 
-    //systemPrompt, err := os.ReadFile(systemPromptFile)
+    systemPrompt, err := os.ReadFile(systemPromptFile)
     if err != nil {
         log.Fatalf("could not open system prompt: %+v\n", err)
     }
@@ -102,8 +108,8 @@ func main() {
     go prog.Run()
 	go chtAgg.Pipe(twitchChat)
 
-    //ai := td.NewStatefulOpenAIChat(os.Getenv("OPENAI_API_KEY"), string(systemPrompt), ctx)
-    //fetch := td.NewFetchPosition(ai, debug)
+    ai := td.NewStatefulOpenAIChat(os.Getenv("OPENAI_API_KEY"), string(systemPrompt), ctx)
+    fetch := td.NewFetchPosition(ai, debug)
     stats := td.Stats{}
     round := 0
     fmt.Printf("won,round,prompt file,seed,ai total towers,ai guesses,ai bad parses\n")
@@ -112,8 +118,7 @@ func main() {
         fmt.Println("\x1b[?25h")
     }()
 
-    box := td.NewBoxPos(24)
-
+    posGen := NewBoxPos(24)
     outer:
     for {
         debug.WriteStrLine(fmt.Sprintf("------------- waiting on game round: %d -----------------", round))
@@ -137,42 +142,20 @@ func main() {
                 continue
             }
 
-            _ = chtAgg.Reset()
-            innerCtx, cancel := context.WithCancel(ctx)
-            go func() {
-                outer:
-                for {
-                    select {
-                    case <-time.NewTimer(time.Second).C:
-                        occs := chtAgg.Peak()
-                        one := occurrencesToPositions(occs, &gs)
-                        cmdr.WritePositions(one, '2')
-                    case <-innerCtx.Done():
-                        break outer
-                    }
-                }
-            }()
+            positions, fetchStats := fetch.Fetch(&gs)
+            stats.Add(fetchStats)
 
-            duration := time.Second * 20
-            t := time.NewTimer(duration)
-            cmdr.Countdown(duration)
+            cmdr.WritePositions(positions, '2')
 
-            //positions, fetchStats := fetch.Fetch(&gs)
-            //stats.Add(fetchStats)
-
-            //cmdr.WritePositions(positions, '2')
-            out := []td.Position{}
+            one := []td.Position{}
             for range gs.AllowedTowers {
-                out = append(out, box.NextPos())
+                one = append(one, posGen.NextPos())
             }
-            cmdr.WritePositions(out, '1')
 
-            <-t.C
-            cancel()
-            one := occurrencesToPositions(chtAgg.Peak(), &gs)
-            cmdr.WritePositions(one, '2')
+            cmdr.WritePositions(one, '1')
             cmdr.PlayRound()
         }
     }
 }
+
 

@@ -84,6 +84,32 @@ type Position struct {
     Col uint
 }
 
+func PositionFromString(str string) (Position, error) {
+    if (len(str) < 3) {
+        return Position{}, fmt.Errorf("str not long enough")
+    }
+
+    parts := strings.Split(str, ",")
+    if len(parts) != 2 {
+        return Position{}, fmt.Errorf("invalid position")
+    }
+
+    row, err := strconv.Atoi(parts[0])
+    if err != nil {
+        return Position{}, fmt.Errorf("invalid position")
+    }
+
+    col, err := strconv.Atoi(parts[1])
+    if err != nil {
+        return Position{}, fmt.Errorf("invalid position")
+    }
+
+    return Position{
+        Row: uint(row),
+        Col: uint(col),
+    }, nil
+}
+
 type Positions []Position
 func (p Positions) String() string {
     out := []string{}
