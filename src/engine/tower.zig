@@ -163,7 +163,6 @@ pub const TowerBuilder = struct {
 
 const ONE_VEC: math.Vec2 = .{.x = 1, .y = 1};
 pub fn upgrade(self: *Tower) void {
-    if (true) {
     if (self.level < 9) {
         self.level += 1;
         if (self.level == 3 or self.level == 9) {
@@ -181,8 +180,12 @@ pub fn upgrade(self: *Tower) void {
     self.fireRateUS = self.values.tower.fireRateUS -
         self.values.tower.scaleFireRateUS * level;
 
-    assert(self.fireRateUS > self.firingDurationUS, "cannot shoot quicker than animation");
+    self.damage = self.values.tower.damage;
+    if (self.level >= 5) {
+        self.damage *= 2;
     }
+
+    assert(self.fireRateUS > self.firingDurationUS, "cannot shoot quicker than animation");
 }
 
 pub fn update(self: *Tower, gs: *GS) !void {

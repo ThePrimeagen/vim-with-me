@@ -15,6 +15,8 @@ const towers = @import("tower.zig");
 const creeps = @import("creep.zig");
 const projectiles = @import("projectile.zig");
 
+const engGS = engine.gamestate;
+
 const Allocator = std.mem.Allocator;
 const GameState = gamestate.GameState;
 const TEXT_AREA_COLS = 30;
@@ -240,6 +242,36 @@ pub const Renderer = struct {
             }, "", .{.r = 255, .g = 255, .b = 255});
             row += 1;
         }
+
+        const oneHealth = try std.fmt.bufPrint(scratchBuf(50), "one health: {}", .{engGS.getHealth(gs, '1')});
+        const twoHealth = try std.fmt.bufPrint(scratchBuf(50), "two health: {}", .{engGS.getHealth(gs, '2')});
+        const oneCreepDmg = try std.fmt.bufPrint(scratchBuf(50), "one creep dmg: {}", .{gs.oneCreepDamage});
+        const twoCreepDmg = try std.fmt.bufPrint(scratchBuf(50), "two creep dmg: {}", .{gs.twoCreepDamage});
+
+        self.canvas.writeText(.{
+            .row = row,
+            .col = self.textOffset,
+        }, oneHealth, .{.r = 255, .g = 255, .b = 255});
+        row += 1;
+
+        self.canvas.writeText(.{
+            .row = row,
+            .col = self.textOffset,
+        }, twoHealth, .{.r = 255, .g = 255, .b = 255});
+        row += 1;
+
+        self.canvas.writeText(.{
+            .row = row,
+            .col = self.textOffset,
+        }, oneCreepDmg, .{.r = 255, .g = 255, .b = 255});
+        row += 1;
+
+        self.canvas.writeText(.{
+            .row = row,
+            .col = self.textOffset,
+        }, twoCreepDmg, .{.r = 255, .g = 255, .b = 255});
+        row += 1;
+
     }
 
     pub fn completed(self: *Renderer, gs: *GameState) !void {
