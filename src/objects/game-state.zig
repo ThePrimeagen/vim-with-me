@@ -130,13 +130,19 @@ pub const GameState = struct {
 
         std.debug.print("one coords:\n", .{});
         for (0..self.onePositions.len) |idx| {
-            std.debug.print("  {s}\n", .{a.u(self.onePositions.positions[idx].string())});
+            const pos = self.onePositions.positions[idx];
+            if (pos) |p| {
+                std.debug.print("  {s}\n", .{a.u(p.string())});
+            }
         }
         std.debug.print("\n", .{});
 
         std.debug.print("two coords:\n", .{});
         for (0..self.twoPositions.len) |idx| {
-            std.debug.print("  {s}\n", .{a.u(self.onePositions.positions[idx].string())});
+            const pos = self.twoPositions.positions[idx];
+            if (pos) |p| {
+                std.debug.print("  {s}\n", .{a.u(p.string())});
+            }
         }
 
         self.debugBoard();

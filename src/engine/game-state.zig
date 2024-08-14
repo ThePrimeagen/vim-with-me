@@ -310,32 +310,36 @@ pub fn message(state: *GS, msg: Message) (Allocator.Error || std.fmt.BufPrintErr
     }
 }
 
-fn place(self: *GS, team: u8, pos: math.Position) !void {
+fn place(self: *GS, team: u8, pos: math.Position) !?usize {
 
     const aabb = towers.placementAABB(pos.vec2());
     if (towerByAABB(self, aabb)) |idx| {
         if (self.towers.items[idx].team == team) {
             towers.upgrade(&self.towers.items[idx]);
-            return;
+            return idx;
         }
 
         if (utils.aabbInValidRange(self, aabb, team)) {
             towers.hurt(&self.towers.items[idx], self.values.tower.ammo);
-            return;
+            return null;
         }
     }
 
-    if (try placeTower(self, aabb, team) == null)  {
+    if (try placeTower(self, aabb, team)) |idx|  {
+        return idx;
+    } else {
         while (true) {
             // TODO: probably should consider upgrades and tower
             // destructive placements...
             const randPos = utils.positionInRange(self, team);
-            if (try placeTower(self, objects.tower.TOWER_AABB.move(randPos.vec2()), team) != null)  {
-                break;
+            if (try placeTower(self, objects.tower.TOWER_AABB.move(randPos.vec2()), team)) |idx|  {
+                return idx;
             }
         }
     }
 
+    a.never("unreachable");
+    unreachable;
 }
 
 pub fn clone(self: *GS) !GS {
@@ -643,4 +647,63 @@ test "place creep calculates positions" {
 
     _ = try placeCreep(&gs, .{.row = 0, .col = 0}, objects.Values.TEAM_ONE);
     try testing.expect(gs.creeps.items[0].pathLen == 2);
+}
+
+fn towerTest(gs: *GS, idx: usize, ammo: ?usize, level: usize) !void {
+    try testing.expect(gs.towers.items.len > idx);
+
+    const t = gs.towers.items[idx];
+
+    if (ammo) |amm| {
+        try testing.expect(t.ammo == amm);
+    }
+
+    try testing.expect(t.level == level);
+}
+
+test "tower collision for upgrades" {
+    var values = objects.Values{.rows = 420, .cols = 1000};
+    values.init();
+
+    var gs = try GS.init(testing.allocator, &values);
+    defer gs.deinit();
+
+    gs.oneNoBuildTowerRange = .{
+        .startRow = 0,
+        .endRow = 20,
+    };
+
+    gs.twoNoBuildTowerRange = .{
+        .startRow = 0,
+        .endRow = 20,
+    };
+
+    // tests all inside tower placements
+    var cOffset = objects.tower.TOWER_COL_COUNT;
+    for (0..objects.tower.TOWER_ROW_COUNT) |r| {
+        const row = r * (objects.tower.TOWER_ROW_COUNT + 1);
+        const og = (try place(&gs, '1', .{.row = row, .col = cOffset})).?;
+        try towerTest(&gs, og, values.tower.ammo, 1);
+
+        for (0..objects.tower.TOWER_COL_COUNT) |c| {
+            const p = try place(&gs, '1', .{.row = row, .col = cOffset + c});
+            try testing.expect(og == p);
+            try towerTest(&gs, og, null, c + 2);
+        }
+    }
+
+    // tests all outside the tower placements
+    cOffset = objects.tower.TOWER_COL_COUNT * 3;
+
+    for (0..objects.tower.TOWER_ROW_COUNT) |r| {
+        const row = r * (objects.tower.TOWER_ROW_COUNT * 3 + 1) + objects.tower.TOWER_ROW_COUNT;
+        const og = (try place(&gs, '1', .{.row = row, .col = cOffset})).?;
+        try towerTest(&gs, og, values.tower.ammo, 1);
+
+        for (0..objects.tower.TOWER_COL_COUNT) |c| {
+            const p = try place(&gs, '1', .{.row = row, .col = cOffset + c});
+            try testing.expect(og == p);
+            try towerTest(&gs, og, null, c + 2);
+        }
+    }
 }
