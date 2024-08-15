@@ -37,6 +37,9 @@ func main() {
 	playerTwoStr := ""
 	flag.StringVar(&playerTwoStr, "two", "", "player two string")
 
+	roundTimeInt := int64(0)
+	flag.Int64Var(&roundTimeInt, "roundTime", 0, "seconds per round time")
+
 	viz := false
 	flag.BoolVar(&viz, "viz", false, "displays the game")
 
@@ -48,6 +51,13 @@ func main() {
     assert.Assert(len(args) >= 2, "you must provide path to exec and json file")
 	name := args[0]
 	json := args[1]
+
+    if roundTimeInt == 0 {
+        roundTimeInt = int64(time.Second * 20)
+    } else {
+        roundTimeInt = int64(time.Second * time.Duration(roundTimeInt));
+    }
+    roundTime := time.Duration(roundTimeInt)
 
     debug, err := getDebug(debugFile)
     if err != nil {
@@ -122,9 +132,8 @@ func main() {
 
             innerCtx, cancel := context.WithCancel(ctx)
 
-            duration := time.Second * 20
-            t := time.NewTimer(duration)
-            cmdr.Countdown(duration)
+            t := time.NewTimer(roundTime)
+            cmdr.Countdown(roundTime)
 
             go one.StreamMoves(innerCtx, &gs)
             go two.StreamMoves(innerCtx, &gs)

@@ -288,14 +288,14 @@ pub fn message(state: *GS, msg: Message) (Allocator.Error || std.fmt.BufPrintErr
             for (0..oneTowerCount) |idx| {
                 const p = state.onePositions.positions[idx];
                 assert(p != null, "position is null when placing tower for tower one");
-                try place(state, state.onePositions.team, p.?);
+                _ = try place(state, state.onePositions.team, p.?);
             }
 
             const twoTowerCount: usize = @intCast(state.twoAvailableTower);
             for (0..twoTowerCount) |idx| {
                 const p = state.twoPositions.positions[idx];
                 assert(p != null, "position is null when placing tower for tower two");
-                try place(state, state.twoPositions.team, p.?);
+                _ = try place(state, state.twoPositions.team, p.?);
             }
 
             state.onePositions = math.PossiblePositions.empty();
@@ -670,16 +670,16 @@ test "tower collision for upgrades" {
 
     gs.oneNoBuildTowerRange = .{
         .startRow = 0,
-        .endRow = 20,
+        .endRow = 420,
     };
 
     gs.twoNoBuildTowerRange = .{
         .startRow = 0,
-        .endRow = 20,
+        .endRow = 420,
     };
 
     // tests all inside tower placements
-    var cOffset = objects.tower.TOWER_COL_COUNT;
+    var cOffset: usize = objects.tower.TOWER_COL_COUNT;
     for (0..objects.tower.TOWER_ROW_COUNT) |r| {
         const row = r * (objects.tower.TOWER_ROW_COUNT + 1);
         const og = (try place(&gs, '1', .{.row = row, .col = cOffset})).?;

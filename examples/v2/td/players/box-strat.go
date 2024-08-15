@@ -54,7 +54,7 @@ func (r *BoxPos) Moves(gs *objects.GameState, ctx context.Context) []objects.Pos
 // As of right now, out of bounds guesses will place a tower within your area
 // randomly
 
-func (r *BoxPos) StreamResults(gs *objects.GameState, out chan<- []objects.Position, ctx context.Context) {
+func (r *BoxPos) StreamResults(team uint8, gs *objects.GameState, out chan<- []objects.Position, ctx context.Context) {
     if !r.sendResults {
         return
     }
@@ -88,7 +88,7 @@ func NewRandomPos(maxRows int) *RandomPos {
     }
 }
 
-func (r *RandomPos) StreamResults(gs *objects.GameState, out chan<- []objects.Position, ctx context.Context) {
+func (r *RandomPos) StreamResults(team uint8, gs *objects.GameState, out chan<- []objects.Position, ctx context.Context) {
     if !r.sendResults {
         return
     }

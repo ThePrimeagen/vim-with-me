@@ -79,7 +79,7 @@ func (r *TwitchTDChat) runStreamResults(gs *objects.GameState, out chan<- []obje
     }
 }
 
-func (r *TwitchTDChat) StreamResults(gs *objects.GameState, out chan<- []objects.Position, ctx context.Context) {
+func (r *TwitchTDChat) StreamResults(team uint8, gs *objects.GameState, out chan<- []objects.Position, ctx context.Context) {
     go r.runStreamResults(gs, out, ctx)
 }
 

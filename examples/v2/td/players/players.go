@@ -14,7 +14,7 @@ import (
 
 type Player interface {
     StartRound()
-    StreamResults(gs *objects.GameState, out chan<- []objects.Position, ctx context.Context)
+    StreamResults(team uint8, gs *objects.GameState, out chan<- []objects.Position, ctx context.Context)
     Stats() objects.Stats
     Run(ctx context.Context)
 }
@@ -31,7 +31,7 @@ func NewTeamPlayer(player Player, team uint8, cmdr td.TDCommander) TeamPlayer {
 
 func (t *TeamPlayer) StreamMoves(ctx context.Context, gs *objects.GameState) {
     out := make(chan []objects.Position, 10)
-    t.Player.StreamResults(gs, out, ctx)
+    t.Player.StreamResults(t.team, gs, out, ctx)
 
     outer:
     for {

@@ -105,6 +105,10 @@ pub const Range = struct {
     startRow: usize = 0,
     endRow: usize = 0,
 
+    pub fn string(self: Range) ![]u8 {
+        return std.fmt.bufPrint(scratchBuf(100), "Range{{s={}, e={}}}", .{self.startRow, self.endRow});
+    }
+
     pub fn len(self: Range) usize {
         if (self.endRow < self.startRow) {
             return 0;

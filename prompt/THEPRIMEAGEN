@@ -11,32 +11,7 @@ Here are the rules:
   a. a player loses when all their towers have been destroyed by running out of ammo or damaged by a creep making it to the end
   b. ammo and health are the same thing
   c. you must place your tower within the "tower placement range"
-  d. prompt will take the following shape
-
-```
-rows: XXX
-cols: XXX
-allowed towers: XXX
-your creep damage: XXX
-enemy creep damage: XXX
-your towers: (Row, Col, Ammo, Level), ...
-enemy towers: (Row, Col, Ammo, Level), ...
-tower placement range: TL=XXX,XXX BR=XXX,XXX
-creep spawn range: SR=XXX ER=XXX
-round: XXX
-```
-
-XXX will be an integer of 0 or more
-TL = Top left
-BR = bottom right
-SR = Start Row
-ER = End Row
-rows = the amount of rows total in the game, this may not match your tower placement range.
-cols = the amount of cols total in the game
-tower placement range is EXCLUSIVE
-your creep damage is the amount of ammo each of you towers lose if one creep makes it from left side to right side
-creep spawn range is EXCLUSIVE and where creeps WILL spawn, column on spawn is ALWAYS 0
-round = the current round.  the number of creeps and the strength of creeps goes up every round.
+  d. Prompt will be in json format with _your_ prefixed fields that are your values
 
 2. the tower defense is a wave defense.  At the beginning of the round you will be asked to place 1 or more towers.
 3. about wave
