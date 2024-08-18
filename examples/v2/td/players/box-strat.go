@@ -54,8 +54,9 @@ func (r *BoxPos) Moves(gs *objects.GameState, ctx context.Context) []objects.Pos
 // As of right now, out of bounds guesses will place a tower within your area
 // randomly
 
-func (r *BoxPos) StreamResults(team uint8, gs *objects.GameState, out chan<- []objects.Position, ctx context.Context) {
+func (r *BoxPos) StreamResults(team uint8, gs *objects.GameState, out PositionChan, done Done, ctx context.Context) {
     if !r.sendResults {
+        done <- struct{}{}
         return
     }
 
@@ -66,6 +67,7 @@ func (r *BoxPos) StreamResults(team uint8, gs *objects.GameState, out chan<- []o
     }
 
     out <- pos
+    done <- struct{}{}
 }
 
 func (r *BoxPos) StartRound() {
@@ -88,14 +90,16 @@ func NewRandomPos(maxRows int) *RandomPos {
     }
 }
 
-func (r *RandomPos) StreamResults(team uint8, gs *objects.GameState, out chan<- []objects.Position, ctx context.Context) {
+func (r *RandomPos) StreamResults(team uint8, gs *objects.GameState, out PositionChan, done Done, ctx context.Context) {
     if !r.sendResults {
+        done <- struct{}{}
         return
     }
 
     go func() {
         r.sendResults = false;
         out <- r.Moves(gs, ctx)
+        done <- struct{}{}
     }()
 }
 
@@ -110,6 +114,7 @@ func (r *RandomPos) Moves(gs *objects.GameState, ctx context.Context) []objects.
 func (r *RandomPos) Stats() objects.Stats {
     return objects.Stats{}
 }
+
 func (f *RandomPos) Run(ctx context.Context) { }
 func (f *BoxPos) Run(ctx context.Context) { }
 

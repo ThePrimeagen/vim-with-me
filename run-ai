@@ -1,7 +1,18 @@
 #!/usr/bin/env bash
 
-for i in {250..500}; do
+for i in {2..99}; do
     echo "running $1 at round $i"
-    LEVEL=error go run ./examples/v2/td/run/main.go --system $1 --seed $i -- ./zig-out/bin/to test.json >> $1_results_strat
+    LEVEL=error go run ./examples/v2/td/run/main.go --two ai:openai:prompt/HOSTAGE --one ai:openai:prompt/THEPRIMEAGEN --roundTime 7 --seed 1 --debug /tmp/td -- ./zig-out/bin/to main.json >> ai_vs_ai
 done
-
+for i in {100..199}; do
+    echo "running $1 at round $i"
+    LEVEL=error go run ./examples/v2/td/run/main.go --one ai:openai:prompt/HOSTAGE --two ai:openai:prompt/THEPRIMEAGEN --roundTime 7 --seed 1 --debug /tmp/td -- ./zig-out/bin/to main.json >> ai_vs_ai
+done
+for i in {200..299}; do
+    echo "running $1 at round $i"
+    LEVEL=error go run ./examples/v2/td/run/main.go --two ai:openai:prompt/HOSTAGE --one ai:openai:prompt/THEPRIMEAGEN --roundTime 7 --seed 1 --debug /tmp/td -- ./zig-out/bin/to main.json >> ai_vs_ai
+done
+for i in {300..399}; do
+    echo "running $1 at round $i"
+    LEVEL=error go run ./examples/v2/td/run/main.go --one ai:openai:prompt/HOSTAGE --two ai:openai:prompt/THEPRIMEAGEN --roundTime 7 --seed 1 --debug /tmp/td -- ./zig-out/bin/to main.json >> ai_vs_ai
+done

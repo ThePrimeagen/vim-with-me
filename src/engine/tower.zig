@@ -286,11 +286,10 @@ pub fn towerWithinRange(self: *Tower, gs: *GS) ?*Tower {
         if (!t.alive or t.team == self.team) {
             continue;
         }
-        if (t.ammo < minAmmo) {
+        if (t.ammo < minAmmo and self.firingRangeAABB.overlaps(t.aabb)) {
             minAmmo = t.ammo;
             out = t;
         }
-
     }
 
     return out;

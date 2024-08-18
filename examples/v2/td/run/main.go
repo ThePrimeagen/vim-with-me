@@ -5,10 +5,12 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/theprimeagen/vim-with-me/examples/v2/td"
+	"github.com/theprimeagen/vim-with-me/examples/v2/td/objects"
 	"github.com/theprimeagen/vim-with-me/examples/v2/td/players"
 	"github.com/theprimeagen/vim-with-me/pkg/testies"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
@@ -16,15 +18,39 @@ import (
 )
 
 func getDebug(name string) (*testies.DebugFile, error) {
-    if name == "" {
-        return testies.EmptyDebugFile(), nil
-    }
-    return testies.NewDebugFile(name)
+	if name == "" {
+		return testies.EmptyDebugFile(), nil
+	}
+	return testies.NewDebugFile(name)
+}
+
+func runMoves(one players.TeamPlayer, two players.TeamPlayer, ctx context.Context, gs *objects.GameState) chan struct{} {
+	out := make(chan struct{}, 1)
+
+	go func() {
+		waitGroup := sync.WaitGroup{}
+		waitGroup.Add(2)
+
+		go func() {
+			one.StreamMoves(ctx, gs)
+			waitGroup.Done()
+		}()
+
+		go func() {
+			two.StreamMoves(ctx, gs)
+			waitGroup.Done()
+		}()
+		waitGroup.Wait()
+		out <- struct{}{}
+		close(out)
+	}()
+
+	return out
 }
 
 func main() {
 
-    testies.SetupLogger()
+	testies.SetupLogger()
 
 	godotenv.Load()
 
@@ -48,100 +74,103 @@ func main() {
 	flag.Parse()
 
 	args := flag.Args()
-    assert.Assert(len(args) >= 2, "you must provide path to exec and json file")
+	assert.Assert(len(args) >= 2, "you must provide path to exec and json file")
 	name := args[0]
 	json := args[1]
 
-    if roundTimeInt == 0 {
-        roundTimeInt = int64(time.Second * 20)
-    } else {
-        roundTimeInt = int64(time.Second * time.Duration(roundTimeInt));
-    }
-    roundTime := time.Duration(roundTimeInt)
+	if roundTimeInt == 0 {
+		roundTimeInt = int64(time.Second * 20)
+	} else {
+		roundTimeInt = int64(time.Second * time.Duration(roundTimeInt))
+	}
+	roundTime := time.Duration(roundTimeInt)
 
-    debug, err := getDebug(debugFile)
-    if err != nil {
-        log.Fatalf("could not open up debug file: %v\n", err)
-    }
-    defer debug.Close()
+	debug, err := getDebug(debugFile)
+	if err != nil {
+		log.Fatalf("could not open up debug file: %v\n", err)
+	}
+	defer debug.Close()
 
 	ctx := context.Background()
 
-    cmdParser := td.NewCmdErrParser(debug)
+	cmdParser := td.NewCmdErrParser(debug)
 
-    prog := cmd.NewCmder(name, ctx).
-        AddVArg(json).
-        AddKVArg("--seed", fmt.Sprintf("%d", seed)).
-        WithErrFn(cmdParser.Parse).
-        WithOutFn(func(b []byte) (int, error) {
-            if viz {
-                fmt.Printf("%s\n", string(b))
-            }
-            return len(b), nil
-        })
+	prog := cmd.NewCmder(name, ctx).
+		AddVArg(json).
+		AddKVArg("--seed", fmt.Sprintf("%d", seed)).
+		WithErrFn(cmdParser.Parse).
+		WithOutFn(func(b []byte) (int, error) {
+			if viz {
+				fmt.Printf("%s\n", string(b))
+			}
+			return len(b), nil
+		})
 
-    cmdr := td.TDCommander {
-        Cmdr: prog,
-        Debug: debug,
-    }
+	cmdr := td.TDCommander{
+		Cmdr:  prog,
+		Debug: debug,
+	}
 
-    go prog.Run()
+	go prog.Run()
 
-    one := players.NewTeamPlayerFromString(playerOneStr, debug, ctx, '1', cmdr)
-    two := players.NewTeamPlayerFromString(playerTwoStr, debug, ctx, '2', cmdr)
+	one := players.NewTeamPlayerFromString(playerOneStr, debug, ctx, '1', cmdr)
+	two := players.NewTeamPlayerFromString(playerTwoStr, debug, ctx, '2', cmdr)
 
-    go one.Player.Run(ctx);
-    go two.Player.Run(ctx);
+	go one.Player.Run(ctx)
+	go two.Player.Run(ctx)
 
-    round := 0
-    fmt.Printf("won,round,prompt file,seed,ai total towers,ai guesses,ai bad parses\n")
+	round := 0
+	fmt.Printf("won,round,prompt file,seed,ai total towers,ai guesses,ai bad parses\n")
 
-    defer func() {
-        fmt.Println("\x1b[?25h")
-    }()
+	defer func() {
+		fmt.Println("\x1b[?25h")
+	}()
 
-    outer:
-    for {
-        debug.WriteStrLine(fmt.Sprintf("------------- waiting on game round: %d -----------------", round))
-        select {
-        case <-ctx.Done():
-            break outer;
-        case gs := <- cmdParser.Gs:
-            debug.WriteStrLine(fmt.Sprintf("ai-placement response: \"%s\"", gs.String()))
-            round = int(gs.Round)
+outer:
+	for {
+		debug.WriteStrLine(fmt.Sprintf("------------- waiting on game round: %d -----------------", round))
+		select {
+		case <-ctx.Done():
+			break outer
+		case gs := <-cmdParser.Gs:
+			debug.WriteStrLine(fmt.Sprintf("ai-placement response: \"%s\"", gs.String()))
+			round = int(gs.Round)
 
-            if gs.Finished {
-                name := players.GetPromptName(playerOneStr) + players.GetPromptName(playerTwoStr)
-                oneStats := one.Player.Stats()
-                stats := oneStats.Add(two.Player.Stats())
+			if gs.Finished {
+				name := players.GetPromptName(playerOneStr) + players.GetPromptName(playerTwoStr)
+				oneStats := one.Player.Stats()
+				stats := oneStats.Add(two.Player.Stats())
 
-                if gs.Winner == '1' {
-                    fmt.Printf("1,%d,%s,%d,%s\n", round, name, seed, stats.String())
-                } else {
-                    fmt.Printf("2,%d,%s,%d,%s\n", round, name, seed, stats.String())
-                }
-                break outer
-            }
+				if gs.Winner == '1' {
+					fmt.Printf("1,%d,%s,%d,%s\n", round, name, seed, stats.String())
+				} else {
+					fmt.Printf("2,%d,%s,%d,%s\n", round, name, seed, stats.String())
+				}
+				break outer
+			}
 
-            if gs.Playing {
-                continue
-            }
+			if gs.Playing {
+				continue
+			}
 
-            one.Player.StartRound()
-            two.Player.StartRound()
+			one.Player.StartRound()
+			two.Player.StartRound()
 
-            innerCtx, cancel := context.WithCancel(ctx)
+			innerCtx, cancel := context.WithCancel(ctx)
+			moves := runMoves(one, two, innerCtx, &gs)
 
-            t := time.NewTimer(roundTime)
-            cmdr.Countdown(roundTime)
+			t := time.NewTimer(roundTime)
+			cmdr.Countdown(roundTime)
 
-            go one.StreamMoves(innerCtx, &gs)
-            go two.StreamMoves(innerCtx, &gs)
+			select {
+			case <-t.C:
+			case <-moves:
+			}
 
-            <-t.C
-            cancel()
-            cmdr.PlayRound()
-        }
-    }
+			t.Stop()
+			cancel()
+
+			cmdr.PlayRound()
+		}
+	}
 }
-
