@@ -115,8 +115,10 @@ func (r *RandomPos) Stats() objects.Stats {
     return objects.Stats{}
 }
 
+func (f *RandomPos) Name() string { return "random-pos" }
 func (f *RandomPos) Run(ctx context.Context) { }
 func (f *BoxPos) Run(ctx context.Context) { }
+func (f *BoxPos) Name() string { return "box-pos" }
 
 func StratPlayerFromString(arg string) Player {
     assert.Assert(strings.HasPrefix(arg, "strat"), "invalid player string for strat client", "arg", arg)

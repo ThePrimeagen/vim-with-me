@@ -66,6 +66,10 @@ func (t *TwitchTDChat) Moves(gs *objects.GameState, ctx context.Context) []objec
     return occurrencesToPositions(occs, gs.AllowedTowers)
 }
 
+func (r *TwitchTDChat) Name() string {
+    return "twitch-" + r.chat
+}
+
 func (r *TwitchTDChat) runStreamResults(gs *objects.GameState, out PositionChan, _ Done, ctx context.Context) {
     outer:
     for {

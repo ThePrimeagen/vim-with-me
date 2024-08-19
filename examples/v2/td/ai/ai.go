@@ -64,6 +64,10 @@ type StatefulOpenAIChat struct {
     ctx context.Context
 }
 
+func (s *StatefulOpenAIChat) Name() string {
+    return "openai"
+}
+
 func NewStatefulOpenAIChat(system string, ctx context.Context) *StatefulOpenAIChat {
     return &StatefulOpenAIChat{
         ai: NewOpenAIChat(os.Getenv("OPENAI_API_KEY"), system),
@@ -100,7 +104,7 @@ func NewClaudeSonnet(system string, ctx context.Context) *ClaudeSonnet {
     return &ClaudeSonnet{
         ctx: ctx,
         client: client,
-        system: system,
+        system: system + "\n" + shapeMessage,
     }
 }
 
@@ -110,19 +114,8 @@ func (o *ClaudeSonnet) chat(chat string, ctx context.Context) (string, error) {
         Model: anthropic.ModelClaude3Sonnet20240229,
         Temperature: &temperature,
         MaxTokens: 1000,
+        System: o.system,
         Messages: []anthropic.Message{
-            anthropic.Message{
-                Role: "system",
-                Content: []anthropic.MessageContent{
-                    anthropic.NewTextMessageContent(o.system),
-                },
-            },
-            anthropic.Message{
-                Role: anthropic.RoleUser,
-                Content: []anthropic.MessageContent{
-                    anthropic.NewTextMessageContent(chat),
-                },
-            },
             anthropic.Message{
                 Role: anthropic.RoleUser,
                 Content: []anthropic.MessageContent{
@@ -137,6 +130,10 @@ func (o *ClaudeSonnet) chat(chat string, ctx context.Context) (string, error) {
     }
 
     return resp.Content[0].GetText(), nil
+}
+
+func (s *ClaudeSonnet) Name() string {
+    return "anthropic"
 }
 
 func (s *ClaudeSonnet) ReadWithTimeout(p string, t time.Duration) (string, error) {

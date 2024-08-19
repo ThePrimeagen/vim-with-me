@@ -19,6 +19,7 @@ type Player interface {
     StreamResults(team uint8, gs *objects.GameState, out PositionChan, done Done, ctx context.Context)
     Stats() objects.Stats
     Run(ctx context.Context)
+    Name() string
 }
 
 type TeamPlayer struct {
