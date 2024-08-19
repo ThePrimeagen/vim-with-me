@@ -61,7 +61,7 @@ func NewTeamPlayerFromString(arg string, debug *testies.DebugFile, ctx context.C
 
     switch (parts[0]) {
     case "ai":
-        ai := AIPlayerFromString(arg, debug, os.Getenv("OPENAI_API_KEY"), ctx)
+        ai := AIPlayerFromString(arg, debug, ctx)
         player = &ai
     case "strat":
         player = StratPlayerFromString(arg)
