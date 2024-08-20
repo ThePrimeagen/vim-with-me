@@ -4,17 +4,3 @@ if aboutToLoose() { GoAllIn() }
 skibidi toilet rizz
 ligma balls
 deez nutz
-
-This is a tower defense, rizz em with the tism, skibidi their ass
-
-output
-
-```
-R,C
-```
-
-input
-
-allowed_towers will tell you how many R,C you should respond with separated by newline
-
-
