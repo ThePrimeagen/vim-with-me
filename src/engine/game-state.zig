@@ -247,6 +247,10 @@ pub fn endRound(state: *GS) void {
 
     if (state.noBuildRange.len() == 0) {
         state.noBuildZone = false;
+        state.oneNoBuildTowerRange.startRow = 0;
+        state.oneNoBuildTowerRange.endRow = state.values.rows;
+        state.twoNoBuildTowerRange.startRow = 0;
+        state.twoNoBuildTowerRange.endRow = state.values.rows;
     }
 }
 
