@@ -2,8 +2,10 @@ package ai
 
 import (
 	"context"
+	"os"
 	"time"
 
+	"github.com/liushuangls/go-anthropic/v2"
 	"github.com/sashabaranov/go-openai"
 )
 
@@ -13,11 +15,19 @@ type OpenAIChat struct {
 }
 
 var foo = 1337
+var temperature float32 = 0.55
+const shapeMessage = `Response Format MUST BE line separated Row,Col tuples
+Example output with 2 positions specified
+20,3
+12,4
+
+This specified position of row 20 col 3 and second, separated by new line, row 12 and col 4
+`
 
 func (o *OpenAIChat) chat(chat string, ctx context.Context) (string, error) {
     resp, err := o.client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
         Model: openai.GPT4oMini20240718,
-        Temperature: 0.55,
+        Temperature: temperature,
         Seed: &foo,
         Messages: []openai.ChatCompletionMessage{
             {
@@ -26,13 +36,7 @@ func (o *OpenAIChat) chat(chat string, ctx context.Context) (string, error) {
             },
             {
                 Role: openai.ChatMessageRoleSystem,
-                Content: `Response Format MUST BE line separated Row,Col tuples
-Example output with 2 positions specified
-20,3
-12,4
-
-This specified position of row 20 col 3 and second, separated by new line, row 12 and col 4
-`,
+                Content: shapeMessage,
             },
             {
                 Role: openai.ChatMessageRoleUser,
@@ -60,9 +64,9 @@ type StatefulOpenAIChat struct {
     ctx context.Context
 }
 
-func NewStatefulOpenAIChat(secret string, system string, ctx context.Context) *StatefulOpenAIChat {
+func NewStatefulOpenAIChat(system string, ctx context.Context) *StatefulOpenAIChat {
     return &StatefulOpenAIChat{
-        ai: NewOpenAIChat(secret, system),
+        ai: NewOpenAIChat(os.Getenv("OPENAI_API_KEY"), system),
         ctx: ctx,
     }
 }
@@ -85,4 +89,62 @@ func (s *StatefulOpenAIChat) ReadWithTimeout(p string, t time.Duration) (string,
     return s.ai.chat(p, ctx)
 }
 
+type ClaudeSonnet struct {
+    client *anthropic.Client
+    system string
+    ctx context.Context
+}
+
+func NewClaudeSonnet(system string, ctx context.Context) *ClaudeSonnet {
+    client := anthropic.NewClient(os.Getenv("ANTHROPIC_API_KEY"))
+    return &ClaudeSonnet{
+        client: client,
+        system: system,
+    }
+}
+
+func (o *ClaudeSonnet) chat(chat string, ctx context.Context) (string, error) {
+
+    resp, err := o.client.CreateMessages(ctx, anthropic.MessagesRequest{
+        Model: anthropic.ModelClaude3Sonnet20240229,
+        Temperature: &temperature,
+        MaxTokens: 1000,
+        Messages: []anthropic.Message{
+            anthropic.Message{
+                Role: "system",
+                Content: []anthropic.MessageContent{
+                    anthropic.NewTextMessageContent(o.system),
+                },
+            },
+            anthropic.Message{
+                Role: anthropic.RoleUser,
+                Content: []anthropic.MessageContent{
+                    anthropic.NewTextMessageContent(chat),
+                },
+            },
+            anthropic.Message{
+                Role: anthropic.RoleUser,
+                Content: []anthropic.MessageContent{
+                    anthropic.NewTextMessageContent(chat),
+                },
+            },
+        },
+    })
+
+    if err != nil {
+        return "", err
+    }
+
+    return resp.Content[0].GetText(), nil
+}
+
+func (s *ClaudeSonnet) ReadWithTimeout(p string, t time.Duration) (string, error) {
+    ctx, cancel := context.WithCancel(s.ctx)
+    go func() {
+        <-time.NewTimer(t).C
+        cancel()
+    }()
+
+    return s.chat(p, ctx)
+}
 

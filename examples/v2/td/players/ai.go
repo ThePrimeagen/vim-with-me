@@ -172,18 +172,25 @@ func (f *AIResponder) StreamResults(team uint8, gs *objects.GameState, out Posit
     }()
 }
 
-func AIPlayerFromString(arg string, debug *testies.DebugFile, key string, ctx context.Context) AIResponder {
+func AIPlayerFromString(arg string, debug *testies.DebugFile, ctx context.Context) AIResponder {
     assert.Assert(strings.HasPrefix(arg, "ai"), "invalid player string for ai client", "arg", arg)
 
     parts := strings.Split(arg, ":")
     assert.Assert(len(parts) == 3, "invalid ai player string colon count", "parts", parts)
-    assert.Assert(parts[1] == "openai", "unsupported ai model for player", "parts", parts)
 
     systemPrompt, err := os.ReadFile(parts[2])
     assert.NoError(err, "could not open system prompt", "parts", parts)
 
-    ai := ai.NewStatefulOpenAIChat(key, string(systemPrompt), ctx)
-    return NewFetchPosition(ai, debug)
+    var fetcher AIFetcher = nil
+    switch (parts[1]) {
+    case "openai":
+        fetcher = ai.NewStatefulOpenAIChat(string(systemPrompt), ctx)
+    case "anthropic":
+        fetcher = ai.NewClaudeSonnet(string(systemPrompt), ctx)
+    }
+
+    assert.Assert(fetcher != nil, "unsupported ai model for player", "parts", parts)
+    return NewFetchPosition(fetcher, debug)
 }
 
 func GetPromptName(arg string) string {
