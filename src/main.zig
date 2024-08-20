@@ -11,9 +11,6 @@ const engine = @import("engine/engine.zig");
 const GameState = objects.gamestate.GameState;
 const Message = objects.message.Message;
 
-const Coord = engine.input.Coord;
-const NextRound = engine.input.NextRound;
-
 pub fn main() !void {
     engine.stdout.hideCursor();
     try engine.stdout.showCursorOnSigInt();
@@ -59,7 +56,7 @@ pub fn main() !void {
         if (!gs.playing) {
             const msgInput = inputter.pop();
             if (msgInput) |msg| {
-                if (Message.init(msg.input[0..msg.length])) |p| {
+                if (try Message.init(msg.input[0..msg.length])) |p| {
                     try engine.gamestate.message(&gs, p);
                 }
             }

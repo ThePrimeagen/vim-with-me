@@ -16,7 +16,6 @@ const Target = @import("target.zig").Target;
 
 // TODO: Make this adjustable
 const Vec2 = math.Vec2;
-const Coord = math.Coord;
 const Range = math.Range;
 
 const Message = messages.Message;
@@ -44,6 +43,7 @@ pub const GameState = struct {
     playing: bool = true,
     playingStartUS: i64 = 0,
     round: usize = 0,
+    countdown: i64 = 0,
 
     noBuildZone: bool = true,
     noBuildRange: Range = Range{},
@@ -53,7 +53,7 @@ pub const GameState = struct {
 
     oneAvailableTower: isize = 0,
     oneTowerCount: usize = 0,
-    oneCoords: [3]?Coord,
+    onePositions: math.PossiblePositions,
     oneStats: Stats = Stats{},
     oneCreepRange: Range = Range{},
     oneNoBuildTowerRange: Range = Range{},
@@ -61,7 +61,7 @@ pub const GameState = struct {
 
     twoAvailableTower: isize = 0,
     twoTowerCount: usize = 0,
-    twoCoords: [3]?Coord,
+    twoPositions: math.PossiblePositions,
     twoStats: Stats = Stats{},
     twoCreepRange: Range = Range{},
     twoNoBuildTowerRange: Range = Range{},
@@ -96,8 +96,8 @@ pub const GameState = struct {
             .board = try alloc.alloc(bool, values.size),
             .alloc = alloc,
             .values = values,
-            .oneCoords = .{null, null, null},
-            .twoCoords = .{null, null, null},
+            .onePositions = .{.team = Values.TEAM_ONE, .len = 0, .positions = undefined },
+            .twoPositions = .{.team = Values.TEAM_TWO, .len = 0, .positions = undefined },
         };
 
         for (0..values.size) |i| {
@@ -129,18 +129,14 @@ pub const GameState = struct {
         std.debug.print("time = {}, loopDeltaUS = {}\n", .{self.time, self.loopDeltaUS});
 
         std.debug.print("one coords:\n", .{});
-        for (&self.oneCoords) |c| {
-            if (c) |coord| {
-                std.debug.print("  {s}\n", .{a.u(coord.string())});
-            }
+        for (0..self.onePositions.len) |idx| {
+            std.debug.print("  {s}\n", .{a.u(self.onePositions.positions[idx].string())});
         }
         std.debug.print("\n", .{});
 
         std.debug.print("two coords:\n", .{});
-        for (&self.twoCoords) |c| {
-            if (c) |coord| {
-                std.debug.print("  {s}\n", .{a.u(coord.string())});
-            }
+        for (0..self.twoPositions.len) |idx| {
+            std.debug.print("  {s}\n", .{a.u(self.onePositions.positions[idx].string())});
         }
 
         self.debugBoard();
