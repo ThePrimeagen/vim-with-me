@@ -25,12 +25,14 @@ type GameState struct {
     Rows uint `json:"rows"`
     Cols uint `json:"cols"`
     AllowedTowers int `json:"allowedTowers"`
-    YourCreepDamage uint `json:"yourCreepDamage"`
-    EnemyCreepDamage uint `json:"enemyCreepDamage"`
-    YourTowers []Tower `json:"yourTowers"`
-    EnemyTowers []Tower `json:"enemyTowers"`
-    TowerPlacementRange Range `json:"towerPlacementRange"`
-    CreepSpawnRange Range `json:"creepSpawnRange"`
+    OneCreepDamage uint `json:"oneCreepDamage"`
+    TwoCreepDamage uint `json:"twoCreepDamage"`
+    OneTowers []Tower `json:"oneTowers"`
+    TwoTowers []Tower `json:"TwoTowers"`
+    OneTowerPlacementRange Range `json:"oneTowerPlacementRange"`
+    TwoTowerPlacementRange Range `json:"twoTowerPlacementRange"`
+    OneCreepSpawnRange Range `json:"oneCreepSpawnRange"`
+    TwoCreepSpawnRange Range `json:"twoCreepSpawnRange"`
     Round uint `json:"round"`
     Finished bool `json:"finished"`
     Playing bool `json:"playing"`

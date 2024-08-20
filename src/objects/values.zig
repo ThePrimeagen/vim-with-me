@@ -19,11 +19,11 @@ pub const CreepValues = struct {
     life: usize = 3,
     speed: f64 = 1.1,
 
-    scaleSpeed: f64 = 0.15,
-    scaleSpeedRounds: usize = 2,
+    scaleSpeed: f64 = 0.05,
+    scaleSpeedRounds: usize = 5,
     scaleLife: usize = 1,
-    scaleLifeRounds: usize = 3,
-    scaleSpawnRate: f64 = 0.15,
+    scaleLifeRounds: usize = 5,
+    scaleSpawnRate: f64 = 0.04,
 };
 
 pub const ProjectorValues = struct {
