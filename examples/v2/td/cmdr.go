@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/theprimeagen/vim-with-me/examples/v2/td/objects"
 	"github.com/theprimeagen/vim-with-me/pkg/testies"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/cmd"
@@ -14,7 +15,7 @@ type TDCommander struct {
     Debug *testies.DebugFile
 }
 
-func (t *TDCommander) WritePositions(positions Positions, team uint8) {
+func (t *TDCommander) WritePositions(positions objects.Positions, team uint8) {
     posStr := fmt.Sprintf("%c%s", team, positions.String())
     t.Debug.WriteStrLine(fmt.Sprintf("tdcmdr#WritePositions: %s", posStr))
     err := t.Cmdr.WriteLine([]byte(posStr))

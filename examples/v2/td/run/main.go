@@ -9,9 +9,9 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/theprimeagen/vim-with-me/examples/v2/td"
+	"github.com/theprimeagen/vim-with-me/examples/v2/td/players"
 	"github.com/theprimeagen/vim-with-me/pkg/testies"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
-	"github.com/theprimeagen/vim-with-me/pkg/v2/chat"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/cmd"
 )
 
@@ -20,22 +20,6 @@ func getDebug(name string) (*testies.DebugFile, error) {
         return testies.EmptyDebugFile(), nil
     }
     return testies.NewDebugFile(name)
-}
-
-func occurrencesToPositions(occ []chat.Occurrence, gs *td.GameState) []td.Position {
-    out := []td.Position{}
-    for i := range gs.AllowedTowers {
-        if len(occ) <= i {
-            break
-        }
-        pos, err := td.PositionFromString(occ[i].Msg)
-        if err != nil {
-            continue
-        }
-        out = append(out, pos)
-    }
-
-    return out
 }
 
 func main() {
@@ -47,12 +31,14 @@ func main() {
 	debugFile := ""
 	flag.StringVar(&debugFile, "debug", "", "runs the file like the program instead of running doom")
 
-	systemPromptFile := "THEPRIMEAGEN"
-	flag.StringVar(&systemPromptFile, "system", "THEPRIMEAGEN", "the system prompt to use")
+	playerOneStr := ""
+	flag.StringVar(&playerOneStr, "one", "", "player one string")
+
+	playerTwoStr := ""
+	flag.StringVar(&playerTwoStr, "two", "", "player two string")
 
 	viz := false
 	flag.BoolVar(&viz, "viz", false, "displays the game")
-
 
 	seed := 1337
 	flag.IntVar(&seed, "seed", 69420, "the seed value for the game")
@@ -69,17 +55,7 @@ func main() {
     }
     defer debug.Close()
 
-    //systemPrompt, err := os.ReadFile(systemPromptFile)
-    if err != nil {
-        log.Fatalf("could not open system prompt: %+v\n", err)
-    }
-
 	ctx := context.Background()
-	twitchChat, err := chat.NewTwitchChat(ctx)
-	assert.NoError(err, "twitch cannot initialize")
-	chtAgg := chat.
-		NewChatAggregator().
-		WithFilter(td.TDFilter(24, 80));
 
     cmdParser := td.NewCmdErrParser(debug)
 
@@ -100,19 +76,19 @@ func main() {
     }
 
     go prog.Run()
-	go chtAgg.Pipe(twitchChat)
 
-    //ai := td.NewStatefulOpenAIChat(os.Getenv("OPENAI_API_KEY"), string(systemPrompt), ctx)
-    //fetch := td.NewFetchPosition(ai, debug)
-    stats := td.Stats{}
+    one := players.NewTeamPlayerFromString(playerOneStr, debug, ctx, '1', cmdr)
+    two := players.NewTeamPlayerFromString(playerTwoStr, debug, ctx, '2', cmdr)
+
+    go one.Player.Run(ctx);
+    go two.Player.Run(ctx);
+
     round := 0
     fmt.Printf("won,round,prompt file,seed,ai total towers,ai guesses,ai bad parses\n")
 
     defer func() {
         fmt.Println("\x1b[?25h")
     }()
-
-    box := td.NewBoxPos(24)
 
     outer:
     for {
@@ -125,10 +101,14 @@ func main() {
             round = int(gs.Round)
 
             if gs.Finished {
+                name := players.GetPromptName(playerOneStr) + players.GetPromptName(playerTwoStr)
+                oneStats := one.Player.Stats()
+                stats := oneStats.Add(two.Player.Stats())
+
                 if gs.Winner == '1' {
-                    fmt.Printf("1,%d,%s,%d,%s\n", round, systemPromptFile, seed, stats.String())
+                    fmt.Printf("1,%d,%s,%d,%s\n", round, name, seed, stats.String())
                 } else {
-                    fmt.Printf("2,%d,%s,%d,%s\n", round, systemPromptFile, seed, stats.String())
+                    fmt.Printf("2,%d,%s,%d,%s\n", round, name, seed, stats.String())
                 }
                 break outer
             }
@@ -137,40 +117,20 @@ func main() {
                 continue
             }
 
-            _ = chtAgg.Reset()
+            one.Player.StartRound()
+            two.Player.StartRound()
+
             innerCtx, cancel := context.WithCancel(ctx)
-            go func() {
-                outer:
-                for {
-                    select {
-                    case <-time.NewTimer(time.Second).C:
-                        occs := chtAgg.Peak()
-                        one := occurrencesToPositions(occs, &gs)
-                        cmdr.WritePositions(one, '2')
-                    case <-innerCtx.Done():
-                        break outer
-                    }
-                }
-            }()
 
             duration := time.Second * 20
             t := time.NewTimer(duration)
             cmdr.Countdown(duration)
 
-            //positions, fetchStats := fetch.Fetch(&gs)
-            //stats.Add(fetchStats)
-
-            //cmdr.WritePositions(positions, '2')
-            out := []td.Position{}
-            for range gs.AllowedTowers {
-                out = append(out, box.NextPos())
-            }
-            cmdr.WritePositions(out, '1')
+            go one.StreamMoves(innerCtx, &gs)
+            go two.StreamMoves(innerCtx, &gs)
 
             <-t.C
             cancel()
-            one := occurrencesToPositions(chtAgg.Peak(), &gs)
-            cmdr.WritePositions(one, '2')
             cmdr.PlayRound()
         }
     }

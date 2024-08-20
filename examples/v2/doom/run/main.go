@@ -73,7 +73,7 @@ func runChat(prog *program.Program) {
 	ctx := context.Background()
 
 	//doom create controller
-	twitchChat, err := chat.NewTwitchChat(ctx)
+	twitchChat, err := chat.NewTwitchChat(ctx, "theprimeagen")
 	assert.NoError(err, "twitch cannot initialize")
 	chtAgg := chat.
 		NewChatAggregator().

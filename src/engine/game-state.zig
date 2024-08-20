@@ -93,6 +93,16 @@ pub fn update(state: *GS, delta: i64) !void {
     });
 }
 
+pub fn getHealth(self: *GS, team: u8) usize {
+    var sum: usize = 0;
+    for (self.towers.items) |t| {
+        if (t.alive and t.team == team) {
+            sum += t.ammo;
+        }
+    }
+    return sum;
+}
+
 fn getRandomTower(self: *GS, team: u8) ?usize {
     switch (team) {
         Values.TEAM_ONE => {

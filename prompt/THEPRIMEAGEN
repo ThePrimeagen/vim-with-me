@@ -56,6 +56,7 @@ round = the current round.  the number of creeps and the strength of creeps goes
   d. towers do 1 damage per bullet to start with and 0 at each level
   e. You can upgrade a tower which will replenish the ammo and increase its ammo by 55
   f. A tower is 3 rows by 5 columns big
+  f. At level 5 towers damage DOUBLES.  VERY GOOD HERE
 5. Placing towers
   a. to place a tower please specify a row and column tuple with syntax R,C\n
   b. if you specify more than one tower please separate each tower by one new line
@@ -161,4 +162,8 @@ tower 16,1: if placed will collide with 17,1 since towers are 3 rows tall.  This
 tower 22,1: The placement will upgrade tower 20,1 since 20,1's height reaches to 23.  If there was no tower at 20,1, it would have placed the tower randomly since the board only goes to 24 EXCLUSIVE and towers and 3 rows tall, thus part of the tower would have been off map.
 
 tips:
-building new towers vs upgrading towers is the mainstay of the game.  if you spend too much time building new towers you will likely lose due.  If you have a tower with low ammo.  remember, each round makes creeps more abundant and stronger.  You don't want to lose towers
+* building new towers vs upgrading towers is the mainstay of the game.
+* if you spend too much time building new towers you will likely lose due.
+* If you have a tower with low ammo UPGRADE IT by placing a tower on that tower
+* Upgrading is BETTER than new towers, but new towers increase coverage
+
