@@ -193,6 +193,14 @@ pub fn completed(self: *GS) bool {
         (self.oneTowerCount == 0 or self.twoTowerCount == 0);
 }
 
+pub fn getWinner(self: *GS) u8 {
+    if (self.oneTowerCount == 0) {
+        return Values.TEAM_TWO;
+    }
+    return Values.TEAM_ONE;
+}
+
+
 pub fn startRound(state: *GS, spawner: *rounds.CreepSpawner) void {
     state.playing = true;
     state.playingStartUS = state.time;

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -28,11 +29,8 @@ func getDebug(name string) (*testies.DebugFile, error) {
 
 type CmdErrParser struct {
     debug *testies.DebugFile
-    prompt chan string
+    gs chan GameState
     done chan string
-    doneStr string
-    doneReadCount int
-    promptStr string
     readingPrompt bool
     empty bool
 }
@@ -40,11 +38,8 @@ type CmdErrParser struct {
 func newCmdErrParser(debug *testies.DebugFile) CmdErrParser {
     return CmdErrParser{
         debug: debug,
-        prompt: make(chan string, 1),
+        gs: make(chan GameState, 1),
         done: make(chan string, 1),
-        doneReadCount: 0,
-        promptStr: "",
-        doneStr: "",
         readingPrompt: false,
         empty: false,
 
@@ -52,57 +47,12 @@ func newCmdErrParser(debug *testies.DebugFile) CmdErrParser {
 }
 
 func (c *CmdErrParser) parse(b []byte) (int, error) {
-    str := string(b)
-
-    lines := strings.Split(str, "\n")
-    idx := 0
-
-    for idx < len(lines) {
-        line := lines[idx]
-
-        if c.readingPrompt {
-            for idx < len(lines) {
-                curr := lines[idx]
-                idx++
-
-                isEmpty := curr == ""
-                if isEmpty && c.empty {
-                    c.prompt <- c.promptStr
-                    c.readingPrompt = false
-                    break;
-                }
-
-                c.empty = isEmpty
-                if c.empty {
-                    continue
-                }
-
-                c.promptStr += curr + "\n"
-            }
-
-        } else if line == "prompt:" {
-            c.readingPrompt = true
-            c.promptStr = ""
-            c.empty = false
-        } else if line == "final" {
-            for range 2 {
-                idx++
-                if idx >= len(lines) {
-                    break;
-                }
-                c.doneReadCount++
-                c.doneStr += lines[idx] + "\n"
-            }
-
-            if c.doneReadCount == 2 {
-                c.done <- c.doneStr
-            }
-        } else {
-            c.debug.WriteLine([]byte(fmt.Sprintf("td: %s\n", line)))
-        }
-
-        idx++
+    var gs GameState;
+    err := json.Unmarshal(b, &gs)
+    if err != nil {
+        fmt.Printf("td: %s\n", string(b))
     }
+    c.gs <- gs
 
     return len(b), nil
 }
@@ -112,10 +62,13 @@ type OpenAIChat struct {
     system string
 }
 
+var foo = 1337
+
 func (o *OpenAIChat) chat(chat string, ctx context.Context) (string, error) {
     resp, err := o.client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
         Model: openai.GPT4oMini20240718,
-        Temperature: 0,
+        Temperature: 0.55,
+        Seed: &foo,
         Messages: []openai.ChatCompletionMessage{
             {
                 Role: openai.ChatMessageRoleSystem,
@@ -228,90 +181,37 @@ type PositionGenerator interface  {
 }
 
 type Tower struct {
-    row int
-    col int
-    ammo int
-    level int
+    Row int `json:"row"`
+    Col int `json:"col"`
+    Ammo int `json:"ammo"`
+    Level int `json:"level"`
 }
 
-func NewTower(str string) Tower {
-    assert.Assert(str[0] == '(' && str[len(str) - 1] == ')', "expected tower string to start and end with a paran", "str", str)
-
-    parts := strings.Split(str[1:len(str) - 1], ",")
-    assert.Assert(len(parts) == 4, "the tower definition did not contain 4 parts", "str", str)
-
-    out := make([]int, 0, 4)
-    for i, v := range parts {
-        num, err := strconv.Atoi(v)
-        assert.NoError(err, "unable to convert the number", "err", err)
-        out[i] = num
-    }
-
-    return Tower{
-        row: out[0],
-        col: out[1],
-        ammo: out[2],
-        level: out[3],
-    }
-}
-
-func NewTowers(str string) []Tower {
-    out := []Tower{}
-    start := 0
-    for {
-        start = strings.Index(str[start:], "(")
-        if start == -1 {
-            return out
-        }
-
-        end := strings.Index(str[start:], ")")
-        assert.Assert(end != -1, "the tower string was incomplete", str)
-        out = append(out, NewTower(str[start:start + end + 1]))
-
-        start += end
-    }
+type Range struct {
+    StartRow uint `json:"startRow"`
+    EndRow uint `json:"endRow"`
 }
 
 type GameState struct {
-    rows string
-    cols string
-    allowedTowers int
-    yourCreepDamage string
-    enemyCreepDamage string
-    yourTowers string
-    enemyTowers string
-    towerPlacement string
-    creepSpawnRange string
+    Rows uint `json:"rows"`
+    Cols uint `json:"cols"`
+    AllowedTowers int `json:"allowedTowers"`
+    YourCreepDamage uint `json:"yourCreepDamage"`
+    EnemyCreepDamage uint `json:"enemyCreepDamage"`
+    YourTowers []Tower `json:"yourTowers"`
+    EnemyTowers []Tower `json:"enemyTowers"`
+    TowerPlacementRange Range `json:"towerPlacementRange"`
+    CreepSpawnRange Range `json:"creepSpawnRange"`
+    Round uint `json:"round"`
+    Finished bool `json:"finished"`
+    Playing bool `json:"playing"`
+    Winner uint `json:"winner"`
 }
 
-func GameStateFromString(str string) GameState {
-    lines := strings.Split(str, "\n")
-    allowed, err := strconv.Atoi(strings.Split(lines[2], ": ")[1])
-    assert.NoError(err, "unable to parse prompt allowed towers", "str", str)
-    return GameState{
-        rows: lines[0],
-        cols: lines[1],
-        allowedTowers: allowed,
-        yourCreepDamage: lines[3],
-        enemyCreepDamage: lines[4],
-        yourTowers: lines[5],
-        enemyTowers: lines[6],
-        towerPlacement: lines[7],
-        creepSpawnRange: lines[8],
-    }
-}
-
-func (g *GameState) String() string {
-    return fmt.Sprintf(`%s
-%s
-allowed towers: %d
-%s
-%s
-%s
-%s
-%s
-%s
-`, g.rows, g.cols, g.allowedTowers, g.yourCreepDamage, g.enemyCreepDamage, g.yourTowers, g.enemyTowers, g.towerPlacement, g.creepSpawnRange)
+func (gs *GameState) String() string {
+    b, err := json.Marshal(gs)
+    assert.NoError(err, "unable to create gamestate string")
+    return string(b)
 }
 
 type PosGenerator interface {
@@ -361,7 +261,6 @@ func main() {
 	flag.IntVar(&seed, "seed", 69420, "the seed value for the game")
 	flag.Parse()
 
-
 	args := flag.Args()
     assert.Assert(len(args) >= 2, "you must provide path to exec and json file")
 	name := args[0]
@@ -379,8 +278,6 @@ func main() {
     }
 
 	ctx := context.Background()
-    ctxWithCancel, cancel := context.WithCancel(ctx)
-
 	twitchChat, err := chat.NewTwitchChat(ctx)
 	assert.NoError(err, "twitch cannot initialize")
 	chtAgg := chat.
@@ -388,7 +285,7 @@ func main() {
 		WithFilter(td.TDFilter(24, 80));
 
     errParser := newCmdErrParser(debug)
-    cmdr := cmd.NewCmder(name, ctxWithCancel).
+    cmdr := cmd.NewCmder(name, ctx).
         AddVArg(json).
         AddKVArg("--seed", fmt.Sprintf("%d", seed)).
         WithErrFn(errParser.parse).
@@ -402,55 +299,46 @@ func main() {
     go cmdr.Run()
 	go chtAgg.Pipe(twitchChat)
 
-    ai := newStatefulOpenAIChat(os.Getenv("OPENAI_API_KEY"), string(systemPrompt), ctxWithCancel)
-    done := make(chan struct{}, 1)
+    ai := newStatefulOpenAIChat(os.Getenv("OPENAI_API_KEY"), string(systemPrompt), ctx)
     aiRandomGuesses := 0
     aiBadParse := 0
     aiTotalTowers := 0
     roundCount := 0
     fmt.Printf("won,round,prompt file,seed,ai total towers,ai guesses,ai bad parses\n")
-    go func() {
-        for doneStr := range errParser.done {
-            debug.WriteLine([]byte("------------------------------------------"))
-            debug.WriteLine([]byte("-------------- game over -----------------"))
-            debug.WriteLine([]byte("------------------------------------------"))
-            debug.WriteLine([]byte(doneStr))
-            cancel();
-
-            // note: waiting a moment to prevent any more IO to screw up my printing
-            <-time.NewTimer(time.Millisecond * 250).C
-            debug.WriteStrLine(fmt.Sprintf("Results: %s", doneStr))
-
-            if strings.Contains(doneStr, "1: won") {
-                fmt.Printf("1,%d,%s,%d,%d,%d,%d\n", roundCount, systemPromptFile, seed, aiTotalTowers, aiRandomGuesses, aiBadParse)
-            } else {
-                fmt.Printf("2,%d,%s,%d,%d,%d,%d\n", roundCount, systemPromptFile, seed, aiTotalTowers, aiRandomGuesses, aiBadParse)
-            }
-
-            done<-struct{}{}
-        }
-    }()
 
     defer func() {
         fmt.Println("\x1b[?25h")
     }()
 
-    posGen := NewRandomPos(24)
+    posGen := NewBoxPos(24)
     outer:
     for {
         debug.WriteStrLine(fmt.Sprintf("------------- waiting on game round: %d -----------------", roundCount))
         select {
-        case <-ctxWithCancel.Done():
+        case <-ctx.Done():
             break outer;
-        case promptStr := <- errParser.prompt:
-            prompt := GameStateFromString(promptStr)
-            count := prompt.allowedTowers
+        case gs := <- errParser.gs:
+            debug.WriteStrLine(fmt.Sprintf("ai-placement response: \"%s\"", gs.String()))
+            count := gs.AllowedTowers
             aiResponses := 0
             tries := 0
-            roundCount++
+            roundCount = int(gs.Round)
+
+            if gs.Finished {
+                if gs.Winner == '1' {
+                    fmt.Printf("1,%d,%s,%d,%d,%d,%d\n", roundCount, systemPromptFile, seed, aiTotalTowers, aiRandomGuesses, aiBadParse)
+                } else {
+                    fmt.Printf("2,%d,%s,%d,%d,%d,%d\n", roundCount, systemPromptFile, seed, aiTotalTowers, aiRandomGuesses, aiBadParse)
+                }
+                break outer
+            }
+
+            if gs.Playing {
+                continue
+            }
 
             for aiResponses < count && tries < 3 {
-                resp, err := ai.ReadWithTimeout(promptStr, time.Second * 5)
+                resp, err := ai.ReadWithTimeout(gs.String(), time.Second * 5)
                 tries++
 
                 if err != nil {
@@ -515,7 +403,5 @@ func main() {
             }
         }
     }
-
-    <-done
 }
 
