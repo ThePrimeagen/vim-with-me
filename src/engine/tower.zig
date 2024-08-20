@@ -170,12 +170,19 @@ pub fn upgrade(self: *Tower) void {
             self.firingRangeAABB.min = self.firingRangeAABB.min.sub(ONE_VEC);
             self.firingRangeAABB.max = self.firingRangeAABB.max.add(ONE_VEC);
         }
+        if (self.level == 5) {
+            self.firingRangeAABB.min = self.firingRangeAABB.min.sub(ONE_VEC);
+            self.firingRangeAABB.max = self.firingRangeAABB.max.add(ONE_VEC);
+        }
+        if (self.level == 7) {
+            self.firingRangeAABB.min = self.firingRangeAABB.min.sub(ONE_VEC);
+            self.firingRangeAABB.max = self.firingRangeAABB.max.add(ONE_VEC);
+        }
         if (self.level == 9) {
             self.firingRangeAABB.min = self.firingRangeAABB.min.sub(TWO_VEC);
             self.firingRangeAABB.max = self.firingRangeAABB.max.add(TWO_VEC);
         }
     }
-
 
     const ammo = self.values.tower.ammo + (self.level - 1) * self.values.tower.ammoPerLevel;
     self.ammo = ammo;
@@ -261,8 +268,11 @@ pub fn render(self: *Tower, gs: *GS) !void {
     color(self, c);
 }
 
-pub fn hurt(self: *Tower, damage: usize) void {
+pub fn hurt(self: *Tower, damage: usize) usize {
+    const prevAmmo = self.ammo;
     self.ammo -|= damage;
+
+    return @min(prevAmmo, damage);
 }
 
 fn getLifePercent(self: *Tower) f64 {

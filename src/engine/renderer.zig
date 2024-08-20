@@ -107,6 +107,7 @@ pub const Renderer = struct {
             self.canvas.place(p.rSized.add(gridOffset), &p.rCells);
         }
 
+        // TODO: Fix the out of bounds check
         // TODO: what is this shit?
         for (gs.onePositions.positions) |p| {
             if (p == null) {

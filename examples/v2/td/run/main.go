@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"sync"
 	"time"
 
@@ -69,6 +70,9 @@ func main() {
 	viz := false
 	flag.BoolVar(&viz, "viz", false, "displays the game")
 
+	hasVizFile := false
+	flag.BoolVar(&hasVizFile, "vizFile", false, "displays the game in a file")
+
 	seed := 1337
 	flag.IntVar(&seed, "seed", 69420, "the seed value for the game")
 	flag.Parse()
@@ -94,6 +98,7 @@ func main() {
 	ctx := context.Background()
 
 	cmdParser := td.NewCmdErrParser(debug)
+    vizFile, err := os.OpenFile("/tmp/td-viz", os.O_RDWR|os.O_CREATE, 0644)
 
 	prog := cmd.NewCmder(name, ctx).
 		AddVArg(json).
@@ -103,6 +108,9 @@ func main() {
 			if viz {
 				fmt.Printf("%s\n", string(b))
 			}
+            if vizFile != nil {
+				fmt.Fprintf(vizFile, "%s\n", string(b))
+            }
 			return len(b), nil
 		})
 
@@ -120,7 +128,7 @@ func main() {
 	go two.Player.Run(ctx)
 
 	round := 0
-	fmt.Printf("won,round,prompt file,seed,ai total towers,ai guesses,ai bad parses\n")
+	fmt.Printf("won,round,one-team,two-team,seed,oneTotalTowersBuild,oneTotalProjectiles,oneTotalTowerUpgrades,oneTotalCreepDamage,oneTotalTowerDamage,oneTotalDamageFromCreeps,twoTotalTowersBuild,twoTotalProjectiles,twoTotalTowerUpgrades,twoTotalCreepDamage,twoTotalTowerDamage,twoTotalDamageFromCreeps\n")
 
 	defer func() {
 		fmt.Println("\x1b[?25h")
@@ -133,19 +141,16 @@ outer:
 		case <-ctx.Done():
 			break outer
 		case gs := <-cmdParser.Gs:
-			debug.WriteStrLine(fmt.Sprintf("ai-placement response: \"%s\"", gs.String()))
+			debug.WriteStrLine(fmt.Sprintf("ai-placement response(%d): \"%s\"", gs.OneTotalDamageFromCreeps, gs.String()))
 			round = int(gs.Round)
 
 			if gs.Finished {
-				name := players.GetPromptName(playerOneStr) + players.GetPromptName(playerTwoStr)
-				oneStats := one.Player.Stats()
-				stats := oneStats.Add(two.Player.Stats())
-
-				if gs.Winner == '1' {
-					fmt.Printf("1,%d,%s,%d,%s\n", round, name, seed, stats.String())
-				} else {
-					fmt.Printf("2,%d,%s,%d,%s\n", round, name, seed, stats.String())
-				}
+                //           w  r 1n 2n seed
+                fmt.Printf("%d,%d,%s,%s,%d,", gs.Winner, gs.Round, one.Player.Name(), two.Player.Name(), seed);
+                // oneTotalTowersBuild, oneTotalProjectiles, oneTotalTowerUpgrades, oneTotalCreepDamage, oneTotalTowerDamage,
+                fmt.Printf("%d,%d,%d,%d,%d,%d,", gs.OneTotalTowersBuild, gs.OneTotalProjectiles, gs.OneTotalTowerUpgrades, gs.OneTotalCreepDamage, gs.OneTotalTowerDamage, gs.OneTotalDamageFromCreeps)
+                // twoTotalTowersBuild, twoTotalProjectiles, twoTotalTowerUpgrades, twoTotalCreepDamage, twoTotalTowerDamage")
+                fmt.Printf("%d,%d,%d,%d,%d,%d\n", gs.TwoTotalTowersBuild, gs.TwoTotalProjectiles, gs.TwoTotalTowerUpgrades, gs.TwoTotalCreepDamage, gs.TwoTotalTowerDamage, gs.TwoTotalDamageFromCreeps)
 				break outer
 			}
 
@@ -169,6 +174,9 @@ outer:
 
 			t.Stop()
 			cancel()
+
+            one.Player.EndRound(&gs, cmdr)
+            two.Player.EndRound(&gs, cmdr)
 
 			cmdr.PlayRound()
 		}

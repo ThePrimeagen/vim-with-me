@@ -1,6 +1,7 @@
 const std = @import("std");
 
 const rounds = @import("rounds.zig");
+const scratchBuf = @import("../scratch/scratch.zig").scratchBuf;
 const objects = @import("../objects/objects.zig");
 const math = @import("../math/math.zig");
 const a = @import("../assert/assert.zig");
@@ -51,14 +52,26 @@ pub fn update(state: *GS, delta: i64) !void {
                 Values.TEAM_TWO => state.twoCreepDamage,
                 else => unreachable,
             };
+            var sum: usize = 0;
             for (state.towers.items) |*t| {
                 if (t.team == c.team and t.alive) {
+                    const prevAmmo = t.ammo;
                     t.ammo -|= d;
+                    sum += @min(prevAmmo, d);
                 }
             }
+
             switch (c.team) {
-                Values.TEAM_ONE => state.oneCreepDamage += 1,
-                Values.TEAM_TWO => state.twoCreepDamage += 1,
+                Values.TEAM_ONE => {
+                    state.oneCreepDamage += 1;
+                    std.debug.print("DEBUG_ONE: applying damage {} + {} = {}\n", .{state.oneTotalDamageFromCreeps, sum, state.oneTotalDamageFromCreeps + sum});
+                    state.oneTotalDamageFromCreeps += sum;
+                },
+                Values.TEAM_TWO => {
+                    state.twoCreepDamage += 1;
+                    state.twoTotalDamageFromCreeps += sum;
+                    std.debug.print("DEBUG_TWO: applying damage {} + {} = {}\n", .{state.oneTotalDamageFromCreeps, sum, state.oneTotalDamageFromCreeps + sum});
+                },
                 else => unreachable,
             }
         }
@@ -150,14 +163,15 @@ pub fn init(self: *GS) void {
     self.twoCreepRange.startRow = rows - objects.tower.TOWER_ROW_COUNT - 1;
     self.twoCreepRange.endRow = rows;
     self.twoNoBuildTowerRange = self.twoCreepRange;
+    self.twoNoBuildTowerRange.endRow -= objects.tower.TOWER_ROW_COUNT;
 
     self.noBuildRange.startRow = self.oneCreepRange.endRow;
     self.noBuildRange.endRow = self.twoCreepRange.startRow;
 
+    self.round = 1;
     setTowerPlacementCount(self, rounds.towerCount(self));
 
     self.playing = false;
-    self.round = 0;
 }
 
 pub fn towerDied(self: *GS, t: *Tower) void {
@@ -191,15 +205,35 @@ pub fn shot(self: *GS, t: *Tower) void {
     }
 }
 
+fn applyDamage(self: *GS, p: *Projectile) void {
+    switch (p.target) {
+        .creep => |c| {
+            switch (self.creeps.items[c].team) {
+                '1' => self.oneTotalCreepDamage += p.damage,
+                '2' => self.twoTotalCreepDamage += p.damage,
+                else => unreachable,
+            }
+        },
+        .tower => |t| {
+            switch (self.towers.items[t].team) {
+                '1' => self.oneTotalTowerDamage += p.damage,
+                '2' => self.twoTotalTowerDamage += p.damage,
+                else => unreachable,
+            }
+        }
+    }
+}
+
 pub fn strike(self: *GS, p: *Projectile) void {
     switch (p.target) {
         .creep => |c| self.creeps.items[c].life -|= p.damage,
         .tower => |t| self.towers.items[t].ammo -|= p.damage,
     }
+    applyDamage(self, p);
 }
 
 pub fn completed(self: *GS) bool {
-    return self.round > 1 and
+    return !self.noBuildZone and
         (self.oneTowerCount == 0 or self.twoTowerCount == 0);
 }
 
@@ -248,9 +282,9 @@ pub fn endRound(state: *GS) void {
     if (state.noBuildRange.len() == 0) {
         state.noBuildZone = false;
         state.oneNoBuildTowerRange.startRow = 0;
-        state.oneNoBuildTowerRange.endRow = state.values.rows;
+        state.oneNoBuildTowerRange.endRow = state.values.rows - objects.tower.TOWER_ROW_COUNT;
         state.twoNoBuildTowerRange.startRow = 0;
-        state.twoNoBuildTowerRange.endRow = state.values.rows;
+        state.twoNoBuildTowerRange.endRow = state.values.rows - objects.tower.TOWER_ROW_COUNT;
     }
 }
 
@@ -285,19 +319,34 @@ pub fn message(state: *GS, msg: Message) (Allocator.Error || std.fmt.BufPrintErr
         },
 
         .round => |_| {
-            assert(state.onePositions.len >= state.oneAvailableTower, "there are not enough one positions");
-            assert(state.twoPositions.len >= state.twoAvailableTower, "there are not enough two positions");
-
             const oneTowerCount: usize = @intCast(state.oneAvailableTower);
-            for (0..oneTowerCount) |idx| {
+            const oneCount = @min(state.onePositions.len, oneTowerCount);
+            const oneRemaining = oneTowerCount - @min(state.onePositions.len, oneTowerCount);
+
+            for (0..oneCount) |idx| {
                 const p = state.onePositions.positions[idx];
                 assert(p != null, "position is null when placing tower for tower one");
                 _ = try place(state, state.onePositions.team, p.?);
             }
 
+            for (0..oneRemaining) |_| {
+                const p = state.onePositions.positions[0];
+                assert(p != null, "position is null when placing tower for tower one");
+                _ = try place(state, state.onePositions.team, p.?);
+            }
+
             const twoTowerCount: usize = @intCast(state.twoAvailableTower);
-            for (0..twoTowerCount) |idx| {
+            const twoCount = @min(state.twoPositions.len, twoTowerCount);
+            const twoRemaining = twoTowerCount - @min(state.twoPositions.len, twoTowerCount);
+
+            for (0..twoCount) |idx| {
                 const p = state.twoPositions.positions[idx];
+                assert(p != null, "position is null when placing tower for tower two");
+                _ = try place(state, state.twoPositions.team, p.?);
+            }
+
+            for (0..twoRemaining) |_| {
+                const p = state.twoPositions.positions[0];
                 assert(p != null, "position is null when placing tower for tower two");
                 _ = try place(state, state.twoPositions.team, p.?);
             }
@@ -320,11 +369,23 @@ fn place(self: *GS, team: u8, pos: math.Position) !?usize {
     if (towerByAABB(self, aabb)) |idx| {
         if (self.towers.items[idx].team == team) {
             towers.upgrade(&self.towers.items[idx]);
+            switch (team) {
+                '1' => self.oneTotalTowerUpgrades += 1,
+                '2' => self.twoTotalTowerUpgrades += 1,
+                else => unreachable,
+            }
             return idx;
         }
 
+        // TODO: Look at this........
+        // make a test
         if (utils.aabbInValidRange(self, aabb, team)) {
-            towers.hurt(&self.towers.items[idx], self.values.tower.ammo);
+            const d = towers.hurt(&self.towers.items[idx], self.values.tower.ammo);
+            switch (team) {
+                '1' => self.oneTotalTowerDamage += d,
+                '2' => self.twoTotalTowerDamage += d,
+                else => unreachable,
+            }
             return null;
         }
     }
@@ -441,6 +502,11 @@ pub fn placeCreep(self: *GS, pos: math.Position, team: u8) !usize {
     );
 
     errdefer c.deinit();
+    c.rCells[0].color = switch (team) {
+        '1' => objects.colors.Orange,
+        '2' => objects.colors.Blue,
+        else => unreachable
+    };
     try self.creeps.append(c);
 
     try creeps.calculatePath(&self.creeps.items[id], self.board);
@@ -483,27 +549,15 @@ fn canPlaceTower(self: *GS, aabb: math.AABB, team: u8) bool {
         };
 
         if (!range.contains(pos)) {
-            std.debug.print("outside range\n", .{});
             return false;
         }
     }
 
     if (pos.col <= 0 or pos.col >= self.values.cols - objects.tower.TOWER_COL_COUNT) {
-        std.debug.print("on outside of accepted range: col={}, {}: col <= 0, {}: col => {}\n", .{
-            pos.col,
-            pos.col <= 0,
-            pos.col >= self.values.cols - objects.tower.TOWER_COL_COUNT,
-            self.values.cols - objects.tower.TOWER_COL_COUNT
-        });
         return false;
     }
 
     if (pos.row < 0 or pos.row >= self.values.rows - objects.tower.TOWER_ROW_COUNT) {
-        std.debug.print("on outside of accepted range: row <= 0, row => {}\n", .{self.values.rows - objects.tower.TOWER_ROW_COUNT});
-        return false;
-    }
-
-    if (creepByAABB(self, aabb)) |_| {
         return false;
     }
 
@@ -530,8 +584,10 @@ pub fn placeTower(self: *GS, aabb: math.AABB, team: u8) Allocator.Error!?usize {
     try self.towers.append(t);
     if (team == Values.TEAM_ONE) {
         self.oneTowerCount += 1;
+        self.oneTotalTowersBuild += 1;
     } else {
         self.twoTowerCount += 1;
+        self.twoTotalTowersBuild += 1;
     }
 
     updateBoard(self);
@@ -578,6 +634,12 @@ pub fn placeProjectile(self: *GS, t: *Tower, target: objects.Target) Allocator.E
 
     try self.projectile.append(projectile);
     shot(self, t);
+
+    switch (t.team) {
+        '1' => self.oneTotalProjectiles += 1,
+        '2' => self.twoTotalProjectiles += 1,
+        else => unreachable,
+    }
 
     return id;
 }

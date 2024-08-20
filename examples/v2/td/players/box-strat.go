@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/theprimeagen/vim-with-me/examples/v2/td"
 	"github.com/theprimeagen/vim-with-me/examples/v2/td/objects"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 )
@@ -117,8 +118,10 @@ func (r *RandomPos) Stats() objects.Stats {
 
 func (f *RandomPos) Name() string { return "random-pos" }
 func (f *RandomPos) Run(ctx context.Context) { }
+func (r *RandomPos) EndRound(gs *objects.GameState, cmdr td.TDCommander) { }
 func (f *BoxPos) Run(ctx context.Context) { }
 func (f *BoxPos) Name() string { return "box-pos" }
+func (r *BoxPos) EndRound(gs *objects.GameState, cmdr td.TDCommander) { }
 
 func StratPlayerFromString(arg string) Player {
     assert.Assert(strings.HasPrefix(arg, "strat"), "invalid player string for strat client", "arg", arg)

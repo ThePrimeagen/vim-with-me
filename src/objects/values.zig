@@ -10,20 +10,20 @@ pub const TowerValues = struct {
     ammo: usize = 40,
     ammoPerLevel: usize = 45,
     damage: usize = 1,
-    fireRateUS: i64 = 420_000,
-    firingDurationUS: i64 = 150_000,
+    fireRateUS: i64 = 280_000,
+    firingDurationUS: i64 = 100_000,
     scaleFireRateUS: i64 = 15_000,
 };
 
 pub const CreepValues = struct {
-    life: usize = 3,
-    speed: f64 = 1.1,
+    life: usize = 2,
+    speed: f64 = 4.0,
 
-    scaleSpeed: f64 = 0.05,
+    scaleSpeed: f64 = 0.025,
     scaleSpeedRounds: usize = 5,
     scaleLife: usize = 1,
     scaleLifeRounds: usize = 5,
-    scaleSpawnRate: f64 = 0.04,
+    scaleSpawnRate: f64 = 0.005,
 };
 
 pub const ProjectorValues = struct {
@@ -96,6 +96,7 @@ pub fn printSize(v: *const Self) !void {
     try f.writeAll(try std.fmt.bufPrint(scratchBuf(50), "cols = {}\n", .{v.cols}));
 }
 
+// TODO: Fix this later because its gross
 pub fn onBoard(v: *const Self, r: usize, c: usize) bool {
-    return r < v.rows and c < v.cols;
+    return r < v.rows - 3 and c < v.cols - 5;
 }

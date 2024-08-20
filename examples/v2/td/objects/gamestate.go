@@ -9,6 +9,9 @@ import (
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 )
 
+const TowerColSize = 5
+const TowerRowSize = 3
+
 type Tower struct {
     Row int `json:"row"`
     Col int `json:"col"`
@@ -25,14 +28,29 @@ type GameState struct {
     Rows uint `json:"rows"`
     Cols uint `json:"cols"`
     AllowedTowers int `json:"allowedTowers"`
+
     OneCreepDamage uint `json:"oneCreepDamage"`
-    TwoCreepDamage uint `json:"twoCreepDamage"`
     OneTowers []Tower `json:"oneTowers"`
-    TwoTowers []Tower `json:"TwoTowers"`
     OneTowerPlacementRange Range `json:"oneTowerPlacementRange"`
-    TwoTowerPlacementRange Range `json:"twoTowerPlacementRange"`
     OneCreepSpawnRange Range `json:"oneCreepSpawnRange"`
+    OneTotalTowersBuild uint `json:"oneTotalTowersBuild"`
+    OneTotalProjectiles uint `json:"oneTotalProjectiles"`
+    OneTotalTowerUpgrades uint `json:"oneTotalTowerUpgrades"`
+    OneTotalCreepDamage uint `json:"oneTotalCreepDamage"`
+    OneTotalTowerDamage uint `json:"oneTotalTowerDamage"`
+    OneTotalDamageFromCreeps uint `json:"oneTotalDamageFromCreeps"`
+
+    TwoCreepDamage uint `json:"twoCreepDamage"`
+    TwoTowers []Tower `json:"TwoTowers"`
+    TwoTowerPlacementRange Range `json:"twoTowerPlacementRange"`
     TwoCreepSpawnRange Range `json:"twoCreepSpawnRange"`
+    TwoTotalTowersBuild uint `json:"twoTotalTowersBuild"`
+    TwoTotalProjectiles uint `json:"twoTotalProjectiles"`
+    TwoTotalTowerUpgrades uint `json:"twoTotalTowerUpgrades"`
+    TwoTotalCreepDamage uint `json:"twoTotalCreepDamage"`
+    TwoTotalTowerDamage uint `json:"twoTotalTowerDamage"`
+    TwoTotalDamageFromCreeps uint `json:"twoTotalDamageFromCreeps"`
+
     Round uint `json:"round"`
     Finished bool `json:"finished"`
     Playing bool `json:"playing"`
@@ -152,6 +170,9 @@ func PositionFromString(str string) (Position, error) {
         return Position{}, fmt.Errorf("invalid position")
     }
 
+    parts[0] = strings.TrimSpace(parts[0])
+    parts[1] = strings.TrimSpace(parts[1])
+
     row, err := strconv.Atoi(parts[0])
     if err != nil {
         return Position{}, fmt.Errorf("invalid position")
@@ -181,8 +202,8 @@ func OutOfBoundPosition() Position {
     return Position{Row: 999, Col: 999}
 }
 
-func (p *Position) OutOfBounds() bool {
-    return p.Row == 999 && p.Col == 999
+func (p *Position) OutOfBounds(gs *GameState) bool {
+    return p.Row >= gs.Rows || p.Col >= gs.Cols
 }
 
 func (p *Position) String() string {
