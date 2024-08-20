@@ -12,9 +12,12 @@ import (
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 )
 
+type PositionChan chan<- []objects.Position;
+type Done chan<- struct{}
+
 type Player interface {
     StartRound()
-    StreamResults(team uint8, gs *objects.GameState, out chan<- []objects.Position, ctx context.Context)
+    StreamResults(team uint8, gs *objects.GameState, out PositionChan, done Done, ctx context.Context)
     Stats() objects.Stats
     Run(ctx context.Context)
 }
@@ -31,19 +34,24 @@ func NewTeamPlayer(player Player, team uint8, cmdr td.TDCommander) TeamPlayer {
 
 func (t *TeamPlayer) StreamMoves(ctx context.Context, gs *objects.GameState) {
     out := make(chan []objects.Position, 10)
-    t.Player.StreamResults(t.team, gs, out, ctx)
+    done := make(chan struct{}, 1)
+    t.Player.StreamResults(t.team, gs, out, done, ctx)
 
     outer:
     for {
         select {
+        case <-done:
+            break outer
         case <-ctx.Done():
-            time.Sleep(time.Millisecond * 100)
-            close(out)
             break outer
         case pos := <-out:
             t.cmdr.WritePositions(objects.Positions(pos), t.team)
         }
     }
+
+    time.Sleep(time.Millisecond * 100)
+    close(out)
+    close(done)
 }
 
 func NewTeamPlayerFromString(arg string, debug *testies.DebugFile, ctx context.Context, team uint8, cmdr td.TDCommander) TeamPlayer {

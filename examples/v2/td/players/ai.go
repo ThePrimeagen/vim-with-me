@@ -94,13 +94,15 @@ func (f *AIResponder) StartRound() {
 
 func (f *AIResponder) fetchResults(team uint8, gs *objects.GameState, ctx context.Context) []objects.Position {
     promptState := gs.PromptState(team)
+    promptStr := promptState.String()
+    f.debug.WriteStrLine(fmt.Sprintf("AIResponder#fetchResults Prompt(%d): \"%s\"", team, promptStr))
     resp, err := f.ai.ReadWithTimeout(promptState.String(), f.timeout)
     if contextDone(ctx) {
         return []objects.Position{}
     }
 
     if err != nil {
-        f.debug.WriteStrLine(fmt.Sprintf("ai-placement response: \"%s\" err: \"%s\"", resp, err.Error()))
+        f.debug.WriteStrLine(fmt.Sprintf("ai-placement error: \"%s\" err: \"%s\"", resp, err.Error()))
         parts := strings.Split(err.Error(), "try again in ")
         if len(parts) == 2 {
             secsStr := strings.Split(parts[1], " ")[0]
@@ -133,13 +135,16 @@ func (f *AIResponder) fetchResults(team uint8, gs *objects.GameState, ctx contex
         }
 
         responses = append(responses, parsedLine)
-        f.debug.WriteStrLine(fmt.Sprintf("ai-placement: %s - %s", line, parsedLine.String()))
+        if len(responses) >= gs.AllowedTowers {
+            break
+        }
     }
 
+    f.debug.WriteStrLine(fmt.Sprintf("AIResponder#fetchResults Response(%d): %+v", team, responses))
     return responses
 }
 
-func (f *AIResponder) StreamResults(team uint8, gs *objects.GameState, out chan<- []objects.Position, ctx context.Context) {
+func (f *AIResponder) StreamResults(team uint8, gs *objects.GameState, out PositionChan, done Done, ctx context.Context) {
     if !f.streamResults {
         return
     }
@@ -162,6 +167,7 @@ func (f *AIResponder) StreamResults(team uint8, gs *objects.GameState, out chan<
 
         if !contextDone(ctx) {
             out <- responses
+            done <- struct{}{}
         }
     }()
 }
