@@ -105,6 +105,41 @@ pub const Renderer = struct {
             self.canvas.place(p.rSized.add(gridOffset), &p.rCells);
         }
 
+        // TODO: what is this shit?
+        for (gs.onePositions.positions) |p| {
+            if (p == null) {
+                break;
+            }
+
+            const pos = p.?;
+            if (!self.values.onBoard(pos.row, pos.col)) {
+                continue;
+            }
+
+            const sized: math.Sized = .{
+                .cols = objects.tower.TOWER_COL_COUNT,
+                .pos = p.?,
+            };
+            self.canvas.place(sized.add(gridOffset), &towers.OnePlacementTowerCell);
+        }
+
+        for (gs.twoPositions.positions) |p| {
+            if (p == null) {
+                break;
+            }
+
+            const pos = p.?;
+            if (!self.values.onBoard(pos.row, pos.col)) {
+                continue;
+            }
+
+            const sized: math.Sized = .{
+                .cols = objects.tower.TOWER_COL_COUNT,
+                .pos = p.?,
+            };
+            self.canvas.place(sized.add(gridOffset), &towers.TwoPlacementTowerCell);
+        }
+
         try self.gameStateText(gs);
         try self.canvas.render();
         self.output = self.canvas.renderBuffer;

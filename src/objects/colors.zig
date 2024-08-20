@@ -31,6 +31,8 @@ pub const LightGrey: Color = .{.r = 175, .g = 175, .b = 175 };
 pub const White: Color = .{.r = 255, .g = 255, .b = 255 };
 pub const Blue: Color = .{ .r = 0x3f, .g = 0xa9, .b = 0xff, };
 pub const Orange: Color = .{ .r = 245, .g = 164, .b = 66, };
+pub const TeamOneTowerColor: Color = Blue;
+pub const TeamTwoTowerColor: Color = Orange;
 
 const NULL = "null";
 

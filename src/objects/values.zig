@@ -94,3 +94,7 @@ pub fn printSize(v: *const Self) !void {
     try f.writeAll(try std.fmt.bufPrint(scratchBuf(50), "rows = {}\n", .{v.rows}));
     try f.writeAll(try std.fmt.bufPrint(scratchBuf(50), "cols = {}\n", .{v.cols}));
 }
+
+pub fn onBoard(v: *const Self, r: usize, c: usize) bool {
+    return r < v.rows and c < v.cols;
+}
