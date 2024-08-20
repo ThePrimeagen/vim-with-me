@@ -2,7 +2,6 @@ package players
 
 import (
 	"context"
-	"os"
 	"strings"
 	"time"
 

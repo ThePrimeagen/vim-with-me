@@ -98,6 +98,7 @@ type ClaudeSonnet struct {
 func NewClaudeSonnet(system string, ctx context.Context) *ClaudeSonnet {
     client := anthropic.NewClient(os.Getenv("ANTHROPIC_API_KEY"))
     return &ClaudeSonnet{
+        ctx: ctx,
         client: client,
         system: system,
     }
