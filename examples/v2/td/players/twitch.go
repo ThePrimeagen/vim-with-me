@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/theprimeagen/vim-with-me/examples/v2/td"
 	"github.com/theprimeagen/vim-with-me/examples/v2/td/objects"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/assert"
 	"github.com/theprimeagen/vim-with-me/pkg/v2/chat"
@@ -41,9 +42,10 @@ func tdFilter(rows, cols uint) func(msg string) bool {
 type TwitchTDChat struct {
     chtAgg chat.ChatAggregator
     chat string
+    team uint8
 }
 
-func NewTwitchTDChat(c string) TwitchTDChat {
+func NewTwitchTDChat(c string, team uint8) TwitchTDChat {
 	chtAgg := chat.
 		NewChatAggregator().
 		WithFilter(tdFilter(24, 80));
@@ -51,6 +53,7 @@ func NewTwitchTDChat(c string) TwitchTDChat {
     return TwitchTDChat {
         chtAgg: chtAgg,
         chat: c,
+        team: team,
     }
 }
 
@@ -87,6 +90,8 @@ func (r *TwitchTDChat) StreamResults(team uint8, gs *objects.GameState, out Posi
     go r.runStreamResults(gs, out, done, ctx)
 }
 
+func (t *TwitchTDChat) EndRound(gs *objects.GameState, cmdr td.TDCommander) { }
+
 func (t *TwitchTDChat) StartRound() {
     t.chtAgg.Reset()
 }
@@ -95,11 +100,11 @@ func (r *TwitchTDChat) Stats() objects.Stats {
     return objects.Stats{};
 }
 
-func TwitchPlayerFromString(arg string) TwitchTDChat {
+func TwitchPlayerFromString(arg string, team uint8) TwitchTDChat {
     assert.Assert(strings.HasPrefix(arg, "twitch"), "invalid player string for twitch client", "arg", arg)
 
     parts := strings.Split(arg, ":")
     assert.Assert(len(parts) == 2, "invalid player string colon count", "parts", parts)
 
-    return NewTwitchTDChat(parts[1])
+    return NewTwitchTDChat(parts[1], team)
 }

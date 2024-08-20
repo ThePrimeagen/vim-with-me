@@ -79,7 +79,7 @@ pub const Position = struct {
 
         const endIdx = idx + 1 + (std.mem.indexOf(u8, str[idx + 1..], ",") orelse str[idx + 1..].len);
 
-        assert.unwrap(void, std.io.getStdErr().writeAll(assert.u(std.fmt.bufPrint(scratchBuf(100), "str = {s} idx = {}, endIdx = {}", .{str, idx, endIdx}))));
+        assert.unwrap(void, std.io.getStdErr().writeAll(assert.u(std.fmt.bufPrint(scratchBuf(150), "str = {s} idx = {}, endIdx = {}", .{str, idx, endIdx}))));
         const row = std.fmt.parseInt(usize, str[0..idx], 10) catch {
             return 0;
         };
@@ -150,7 +150,7 @@ pub const Sized = struct {
     pos: Position,
 
     pub fn string(self: Sized) ![]u8 {
-        return std.fmt.bufPrint(scratchBuf(50), "Sized(cols={}, pos={s})", .{
+        return std.fmt.bufPrint(scratchBuf(70), "Sized(cols={}, pos={s})", .{
             self.cols,
             try self.pos.string(),
         });
@@ -164,7 +164,7 @@ pub const Sized = struct {
 };
 
 pub const PossiblePositions = struct {
-    positions: [10]?Position,
+    positions: [50]?Position,
     len: usize,
     team: u8,
 

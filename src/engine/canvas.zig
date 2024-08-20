@@ -2,6 +2,7 @@ const a = @import("../assert/assert.zig");
 const std = @import("std");
 
 const assert = a.assert;
+const never = a.never;
 const framer = @import("framer.zig");
 const math = @import("../math/math.zig");
 const objects = @import("../objects/objects.zig");
@@ -80,7 +81,13 @@ pub const Canvas = struct {
         assert(cells.len % sized.cols == 0, "must provide a square");
 
         // TODO: rethink these?  Just have the canvas draw what it can?
-        assert(sized.pos.row + (cells.len / sized.cols - 1) < self.values.rows, "cannot write text off the screen rows");
+        const offScreen = sized.pos.row + (cells.len / sized.cols - 1) < self.values.rows;
+        if (offScreen == false) {
+            // TODO: I really need to figure out debugging
+            std.debug.print("sized: {s} - ({} / {} - 1) < {}\n", .{a.u(sized.string()), cells.len, sized.cols, self.values.rows});
+            never("cannot write text off the screen rows");
+        }
+
         assert(sized.pos.col + sized.cols < self.values.cols, "cannot paint object off screen cols");
         for (cells, 0..) |cell, idx| {
             const col = idx % sized.cols;
@@ -108,76 +115,3 @@ pub const Canvas = struct {
     }
 
 };
-
-
-//const t = std.testing;
-//test "i think this test is terribly written, i need help or a doctor" {
-//    var values = Values{.rows = 10, .cols = 10};
-//    values.init();
-//
-//    var canvas = try Canvas.init(t.allocator, &values);
-//    defer canvas.deinit();
-//
-//    const newLine = "\r\n";
-//    const emptyLine = " " ** 10;
-//    const x: []const Cell = &(.{
-//        .{.text = 'x', .color = .{.r = 69, .g = 69, .b = 69}}
-//    } ** 3);
-//    const y: []const Cell = &(.{
-//        .{.text = 'y', .color = .{.r = 69, .g = 69, .b = 69}}
-//    } ** 3);
-//    const z: []const Cell = &(.{
-//        .{.text = 'z', .color = .{.r = 69, .g = 69, .b = 69}}
-//    } ** 3);
-//
-//    const image: []const Cell = x ++ y ++ z;
-//
-//    canvas.place(.{
-//        .cols = 3,
-//        .pos = .{.row = 3, .col = 3}
-//    }, image);
-//
-//    try canvas.render();
-//
-//    var text: [200]u8 = undefined;
-//    {
-//        const len = AnsiFramer.parseText(canvas.renderBuffer, &text);
-//        try t.expectEqualStrings(
-//            emptyLine ++ newLine ++
-//            emptyLine ++ newLine ++
-//            emptyLine ++ newLine ++
-//            "   xxx    \r\n".* ++
-//            "   yyy    \r\n".* ++
-//            "   zzz    \r\n".* ++
-//            emptyLine ++ newLine ++
-//            emptyLine ++ newLine ++
-//            emptyLine ++ newLine ++
-//            emptyLine ++ newLine,
-//
-//            text[0..len]
-//        );
-//    }
-//
-//
-//    canvas.place(.{.cols = 3, .pos = .{.row = 4, .col = 4}}, x);
-//    try canvas.render();
-//    {
-//        const len = AnsiFramer.parseText(canvas.renderBuffer, &text);
-//
-//        try t.expectEqualStrings(
-//            emptyLine ++ newLine ++
-//            emptyLine ++ newLine ++
-//            emptyLine ++ newLine ++
-//            emptyLine ++ newLine ++
-//            "    xxx   \r\n".* ++
-//            emptyLine ++ newLine ++
-//            emptyLine ++ newLine ++
-//            emptyLine ++ newLine ++
-//            emptyLine ++ newLine ++
-//            emptyLine ++ newLine,
-//
-//            text[0..len]
-//        );
-//    }
-//
-//}

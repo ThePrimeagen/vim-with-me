@@ -36,8 +36,8 @@ pub fn scale(current: f64, total: f64, s: f64) f64 {
 
 pub fn getRangeByTeam(gs: *GameState, team: u8) math.Range {
     return switch (team) {
-        Values.TEAM_ONE => gs.oneCreepRange,
-        Values.TEAM_TWO => gs.twoCreepRange,
+        Values.TEAM_ONE => gs.oneNoBuildTowerRange,
+        Values.TEAM_TWO => gs.twoNoBuildTowerRange,
         else => {
             never("invalid team id");
             unreachable;
@@ -47,7 +47,11 @@ pub fn getRangeByTeam(gs: *GameState, team: u8) math.Range {
 
 pub fn positionInRange(gs: *GameState, team: u8) math.Position {
     const range = getRangeByTeam(gs, team);
-    const row = gs.values.randRange(usize, range.startRow, range.endRow - objects.tower.TOWER_ROW_COUNT);
+    // TODO: the ranges really are weird here...
+    // the problem is that for chat AIs i adjust the range to begin with with
+    // the tower row count and then again here leading to the end being lower
+    // than the start
+    const row = gs.values.randRange(usize, range.startRow, range.endRow);
     const col = gs.values.randRange(usize, objects.tower.TOWER_COL_COUNT, gs.values.cols - objects.tower.TOWER_COL_COUNT);
 
     return .{

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/theprimeagen/vim-with-me/examples/v2/td"
 	"github.com/theprimeagen/vim-with-me/examples/v2/td/ai"
 	"github.com/theprimeagen/vim-with-me/examples/v2/td/objects"
 	"github.com/theprimeagen/vim-with-me/pkg/testies"
@@ -58,6 +59,8 @@ type AIResponder struct {
     guesses int
     badParses int
     totalTowers int
+    towersCreatedThisRound int
+    team uint8
 }
 
 type AIFetcher interface {
@@ -65,16 +68,18 @@ type AIFetcher interface {
     Name() string
 }
 
-func NewFetchPosition(ai AIFetcher, debug *testies.DebugFile) AIResponder {
+func NewFetchPosition(ai AIFetcher, team uint8, debug *testies.DebugFile) AIResponder {
     return AIResponder {
         ai: ai,
         debug: debug,
-        maxTries: 3,
+        maxTries: 1,
         timeout: time.Second * 5,
         streamResults: false,
+        towersCreatedThisRound: 0,
         badParses: 0,
         guesses: 0,
         totalTowers: 0,
+        team: team,
     };
 }
 
@@ -90,7 +95,32 @@ func (f *AIResponder) Stats() objects.Stats {
 
 func (f *AIResponder) StartRound() {
     f.streamResults = true
+    f.towersCreatedThisRound = 0
     return
+}
+
+func isTimeoutError(e error, debug *testies.DebugFile) (bool, time.Duration) {
+    // OpenAIs version
+    err := e.Error()
+    parts := strings.Split(err, "try again in ")
+    if len(parts) == 2 {
+        secsStr := strings.Split(parts[1], " ")[0]
+        secs, err := strconv.ParseFloat(secsStr[0:len(secsStr) - 2], 64)
+        if err == nil {
+            dur := time.Duration(float64(time.Second) * secs)
+            return true, dur
+        }
+    }
+
+
+    // anthropics
+    parts = strings.Split(err, "Number of request tokens has exceeded your per-minute rate limit")
+    debug.WriteStrLine(fmt.Sprintf("ANTHROPIC TEST: %+v", parts))
+    if len(parts) == 2 {
+        return true, time.Second * 8
+    }
+
+    return false, time.Second
 }
 
 func (f *AIResponder) fetchResults(team uint8, gs *objects.GameState, ctx context.Context) []objects.Position {
@@ -104,40 +134,43 @@ func (f *AIResponder) fetchResults(team uint8, gs *objects.GameState, ctx contex
 
     if err != nil {
         f.debug.WriteStrLine(fmt.Sprintf("ai-placement error: \"%s\" err: \"%s\"", resp, err.Error()))
-        parts := strings.Split(err.Error(), "try again in ")
-        if len(parts) == 2 {
-            secsStr := strings.Split(parts[1], " ")[0]
-            secs, err := strconv.ParseFloat(secsStr[0:len(secsStr) - 2], 64)
-            if err == nil {
-                dur := time.Duration(float64(time.Second) * secs)
-                f.debug.WriteStrLine(fmt.Sprintf("ai-placement wait time required: %d", dur))
-                <-time.NewTimer(dur).C
-            }
+        if timeout, timeToWait := isTimeoutError(err, f.debug); timeout {
+            f.debug.WriteStrLine(fmt.Sprintf("ai-placement timeout: \"%s\" for: \"%d\"", f.ai.Name(), timeToWait))
+            timer := time.NewTimer(timeToWait)
+            <-timer.C
+            timer.Stop()
         }
         return []objects.Position{}
     }
 
     if resp == "" {
-        <-time.NewTimer(time.Second).C
         return []objects.Position{}
     }
 
     responses := []objects.Position{}
+    f.debug.WriteStrLine(fmt.Sprintf("AIResponder#fetchResults Raw Response(%d): \"%s\"", team, resp))
     for _, line := range strings.Split(resp, "\n") {
         line = strings.TrimSpace(line)
         if line == "" {
-            break;
+            continue;
         }
 
         parsedLine := getPosFromAIResponse(line)
-        if parsedLine.OutOfBounds() {
+        if parsedLine.OutOfBounds(gs) {
             f.badParses++
             continue
         }
 
+        f.debug.WriteLine([]byte(fmt.Sprintf("parsedLine: %s", parsedLine.String())))
         responses = append(responses, parsedLine)
         if len(responses) >= gs.AllowedTowers {
             break
+        }
+    }
+
+    if len(responses) < gs.AllowedTowers {
+        for range gs.AllowedTowers - len(responses) {
+            responses = append(responses, objects.OutOfBoundPosition())
         }
     }
 
@@ -147,6 +180,19 @@ func (f *AIResponder) fetchResults(team uint8, gs *objects.GameState, ctx contex
 
 func (f *AIResponder) Name() string {
     return f.ai.Name()
+}
+
+func (f *AIResponder) EndRound(gs *objects.GameState, cmdr td.TDCommander) {
+    if f.towersCreatedThisRound >= gs.AllowedTowers {
+        return
+    }
+
+    out := []objects.Position{}
+    amount := gs.AllowedTowers - f.towersCreatedThisRound
+    for range amount {
+        out = append(out, objects.OutOfBoundPosition())
+    }
+    cmdr.WritePositions(out, f.team)
 }
 
 func (f *AIResponder) StreamResults(team uint8, gs *objects.GameState, out PositionChan, done Done, ctx context.Context) {
@@ -161,7 +207,7 @@ func (f *AIResponder) StreamResults(team uint8, gs *objects.GameState, out Posit
         responses := []objects.Position{}
         var tries uint = 0
 
-        for len(responses) < count && tries < f.maxTries {
+        for len(responses) < count && tries < f.maxTries && !contextDone(ctx) {
             responses = append(responses, f.fetchResults(team, gs, ctx)...)
         }
 
@@ -172,12 +218,13 @@ func (f *AIResponder) StreamResults(team uint8, gs *objects.GameState, out Posit
 
         if !contextDone(ctx) {
             out <- responses
+            f.towersCreatedThisRound = len(responses)
             done <- struct{}{}
         }
     }()
 }
 
-func AIPlayerFromString(arg string, debug *testies.DebugFile, ctx context.Context) AIResponder {
+func AIPlayerFromString(arg string, team uint8, debug *testies.DebugFile, ctx context.Context) AIResponder {
     assert.Assert(strings.HasPrefix(arg, "ai"), "invalid player string for ai client", "arg", arg)
 
     parts := strings.Split(arg, ":")
@@ -195,7 +242,7 @@ func AIPlayerFromString(arg string, debug *testies.DebugFile, ctx context.Contex
     }
 
     assert.Assert(fetcher != nil, "unsupported ai model for player", "parts", parts)
-    return NewFetchPosition(fetcher, debug)
+    return NewFetchPosition(fetcher, team, debug)
 }
 
 func GetPromptName(arg string) string {

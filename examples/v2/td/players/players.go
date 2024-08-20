@@ -16,6 +16,7 @@ type Done chan<- struct{}
 
 type Player interface {
     StartRound()
+    EndRound(gs *objects.GameState, cmdr td.TDCommander)
     StreamResults(team uint8, gs *objects.GameState, out PositionChan, done Done, ctx context.Context)
     Stats() objects.Stats
     Run(ctx context.Context)
@@ -61,12 +62,12 @@ func NewTeamPlayerFromString(arg string, debug *testies.DebugFile, ctx context.C
 
     switch (parts[0]) {
     case "ai":
-        ai := AIPlayerFromString(arg, debug, ctx)
+        ai := AIPlayerFromString(arg, team, debug, ctx)
         player = &ai
     case "strat":
         player = StratPlayerFromString(arg)
     case "twitch":
-        twitch := TwitchPlayerFromString(arg)
+        twitch := TwitchPlayerFromString(arg, team)
         player = &twitch
     default:
         assert.Never("unknown player type", "arg", arg)
