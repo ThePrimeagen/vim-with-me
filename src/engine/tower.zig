@@ -162,12 +162,17 @@ pub const TowerBuilder = struct {
 };
 
 const ONE_VEC: math.Vec2 = .{.x = 1, .y = 1};
+const TWO_VEC: math.Vec2 = .{.x = 2, .y = 2};
 pub fn upgrade(self: *Tower) void {
     if (self.level < 9) {
         self.level += 1;
-        if (self.level == 3 or self.level == 9) {
+        if (self.level == 3) {
             self.firingRangeAABB.min = self.firingRangeAABB.min.sub(ONE_VEC);
             self.firingRangeAABB.max = self.firingRangeAABB.max.add(ONE_VEC);
+        }
+        if (self.level == 9) {
+            self.firingRangeAABB.min = self.firingRangeAABB.min.sub(TWO_VEC);
+            self.firingRangeAABB.max = self.firingRangeAABB.max.add(TWO_VEC);
         }
     }
 
@@ -183,6 +188,9 @@ pub fn upgrade(self: *Tower) void {
     self.damage = self.values.tower.damage;
     if (self.level >= 5) {
         self.damage *= 2;
+    }
+    if (self.level == 9) {
+        self.damage *= 3;
     }
 
     assert(self.fireRateUS > self.firingDurationUS, "cannot shoot quicker than animation");
@@ -207,16 +215,17 @@ pub fn update(self: *Tower, gs: *GS) !void {
     }
 
     const creepMaybe = creepWithinRange(self, gs);
-    if (creepMaybe == null) {
+    const towerMaybe = towerWithinRange(self, gs);
+    if (creepMaybe == null and towerMaybe == null) {
         if (self.firing) {
             self.firing = false;
         }
         return;
     }
-    const creep = creepMaybe.?;
+    const target: Target = if (creepMaybe) |c| .{.creep = c.id} else .{.tower = towerMaybe.?.id};
 
     if (self.firing and self.lastFiringUS + self.firingDurationUS < gs.time) {
-        _ = try gs.fns.?.placeProjectile(gs, self, .{.creep = creep.id});
+        _ = try gs.fns.?.placeProjectile(gs, self, target);
 
         self.ammo -= 1;
         self.fired = true;
@@ -266,6 +275,24 @@ var testId: usize = 0;
 fn getTestId() usize {
     const out = testId;
     testId += 1;
+    return out;
+}
+
+pub fn towerWithinRange(self: *Tower, gs: *GS) ?*Tower {
+    var out: ?*Tower = null;
+
+    var minAmmo: usize = 4000;
+    for (gs.towers.items) |*t| {
+        if (!t.alive or t.team == self.team) {
+            continue;
+        }
+        if (t.ammo < minAmmo) {
+            minAmmo = t.ammo;
+            out = t;
+        }
+
+    }
+
     return out;
 }
 

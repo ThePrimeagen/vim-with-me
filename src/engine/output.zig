@@ -89,3 +89,10 @@ pub fn writeState(alloc: Allocator, gs: *GS, out: std.fs.File) !void {
     try out.writeAll(string.items);
     try out.writeAll("\n");
 }
+
+pub fn writeValues(gs: *GS) !void {
+    var buf: [8196]u8 = undefined;
+    var fba = std.heap.FixedBufferAllocator.init(&buf);
+    var string = std.ArrayList(u8).init(fba.allocator());
+    try std.json.stringify(gs.values, .{}, string.writer());
+}

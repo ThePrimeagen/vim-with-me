@@ -39,6 +39,81 @@ type GameState struct {
     Winner uint `json:"winner"`
 }
 
+type PromptState struct {
+    Rows uint `json:"rows"`
+    Cols uint `json:"cols"`
+    AllowedTowers int `json:"allowedTowers"`
+    YourCreepDamage uint `json:"yourCreepDamage"`
+    EnemyCreepDamage uint `json:"enemyCreepDamage"`
+    YourTowers []Tower `json:"yourTowers"`
+    EnemyTowers []Tower `json:"TwoTowers"`
+    YourTowerPlacementRange Range `json:"yourTowerPlacementRange"`
+    EnemyTowerPlacementRange Range `json:"enemyTowerPlacementRange"`
+    YourCreepSpawnRange Range `json:"yourCreepSpawnRange"`
+    EnemyCreepSpawnRange Range `json:"enemyCreepSpawnRange"`
+    Round uint `json:"round"`
+}
+
+func (p *GameState) towers(team uint8) []Tower {
+    if team == '1' {
+        return p.OneTowers
+    }
+    return p.TwoTowers
+}
+
+func (p *GameState) towerRange(team uint8) Range {
+    if team == '1' {
+        return p.OneTowerPlacementRange
+    }
+    return p.TwoTowerPlacementRange
+}
+
+func (p *GameState) creepRange(team uint8) Range {
+    if team == '1' {
+        return p.OneCreepSpawnRange
+    }
+    return p.TwoCreepSpawnRange
+}
+
+func (p *GameState) creepDamage(team uint8) uint {
+    if team == '1' {
+        return p.OneCreepDamage
+    }
+    return p.TwoCreepDamage
+}
+
+func (p *GameState) PromptState(team uint8) PromptState {
+    enemyTeam := uint8('2')
+    if team == '2' {
+        enemyTeam = '1'
+    }
+
+    return PromptState{
+        Rows: p.Rows,
+        Cols: p.Cols,
+        AllowedTowers: p.AllowedTowers,
+        Round: p.Round,
+
+        YourTowers: p.towers(team),
+        EnemyTowers: p.towers(enemyTeam),
+
+        YourCreepDamage: p.creepDamage(team),
+        EnemyCreepDamage: p.creepDamage(enemyTeam),
+
+        YourCreepSpawnRange: p.creepRange(team),
+        EnemyCreepSpawnRange: p.creepRange(enemyTeam),
+
+        YourTowerPlacementRange: p.towerRange(team),
+        EnemyTowerPlacementRange: p.towerRange(enemyTeam),
+    }
+}
+
+func (p *PromptState) String() string {
+    b, err := json.Marshal(p)
+    assert.NoError(err, "unable to create gamestate string")
+    return string(b)
+}
+
 func (gs *GameState) String() string {
     b, err := json.Marshal(gs)
     assert.NoError(err, "unable to create gamestate string")

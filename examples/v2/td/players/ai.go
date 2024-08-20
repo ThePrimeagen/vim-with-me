@@ -49,7 +49,7 @@ func getPosFromAIResponse(line string) objects.Position {
     }
 }
 
-type FetchPositions struct {
+type AIResponder struct {
     ai AIFetcher
     maxTries uint
     debug *testies.DebugFile
@@ -64,8 +64,8 @@ type AIFetcher interface {
     ReadWithTimeout(prompt string, t time.Duration) (string, error)
 }
 
-func NewFetchPosition(ai AIFetcher, debug *testies.DebugFile) FetchPositions {
-    return FetchPositions {
+func NewFetchPosition(ai AIFetcher, debug *testies.DebugFile) AIResponder {
+    return AIResponder {
         ai: ai,
         debug: debug,
         maxTries: 3,
@@ -77,9 +77,9 @@ func NewFetchPosition(ai AIFetcher, debug *testies.DebugFile) FetchPositions {
     };
 }
 
-func (f *FetchPositions) Run(ctx context.Context) { }
+func (f *AIResponder) Run(ctx context.Context) { }
 
-func (f *FetchPositions) Stats() objects.Stats {
+func (f *AIResponder) Stats() objects.Stats {
     return objects.Stats{
         RandomGuesses: f.guesses,
         BadParses: f.badParses,
@@ -87,13 +87,14 @@ func (f *FetchPositions) Stats() objects.Stats {
     }
 }
 
-func (f *FetchPositions) StartRound() {
+func (f *AIResponder) StartRound() {
     f.streamResults = true
     return
 }
 
-func (f *FetchPositions) fetchResults(gs *objects.GameState, ctx context.Context) []objects.Position {
-    resp, err := f.ai.ReadWithTimeout(gs.String(), f.timeout)
+func (f *AIResponder) fetchResults(team uint8, gs *objects.GameState, ctx context.Context) []objects.Position {
+    promptState := gs.PromptState(team)
+    resp, err := f.ai.ReadWithTimeout(promptState.String(), f.timeout)
     if contextDone(ctx) {
         return []objects.Position{}
     }
@@ -138,7 +139,7 @@ func (f *FetchPositions) fetchResults(gs *objects.GameState, ctx context.Context
     return responses
 }
 
-func (f *FetchPositions) StreamResults(gs *objects.GameState, out chan<- []objects.Position, ctx context.Context) {
+func (f *AIResponder) StreamResults(team uint8, gs *objects.GameState, out chan<- []objects.Position, ctx context.Context) {
     if !f.streamResults {
         return
     }
@@ -151,7 +152,7 @@ func (f *FetchPositions) StreamResults(gs *objects.GameState, out chan<- []objec
         var tries uint = 0
 
         for len(responses) < count && tries < f.maxTries {
-            responses = append(responses, f.fetchResults(gs, ctx)...)
+            responses = append(responses, f.fetchResults(team, gs, ctx)...)
         }
 
         for range count - len(responses) {
@@ -165,7 +166,7 @@ func (f *FetchPositions) StreamResults(gs *objects.GameState, out chan<- []objec
     }()
 }
 
-func AIPlayerFromString(arg string, debug *testies.DebugFile, key string, ctx context.Context) FetchPositions {
+func AIPlayerFromString(arg string, debug *testies.DebugFile, key string, ctx context.Context) AIResponder {
     assert.Assert(strings.HasPrefix(arg, "ai"), "invalid player string for ai client", "arg", arg)
 
     parts := strings.Split(arg, ":")

@@ -12,7 +12,7 @@ const creep = @import("creep.zig");
 const colors = @import("colors.zig");
 const messages = @import("messages.zig");
 const Values = @import("values.zig");
-const Target = @import("target.zig").Target;
+pub const Target = @import("target.zig").Target;
 
 // TODO: Make this adjustable
 const Vec2 = math.Vec2;
