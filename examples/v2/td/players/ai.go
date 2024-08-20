@@ -62,6 +62,7 @@ type AIResponder struct {
 
 type AIFetcher interface {
     ReadWithTimeout(prompt string, t time.Duration) (string, error)
+    Name() string
 }
 
 func NewFetchPosition(ai AIFetcher, debug *testies.DebugFile) AIResponder {
@@ -142,6 +143,10 @@ func (f *AIResponder) fetchResults(team uint8, gs *objects.GameState, ctx contex
 
     f.debug.WriteStrLine(fmt.Sprintf("AIResponder#fetchResults Response(%d): %+v", team, responses))
     return responses
+}
+
+func (f *AIResponder) Name() string {
+    return f.ai.Name()
 }
 
 func (f *AIResponder) StreamResults(team uint8, gs *objects.GameState, out PositionChan, done Done, ctx context.Context) {
