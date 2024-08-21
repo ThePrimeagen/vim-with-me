@@ -70,8 +70,8 @@ func main() {
 	viz := false
 	flag.BoolVar(&viz, "viz", false, "displays the game")
 
-	hasVizFile := false
-	flag.BoolVar(&hasVizFile, "vizFile", false, "displays the game in a file")
+	vizFileStr := ""
+	flag.StringVar(&vizFileStr, "vizFile", "", "where to display the viz of game")
 
 	seed := 1337
 	flag.IntVar(&seed, "seed", 69420, "the seed value for the game")
@@ -98,7 +98,7 @@ func main() {
 	ctx := context.Background()
 
 	cmdParser := td.NewCmdErrParser(debug)
-    vizFile, err := os.OpenFile("/tmp/td-viz", os.O_RDWR|os.O_CREATE, 0644)
+    vizFile, err := os.OpenFile(vizFileStr, os.O_RDWR|os.O_CREATE, 0644)
 
 	prog := cmd.NewCmder(name, ctx).
 		AddVArg(json).
