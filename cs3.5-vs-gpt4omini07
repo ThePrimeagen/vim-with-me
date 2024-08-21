@@ -1,36 +1,6 @@
-ONE: running  at round 21
-won,round,one-team,two-team,seed,oneTotalTowersBuild,oneTotalProjectiles,oneTotalTowerUpgrades,oneTotalCreepDamage,oneTotalTowerDamage,oneTotalDamageFromCreeps,twoTotalTowersBuild,twoTotalProjectiles,twoTotalTowerUpgrades,twoTotalCreepDamage,twoTotalTowerDamage,twoTotalDamageFromCreeps
-50,58,openai,anthropic,21,153,19068,279,81611,10204,894,72,16344,392,77561,3156,217
+TWO: running  at round 123
+won,round,one-team,two-team,seed,oneTotalTowersBuild,oneTotalProjectiles,oneTotalTowerUpgrades,oneTotalCreepDamage,oneTotalTowerDamage,oneTotalDamageFromCreeps,twoTotalTowersBuild,twoTotalProjectiles,twoTotalTowerUpgrades,twoTotalCreepDamage,twoTotalTowerDamage,twoTotalDamageFromCreeps,oneGuesses,twoGuesses
+49,38,anthropic,openai,123,20,5232,184,27243,689,0,10,5918,195,32257,843,1631,0,0
 [?25h
-ONE: running  at round 22
-won,round,one-team,two-team,seed,oneTotalTowersBuild,oneTotalProjectiles,oneTotalTowerUpgrades,oneTotalCreepDamage,oneTotalTowerDamage,oneTotalDamageFromCreeps,twoTotalTowersBuild,twoTotalProjectiles,twoTotalTowerUpgrades,twoTotalCreepDamage,twoTotalTowerDamage,twoTotalDamageFromCreeps
-50,49,openai,anthropic,22,103,11909,227,53545,4475,4129,48,9728,287,47963,3190,30
-[?25h
-ONE: running  at round 23
-won,round,one-team,two-team,seed,oneTotalTowersBuild,oneTotalProjectiles,oneTotalTowerUpgrades,oneTotalCreepDamage,oneTotalTowerDamage,oneTotalDamageFromCreeps,twoTotalTowersBuild,twoTotalProjectiles,twoTotalTowerUpgrades,twoTotalCreepDamage,twoTotalTowerDamage,twoTotalDamageFromCreeps
-50,39,openai,anthropic,23,52,6460,166,24611,1058,2877,40,5190,167,27238,4329,483
-[?25h
-ONE: running  at round 24
-won,round,one-team,two-team,seed,oneTotalTowersBuild,oneTotalProjectiles,oneTotalTowerUpgrades,oneTotalCreepDamage,oneTotalTowerDamage,oneTotalDamageFromCreeps,twoTotalTowersBuild,twoTotalProjectiles,twoTotalTowerUpgrades,twoTotalCreepDamage,twoTotalTowerDamage,twoTotalDamageFromCreeps
-50,30,openai,anthropic,24,44,3812,86,15843,1979,1354,10,3404,120,16958,557,0
-[?25h
-ONE: running  at round 25
-won,round,one-team,two-team,seed,oneTotalTowersBuild,oneTotalProjectiles,oneTotalTowerUpgrades,oneTotalCreepDamage,oneTotalTowerDamage,oneTotalDamageFromCreeps,twoTotalTowersBuild,twoTotalProjectiles,twoTotalTowerUpgrades,twoTotalCreepDamage,twoTotalTowerDamage,twoTotalDamageFromCreeps
-50,45,openai,anthropic,25,96,9676,161,39875,6198,1167,45,10936,242,54292,1841,0
-[?25h
-ONE: running  at round 26
-won,round,one-team,two-team,seed,oneTotalTowersBuild,oneTotalProjectiles,oneTotalTowerUpgrades,oneTotalCreepDamage,oneTotalTowerDamage,oneTotalDamageFromCreeps,twoTotalTowersBuild,twoTotalProjectiles,twoTotalTowerUpgrades,twoTotalCreepDamage,twoTotalTowerDamage,twoTotalDamageFromCreeps
-50,27,openai,anthropic,26,30,2809,55,10651,2620,669,26,2413,85,9760,1685,3
-[?25h
-ONE: running  at round 27
-won,round,one-team,two-team,seed,oneTotalTowersBuild,oneTotalProjectiles,oneTotalTowerUpgrades,oneTotalCreepDamage,oneTotalTowerDamage,oneTotalDamageFromCreeps,twoTotalTowersBuild,twoTotalProjectiles,twoTotalTowerUpgrades,twoTotalCreepDamage,twoTotalTowerDamage,twoTotalDamageFromCreeps
-TWO: running  at round 27
-won,round,one-team,two-team,seed,oneTotalTowersBuild,oneTotalProjectiles,oneTotalTowerUpgrades,oneTotalCreepDamage,oneTotalTowerDamage,oneTotalDamageFromCreeps,twoTotalTowersBuild,twoTotalProjectiles,twoTotalTowerUpgrades,twoTotalCreepDamage,twoTotalTowerDamage,twoTotalDamageFromCreeps
-49,26,openai,anthropic,27,21,3022,83,13065,538,0,18,1654,71,7772,1715,1525
-[?25h
-TWO: running  at round 28
-won,round,one-team,two-team,seed,oneTotalTowersBuild,oneTotalProjectiles,oneTotalTowerUpgrades,oneTotalCreepDamage,oneTotalTowerDamage,oneTotalDamageFromCreeps,twoTotalTowersBuild,twoTotalProjectiles,twoTotalTowerUpgrades,twoTotalCreepDamage,twoTotalTowerDamage,twoTotalDamageFromCreeps
-50,44,openai,anthropic,28,76,9402,179,41894,3738,261,72,7682,197,33228,2904,1535
-[?25h
-TWO: running  at round 29
-won,round,one-team,two-team,seed,oneTotalTowersBuild,oneTotalProjectiles,oneTotalTowerUpgrades,oneTotalCreepDamage,oneTotalTowerDamage,oneTotalDamageFromCreeps,twoTotalTowersBuild,twoTotalProjectiles,twoTotalTowerUpgrades,twoTotalCreepDamage,twoTotalTowerDamage,twoTotalDamageFromCreeps
+TWO: running  at round 124
+won,round,one-team,two-team,seed,oneTotalTowersBuild,oneTotalProjectiles,oneTotalTowerUpgrades,oneTotalCreepDamage,oneTotalTowerDamage,oneTotalDamageFromCreeps,twoTotalTowersBuild,twoTotalProjectiles,twoTotalTowerUpgrades,twoTotalCreepDamage,twoTotalTowerDamage,twoTotalDamageFromCreeps,oneGuesses,twoGuesses

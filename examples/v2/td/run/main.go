@@ -128,7 +128,7 @@ func main() {
 	go two.Player.Run(ctx)
 
 	round := 0
-	fmt.Printf("won,round,one-team,two-team,seed,oneTotalTowersBuild,oneTotalProjectiles,oneTotalTowerUpgrades,oneTotalCreepDamage,oneTotalTowerDamage,oneTotalDamageFromCreeps,twoTotalTowersBuild,twoTotalProjectiles,twoTotalTowerUpgrades,twoTotalCreepDamage,twoTotalTowerDamage,twoTotalDamageFromCreeps\n")
+	fmt.Printf("won,round,one-team,two-team,seed,oneTotalTowersBuild,oneTotalProjectiles,oneTotalTowerUpgrades,oneTotalCreepDamage,oneTotalTowerDamage,oneTotalDamageFromCreeps,twoTotalTowersBuild,twoTotalProjectiles,twoTotalTowerUpgrades,twoTotalCreepDamage,twoTotalTowerDamage,twoTotalDamageFromCreeps,oneGuesses,twoGuesses\n")
 
 	defer func() {
 		fmt.Println("\x1b[?25h")
@@ -150,7 +150,9 @@ outer:
                 // oneTotalTowersBuild, oneTotalProjectiles, oneTotalTowerUpgrades, oneTotalCreepDamage, oneTotalTowerDamage,
                 fmt.Printf("%d,%d,%d,%d,%d,%d,", gs.OneTotalTowersBuild, gs.OneTotalProjectiles, gs.OneTotalTowerUpgrades, gs.OneTotalCreepDamage, gs.OneTotalTowerDamage, gs.OneTotalDamageFromCreeps)
                 // twoTotalTowersBuild, twoTotalProjectiles, twoTotalTowerUpgrades, twoTotalCreepDamage, twoTotalTowerDamage")
-                fmt.Printf("%d,%d,%d,%d,%d,%d\n", gs.TwoTotalTowersBuild, gs.TwoTotalProjectiles, gs.TwoTotalTowerUpgrades, gs.TwoTotalCreepDamage, gs.TwoTotalTowerDamage, gs.TwoTotalDamageFromCreeps)
+                fmt.Printf("%d,%d,%d,%d,%d,%d,", gs.TwoTotalTowersBuild, gs.TwoTotalProjectiles, gs.TwoTotalTowerUpgrades, gs.TwoTotalCreepDamage, gs.TwoTotalTowerDamage, gs.TwoTotalDamageFromCreeps)
+
+                fmt.Printf("%d,%d\n", one.Player.Guesses(), two.Player.Guesses())
 				break outer
 			}
 

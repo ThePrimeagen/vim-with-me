@@ -190,9 +190,14 @@ func (f *AIResponder) EndRound(gs *objects.GameState, cmdr td.TDCommander) {
     out := []objects.Position{}
     amount := gs.AllowedTowers - f.towersCreatedThisRound
     for range amount {
+        f.guesses++
         out = append(out, objects.OutOfBoundPosition())
     }
     cmdr.WritePositions(out, f.team)
+}
+
+func (f *AIResponder) Guesses() uint {
+    return uint(f.guesses);
 }
 
 func (f *AIResponder) StreamResults(team uint8, gs *objects.GameState, out PositionChan, done Done, ctx context.Context) {

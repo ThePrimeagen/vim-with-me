@@ -21,6 +21,7 @@ type Player interface {
     Stats() objects.Stats
     Run(ctx context.Context)
     Name() string
+    Guesses() uint
 }
 
 type TeamPlayer struct {

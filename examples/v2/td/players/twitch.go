@@ -91,6 +91,7 @@ func (r *TwitchTDChat) StreamResults(team uint8, gs *objects.GameState, out Posi
 }
 
 func (t *TwitchTDChat) EndRound(gs *objects.GameState, cmdr td.TDCommander) { }
+func (r *TwitchTDChat) Guesses() uint { return 0 }
 
 func (t *TwitchTDChat) StartRound() {
     t.chtAgg.Reset()
