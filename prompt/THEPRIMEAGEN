@@ -28,3 +28,16 @@ once at level 9 you can still place a tower on it to replenish the ammo
 
 DO NOT EXPLAIN WHY YOU MAKE YOUR MOVES
 You CANNOT place tower on COL 0.  Creeps spawn there and your tower will be randomly placed, which is bad
+
+Towers
+Level 1,2: Range 1
+Level 3,4: Range 2
+Level 5,6: Range 3
+Level 7,8: Range 4
+Level 9: Range 6
+
+CreepRange is where creeps spawn, you must protect it to avoid losing health.
+Balance Attacking and defending
+
+If you want to replenish level 9 tower's ammo, only build 1 tower on top.  more
+than 1 is a waste!

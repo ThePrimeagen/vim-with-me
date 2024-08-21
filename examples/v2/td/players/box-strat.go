@@ -122,6 +122,8 @@ func (r *RandomPos) EndRound(gs *objects.GameState, cmdr td.TDCommander) { }
 func (f *BoxPos) Run(ctx context.Context) { }
 func (f *BoxPos) Name() string { return "box-pos" }
 func (r *BoxPos) EndRound(gs *objects.GameState, cmdr td.TDCommander) { }
+func (r *BoxPos) Guesses() uint { return 0 }
+func (r *RandomPos) Guesses() uint { return 0 }
 
 func StratPlayerFromString(arg string) Player {
     assert.Assert(strings.HasPrefix(arg, "strat"), "invalid player string for strat client", "arg", arg)
