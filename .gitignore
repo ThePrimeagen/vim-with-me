@@ -2,7 +2,10 @@
 
 /out
 main
+prompt_bak/
 /assert.debug
 /debug.doom
 /.env
 /vendor
+.zig-cache/
+zig-out/

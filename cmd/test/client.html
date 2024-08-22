@@ -1,0 +1,25 @@
+<html>
+    <body>
+<script>
+    const ws = this.ws = new WebSocket("ws://vim-with-me.fly.dev/ws")
+    let last = -1
+    ws.onmessage = async (msg) => {
+        /** @type {Blob} */
+        const blob = msg.data
+        const arrBuff = await blob.arrayBuffer()
+        const view = new Uint8Array(arrBuff)
+
+        console.log(view[0])
+        if (last !== -1) {
+            const expected = (last + 1) % 256
+            if (expected !== view[0]) {
+                console.error("out of order", last, expected, view[0])
+            }
+        }
+
+        last = view[0]
+    }
+</script>
+    </body>
+</html>
+

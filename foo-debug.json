@@ -1,0 +1,11 @@
+{
+    "rows": 5,
+    "cols": 35,
+    "fps": 33333,
+    "runCount": 50000,
+    "realtime": true,
+    "roundTimeUS": 1000000,
+    "viz": true,
+    "seed": 1250
+}
+

@@ -37,7 +37,6 @@ func main() {
 	lines := bufio.NewScanner(file)
 	for lines.Scan() {
 		txt := lines.Text()
-		fmt.Printf("sending line: %s\n", txt)
 		err := client.Relay([]byte(txt))
 		assert.NoError(err, "unable to relay data")
 

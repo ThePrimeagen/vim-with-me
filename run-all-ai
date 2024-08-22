@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+files=$(find prompt -type f | grep -v result)
+
+for f in $files; do
+    ./run-ai $f
+done
+
+wait
+

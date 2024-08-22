@@ -61,6 +61,7 @@ func DoomChatMapFn(msg string) string {
 		return msg
 	}
 
+    msg = strings.ToLower(msg)
 	bytes := []byte(msg)
 	slices.Sort(bytes)
 

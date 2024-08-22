@@ -30,6 +30,6 @@ primary_region = 'ord'
     timeout = 2000
 
 [[vm]]
-  memory = '1gb'
-  cpu_kind = 'shared'
-  cpus = 1
+  memory = '16gb'
+  cpu_kind = 'performance'
+  cpus = 32

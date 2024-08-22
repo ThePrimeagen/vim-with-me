@@ -1,0 +1,12 @@
+{
+    "rows": 24,
+    "cols": 80,
+    "fps": 33333,
+    "runCount": 50000,
+    "simCount": 1,
+    "simulationType": "rand",
+    "realtime": false,
+    "realtimeMultiplier": 8,
+    "viz": true,
+    "seed": 1235
+}

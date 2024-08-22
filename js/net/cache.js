@@ -1,4 +1,5 @@
 import { debugAssert } from "../assert.js"
+import { isHuffmanEncoded } from "../decode/frame.js"
 
 export class Cache {
     /** @type {(import("../types").Frame | undefined)[]} */
@@ -38,6 +39,24 @@ export class Cache {
         this.cacheIdx = (this.cacheIdx + 1) % 256
 
         return item
+    }
+
+    seek() {
+        let idx = (this.cacheIdx + 1) % 256
+        let item = this.cache[idx]
+        while (item) {
+
+            if (isHuffmanEncoded(item.data)) {
+                for (let i = this.cacheIdx; i !== idx; i = (i + 1) % 256) {
+                    this.cache[i] = undefined
+                }
+                this.cacheIdx = idx
+                return
+            }
+
+            idx = (idx + 1) % 256
+            item = this.cache[idx]
+        }
     }
 }
 

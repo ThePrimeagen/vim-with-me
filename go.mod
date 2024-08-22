@@ -9,6 +9,8 @@ require (
 	github.com/imkira/go-observer/v2 v2.0.0-20230629064422-8e0b61f11f1b
 	github.com/joho/godotenv v1.5.1
 	github.com/leaanthony/go-ansi-parser v1.6.1
+	github.com/liushuangls/go-anthropic/v2 v2.6.0
+	github.com/sashabaranov/go-openai v1.27.1
 	github.com/stretchr/testify v1.9.0
 	gitlab.com/ethanbakerdev/colors v0.0.0-20200516034746-6377d14b7978
 	golang.org/x/sys v0.13.0

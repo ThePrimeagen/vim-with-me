@@ -15,7 +15,7 @@ func toChatMsg(twitchMsg twitch.PrivateMessage) ChatMsg {
 	}
 }
 
-func NewTwitchChat(ctx context.Context) (chan ChatMsg, error) {
+func NewTwitchChat(ctx context.Context, chat string) (chan ChatMsg, error) {
 	messages := make(chan ChatMsg)
 
 	client := twitch.NewAnonymousClient()
@@ -23,7 +23,7 @@ func NewTwitchChat(ctx context.Context) (chan ChatMsg, error) {
 		messages <- toChatMsg(msg)
 	})
 
-	client.Join("theprimeagen")
+	client.Join(chat)
 
 	// TODO: on disconnect send done to reconnect everything from the top
 	go func() {

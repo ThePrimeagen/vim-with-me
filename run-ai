@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+one() {
+    for i in {21..250}; do
+        echo "ONE: running $1 at round $i"
+        rm -f /tmp/td /tmp/td-viz && LEVEL=error go run ./examples/v2/td/run/main.go --one ai:openai:prompt/THEPRIMEAGEN --two ai:anthropic:prompt/THEPRIMEAGEN --roundTime 6 --seed $i --debug /tmp/td -- ./zig-out/bin/to main.json
+    done
+}
+
+two() {
+    for i in {0..250}; do
+        echo "TWO: running $1 at round $i"
+        rm -f /tmp/td2 /tmp/td-viz && LEVEL=error go run ./examples/v2/td/run/main.go --two ai:openai:prompt/THEPRIMEAGEN --one ai:anthropic:prompt/THEPRIMEAGEN --roundTime 6 --seed $i --debug /tmp/td2 -- ./zig-out/bin/to main.json
+    done
+}
+
+
+zig build
+
+one
+two

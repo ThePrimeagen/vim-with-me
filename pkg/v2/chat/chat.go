@@ -2,6 +2,7 @@ package chat
 
 import (
 	"fmt"
+	"slices"
 	"time"
 )
 
@@ -27,6 +28,7 @@ type Occurrence struct {
 
 type ChatAggregator struct {
 	mapFn       MapCB
+	afterMap    MapCB
 	filter      FilterCB
 	occurrences []*Occurrence
 	max         *Occurrence
@@ -47,6 +49,7 @@ func NewChatAggregator() ChatAggregator {
 		count:       0,
 		max:         &defaultMax,
 		mapFn:       identity,
+		afterMap:    identity,
 	}
 }
 
@@ -60,6 +63,11 @@ func (c ChatAggregator) WithMap(mapFn MapCB) ChatAggregator {
 	return c
 }
 
+func (c ChatAggregator) WithAfterMap(mapFn MapCB) ChatAggregator {
+	c.afterMap = mapFn
+	return c
+}
+
 func (c *ChatAggregator) incAndMax(occurrence *Occurrence) {
 	occurrence.Count++
 	if occurrence.Count > c.max.Count {
@@ -69,10 +77,12 @@ func (c *ChatAggregator) incAndMax(occurrence *Occurrence) {
 
 func (c *ChatAggregator) Add(msg string) {
 	msg = c.mapFn(msg)
+
 	if !c.filter(msg) {
-		fmt.Printf("filtering msg: %s\n", msg)
 		return
 	}
+
+    msg = c.afterMap(msg)
 
     c.count++
     if c.count % 1000 == 0 {
@@ -107,6 +117,30 @@ func (c *ChatAggregator) Reset() Occurrence {
 	c.occurrences = make([]*Occurrence, 0)
 
 	return *max
+}
+
+func (c *ChatAggregator) ResetWithAll() []*Occurrence {
+	all := c.occurrences
+	c.max = &defaultMax
+	c.occurrences = make([]*Occurrence, 0)
+
+	return all
+}
+
+func (c *ChatAggregator) Peak() []Occurrence {
+    slices.SortFunc(c.occurrences, func(a, b *Occurrence) int {
+        return b.Count - a.Count;
+    });
+
+    out := make([]Occurrence, 0, 5);
+    for i, o := range c.occurrences {
+        if i >= 5 {
+            break;
+        }
+        out = append(out, *o)
+    }
+
+    return out
 }
 
 func (c *ChatAggregator) Next() string {

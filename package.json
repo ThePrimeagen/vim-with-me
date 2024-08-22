@@ -16,5 +16,8 @@
     "license": "GLWTS(NOLLM)",
     "devDependencies": {
         "@types/node": "^20.12.12"
+    },
+    "dependencies": {
+        "ts-node": "^10.9.2"
     }
 }
