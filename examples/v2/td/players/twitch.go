@@ -2,6 +2,7 @@ package players
 
 import (
 	"context"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -24,6 +25,7 @@ func occurrencesToPositions(occ []chat.Occurrence, count int) []objects.Position
         out = append(out, pos)
     }
 
+	slog.Warn("occurrencesToPositions", "out", out)
     return out
 }
 
@@ -81,7 +83,9 @@ func (r *TwitchTDChat) runStreamResults(gs *objects.GameState, out PositionChan,
         case <-ctx.Done():
             break outer
         default:
-            out <- r.Moves(gs, ctx)
+			moves := r.Moves(gs, ctx)
+			slog.Warn("runStreamResults", "moves", moves)
+            out <- moves
         }
     }
 }

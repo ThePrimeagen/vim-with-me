@@ -73,7 +73,7 @@ func NewFetchPosition(ai AIFetcher, team uint8, debug *testies.DebugFile) AIResp
         ai: ai,
         debug: debug,
         maxTries: 1,
-        timeout: time.Second * 5,
+        timeout: time.Second * 30,
         streamResults: false,
         towersCreatedThisRound: 0,
         badParses: 0,
@@ -228,17 +228,24 @@ func AIPlayerFromString(arg string, team uint8, debug *testies.DebugFile, ctx co
     assert.Assert(strings.HasPrefix(arg, "ai"), "invalid player string for ai client", "arg", arg)
 
     parts := strings.Split(arg, ":")
-    assert.Assert(len(parts) == 3, "invalid ai player string colon count", "parts", parts)
+    assert.Assert(len(parts) == 4, "invalid ai player string colon count", "parts", parts)
 
-    systemPrompt, err := os.ReadFile(parts[2])
+    modelName := parts[2]
+    systemPrompt, err := os.ReadFile(parts[3])
     assert.NoError(err, "could not open system prompt", "parts", parts)
 
     var fetcher AIFetcher = nil
     switch (parts[1]) {
     case "openai":
-        fetcher = ai.NewStatefulOpenAIChat(string(systemPrompt), ctx)
+        fetcher = ai.NewStatefulOpenAIChat(ai.OpenAIParams{
+			System: string(systemPrompt),
+			Model: modelName,
+		}, ctx)
     case "anthropic":
-        fetcher = ai.NewClaudeSonnet(string(systemPrompt), ctx)
+        fetcher = ai.NewClaudeSonnet(ai.ClaudeSonnetParams{
+			System: string(systemPrompt),
+			Model: modelName,
+		}, ctx)
     }
 
     assert.Assert(fetcher != nil, "unsupported ai model for player", "parts", parts)

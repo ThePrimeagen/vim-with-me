@@ -132,9 +132,9 @@ func (c *ChatAggregator) Peak() []Occurrence {
         return b.Count - a.Count;
     });
 
-    out := make([]Occurrence, 0, 5);
+    out := make([]Occurrence, 0, 10);
     for i, o := range c.occurrences {
-        if i >= 5 {
+        if i >= 10 {
             break;
         }
         out = append(out, *o)

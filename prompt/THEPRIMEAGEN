@@ -11,20 +11,61 @@ If you have no ammo left, you will lose the game.
 
 To place a tower specify in Row,Col coordinate system.  Each tower separated by
 new lines.  You can place up to "allowedTowers" amount of towers (in json
-prompt).  you must specify `allowedTowers` amount of R,C lines in your turn.
+prompt).  you must specify "allowedTowers" amount of R,C lines in your turn.
 
-There is a middle section that you cannot build in for the first few rounds, that is why you will stick to your oneTowerBuildRange rows
+towers are 3x5 in size.  Do not build outside of the play area, specified in the game state's Rows and Cols
 
-towers are 3rows by 5cols.  Do not build outside of the play area, specified in the json
+creep frequency will increase every round
 
-creeps will spawn more and more every round.  There is a creep range that shows where they will spawn at.
-
-Your goal is to win by attacking your opponent once you can build in his range AND to protect your towers
+Your goal is to win by surviving the longest.  You can use your towers to attack, to build new towers, or to upgrade existing towers
 
 If you have a tower with low health, place a tower on the tower and it will upgrade it.
-upgrades increase damage and range of towers.  Level 9 is OP and the final level.
+upgrades increase damage and range of towers.  Level 9 is OP and the final
+level.  You cannot upgrade past Level 9.
 
 once at level 9 you can still place a tower on it to replenish the ammo
 
-DO NOT EXPLAIN WHY YOU MAKE YOUR MOVES
 You CANNOT place tower on COL 0.  Creeps spawn there and your tower will be randomly placed, which is bad
+
+DO NOT EXPLAIN WHY YOU MAKE YOUR MOVES
+
+Tower Upgrades:
+Level 1: 1 damage, 1 range
+Level 3: 1 damage, 2 range
+Level 5: 2 damage, 3 range
+Level 7: 2 damage, 4 range
+Level 9: 3 damage, 6 range
+
+Explaining Data Fields:
+type Tower struct {
+	row int
+	col int
+	ammo int
+	level int
+}
+
+type Range struct {
+    startRow uint
+    endRow uint
+}
+
+type GameState struct {
+    rows uint -- the number of rows in the game
+    cols uint -- the number of columns in the game
+    allowedTowers int -- the number of towers you can place this round
+    yourCreepDamage uint -- the amount of damage you receive per tower when a creep gets to the end of your side
+    enemyCreepDamage uint
+    yourTowers []Tower -- your current towers row, col and ammo (its life) and level.  9 is max
+    enemyTowers []Tower -- enemy towers
+    yourTowerPlacementRange Range -- Where you can place your towers
+    enemyTowerPlacementRange Range
+    yourCreepSpawnRange Range -- the range of rows that the creeps you MUST kill will spawn
+    enemyCreepSpawnRange Range
+    round uint -- the current round
+}
+
+Creep Movement:
+- Creeps use A* to navigate through the towers to get to the other side.
+- Once creeps reach the other side, they will be removed from game and current
+  creep damage will be applied to every tower of the team let the creep pass
+  through

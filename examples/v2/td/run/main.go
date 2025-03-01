@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 	"sync"
 	"time"
@@ -51,8 +52,6 @@ func runMoves(one players.TeamPlayer, two players.TeamPlayer, ctx context.Contex
 
 func main() {
 
-	testies.SetupLogger()
-
 	godotenv.Load()
 
 	debugFile := ""
@@ -64,14 +63,17 @@ func main() {
 	playerTwoStr := ""
 	flag.StringVar(&playerTwoStr, "two", "", "player two string")
 
+	silent := false
+	flag.BoolVar(&silent, "silent", false, "if the program should print anything out")
+
 	roundTimeInt := int64(0)
 	flag.Int64Var(&roundTimeInt, "roundTime", 0, "seconds per round time")
 
 	viz := false
 	flag.BoolVar(&viz, "viz", false, "displays the game")
 
-	hasVizFile := false
-	flag.BoolVar(&hasVizFile, "vizFile", false, "displays the game in a file")
+	vizFileStr := ""
+	flag.StringVar(&vizFileStr, "vizFile", "", "displays the game in a file")
 
 	seed := 1337
 	flag.IntVar(&seed, "seed", 69420, "the seed value for the game")
@@ -81,6 +83,12 @@ func main() {
 	assert.Assert(len(args) >= 2, "you must provide path to exec and json file")
 	name := args[0]
 	json := args[1]
+
+	if silent {
+		os.Setenv("LEVEL", "silent")
+	}
+	slog.Error("Program Setup", "debugFile", debugFile, "name", name, "json", json, "silent", silent, "roundTime", roundTimeInt, "viz", viz, "vizFile", vizFileStr, "seed", seed, "playerOneStr", playerOneStr, "playerTwoStr", playerTwoStr)
+	testies.SetupLogger()
 
 	if roundTimeInt == 0 {
 		roundTimeInt = int64(time.Second * 20)
@@ -98,7 +106,11 @@ func main() {
 	ctx := context.Background()
 
 	cmdParser := td.NewCmdErrParser(debug)
-    vizFile, err := os.OpenFile("/tmp/td-viz", os.O_RDWR|os.O_CREATE, 0644)
+    var vizFile *os.File
+	if vizFileStr != "" {
+		vizFile, err = os.OpenFile(vizFileStr, os.O_RDWR|os.O_CREATE, 0644)
+		assert.NoError(err, "unable to create the vizFile")
+	}
 
 	prog := cmd.NewCmder(name, ctx).
 		AddVArg(json).
@@ -158,6 +170,7 @@ outer:
 				continue
 			}
 
+			slog.Warn("starting round", "round", round)
 			one.Player.StartRound()
 			two.Player.StartRound()
 
@@ -175,6 +188,7 @@ outer:
 			t.Stop()
 			cancel()
 
+			slog.Warn("ending round", "round", round)
             one.Player.EndRound(&gs, cmdr)
             two.Player.EndRound(&gs, cmdr)
 
