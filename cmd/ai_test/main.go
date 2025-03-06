@@ -20,15 +20,13 @@ type Challenger struct {
 
 const GPT3Dot5Turbo = "gpt-3.5-turbo"
 const GPT4 = "gpt-4"
-const GPT4oMini = "gpt-4o-mini"
-const GPTo1 = "o1"
 const GPTo3Mini = "o3-mini"
+const GPT45 = "gpt-4.5-preview"
 
-const ClaudeSonnet3_5 = "claude-3-5-sonnet-latest"
 const ClaudeSonnet3_7 = "claude-3-7-sonnet-latest"
 
-var claudes = []string{ClaudeSonnet3_5, ClaudeSonnet3_7}
-var gpts = []string{GPT3Dot5Turbo, GPT4, GPT4oMini, GPTo1, GPTo3Mini}
+var claudes = []string{ClaudeSonnet3_7}
+var gpts = []string{GPT45}
 
 func createTmp(name string) string {
 	return path.Join("/tmp", fmt.Sprintf("%s-%d", name, time.Now().UnixMilli()))
@@ -53,45 +51,46 @@ func run(ctx context.Context, out io.WriteCloser, args []string, round int) erro
 	}
 
 	/*
-	buf := bytes.NewBuffer(make([]byte, 0, 1000))
-	cmd.Stdout = buf
+		buf := bytes.NewBuffer(make([]byte, 0, 1000))
+		cmd.Stdout = buf
 
-	ch := make(chan struct{})
-	go func() {
-		fmt.Printf("running: %v\n", cmd.String())
-		err := cmd.Run()
-		if err != nil {
-			slog.Error("error running cmd", "error", err)
-		}
-		ch <- struct{}{}
-	}()
+		ch := make(chan struct{})
+		go func() {
+			fmt.Printf("running: %v\n", cmd.String())
+			err := cmd.Run()
+			if err != nil {
+				slog.Error("error running cmd", "error", err)
+			}
+			ch <- struct{}{}
+		}()
 
-	select {
-	case <-ctx.Done():
-		cmd.Process.Kill()
-		fmt.Printf("killing process", cmd.String())
-		return fmt.Errorf("context cancelled before game ran its course: %w", ctx.Err())
-	case <-ch:
-		output, err := io.ReadAll(buf)
-		fmt.Printf("process finished nicely", cmd.String())
-		if err != nil {
-			slog.Error("somehow got error while reading from buf output of cmd", "error", err)
+		select {
+		case <-ctx.Done():
+			cmd.Process.Kill()
+			fmt.Printf("killing process", cmd.String())
+			return fmt.Errorf("context cancelled before game ran its course: %w", ctx.Err())
+		case <-ch:
+			output, err := io.ReadAll(buf)
+			fmt.Printf("process finished nicely", cmd.String())
+			if err != nil {
+				slog.Error("somehow got error while reading from buf output of cmd", "error", err)
+			}
+			out.Write(output)
+			out.Close()
 		}
-		out.Write(output)
-		out.Close()
-	}
 	*/
 
 	return nil
 }
 
 type RunParams struct {
-	One       string `json:"one"`       // ai:anthropic:claude-3-7-sonnet-latest:prompt/THEPRIMEAGEN
-	Two       string `json:"two"`       // ai:openai:model:prompt/THEPRIMEAGEN
-	RoundTime int    `json:"roundTime"` // 10
-	Seed      int    `json:"seed"`      // 42069
-	DebugPath string `json:"debugPath"` // /tmp/td
-	VizPath string `json:"vizPath"` // /tmp/td
+	One        string `json:"one"`        // ai:anthropic:claude-3-7-sonnet-latest:prompt/THEPRIMEAGEN
+	Two        string `json:"two"`        // ai:openai:model:prompt/THEPRIMEAGEN
+	RoundTime  int    `json:"roundTime"`  // 10
+	Seed       int    `json:"seed"`       // 42069
+	DebugPath  string `json:"debugPath"`  // /tmp/td
+	VizPath    string `json:"vizPath"`    // /tmp/td
+	OutputPath string `json:"outputPath"` // /tmp/td
 }
 
 func (r *RunParams) String() string {
@@ -122,13 +121,13 @@ func createChallenger(one, two string) Challenger {
 func runWithCancel(ctx context.Context, params RunParams, round int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*20)
 	defer cancel()
-	tmp, err := os.CreateTemp("/tmp", "td-")
+	f, err := os.Create(params.OutputPath)
 	if err != nil {
-		slog.Error("unable to run program, no temp file", "error", err)
+		slog.Error("Unable to create output path program", "name", f.Name())
 		return err
 	}
-	slog.Warn("Running with temp file", "name", tmp.Name())
-	err = run(ctx, tmp, params.toArgs(), round)
+	slog.Warn("Running with temp file", "name", f.Name())
+	err = run(ctx, f, params.toArgs(), round)
 	if err != nil {
 		slog.Error("error running", "error", err)
 		return err
@@ -136,19 +135,28 @@ func runWithCancel(ctx context.Context, params RunParams, round int) error {
 	return nil
 }
 
-func main() {
-	semaphore := make(chan struct{}, 2)
-	semaphore <- struct{}{}
-	semaphore <- struct{}{}
+type AIRunnerParams struct {
+	parallel int
+	count int
+	a []string
+	b []string
+	roundStart int
+}
 
-	round := 0
+func runAll(params AIRunnerParams) {
+	semaphore := make(chan struct{}, params.parallel)
+	for range params.parallel {
+		semaphore <- struct{}{}
+	}
+
+	round := params.roundStart
 	for top := range 2 {
-		for seed := range 5 {
-			for anth := range len(claudes) {
-				for gpt := range len(gpts) {
+		for range params.count {
+			for aIdx := range len(params.a) {
+				for bIdx := range len(params.b) {
 					round++
-					one := fmt.Sprintf("ai:anthropic:%s:prompt/THEPRIMEAGEN", claudes[anth])
-					two := fmt.Sprintf("ai:openai:%s:prompt/THEPRIMEAGEN", gpts[gpt])
+					one := fmt.Sprintf("ai:anthropic:%s:prompt/THEPRIMEAGEN", params.a[aIdx])
+					two := fmt.Sprintf("ai:openai:%s:prompt/THEPRIMEAGEN", params.b[bIdx])
 
 					if top == 1 {
 						tmp := one
@@ -157,17 +165,19 @@ func main() {
 					}
 
 					params := RunParams{
-						One: one,
-						Two: two,
-						RoundTime: 30,
-						Seed: round,
-						DebugPath: fmt.Sprintf("/tmp/td-%d-%d-%d-%d", top, seed, anth, gpt),
+						One:        one,
+						Two:        two,
+						RoundTime:  60,
+						Seed:       round,
+						DebugPath:  fmt.Sprintf("./results/debug-%d-%d-%d-%d", top, round, aIdx, bIdx),
+						VizPath:    fmt.Sprintf("./results/viz-%d-%d-%d-%d", top, round, aIdx, bIdx),
+						OutputPath: fmt.Sprintf("./results/output-%d-%d-%d-%d", top, round, aIdx, bIdx),
 					}
 
 					fmt.Printf("waiting for semaphore...\n")
 					<-semaphore
 					fmt.Printf("running: %v\n", params.String())
-					go func () {
+					go func() {
 						err := runWithCancel(context.Background(), params, round)
 						if err != nil {
 							fmt.Printf("error: %s\n", err)
@@ -182,11 +192,25 @@ func main() {
 	fmt.Printf("done\n")
 }
 
-func testRunner() {
+func main() {
+	runAll(AIRunnerParams{
+		parallel: 5,
+		count: 20,
+		a: claudes,
+		b: gpts,
+		roundStart: 0,
+	})
+}
+
+/*
+func main() {
+	const GPT3Dot5Turbo = "gpt-3.5-turbo"
+	const GPT4 = "gpt-4"
+	const GPT4oMini = "gpt-4o-mini"
 	ctx := context.Background()
 	params := RunParams{
 		One: "ai:anthropic:claude-3-7-sonnet-latest:prompt/THEPRIMEAGEN",
-		Two: "ai:openai:o3-mini:prompt/THEPRIMEAGEN",
+		Two: "ai:openai:gpt-4o-mini:prompt/THEPRIMEAGEN",
 		RoundTime: 30,
 		Seed: 42069,
 		DebugPath: createTmp("td-debug"),
@@ -196,3 +220,4 @@ func testRunner() {
 		slog.Error("error running the program", "error", err)
 	}
 }
+*/

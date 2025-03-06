@@ -73,7 +73,7 @@ func NewFetchPosition(ai AIFetcher, team uint8, debug *testies.DebugFile) AIResp
         ai: ai,
         debug: debug,
         maxTries: 1,
-        timeout: time.Second * 30,
+        timeout: time.Second * 60,
         streamResults: false,
         towersCreatedThisRound: 0,
         badParses: 0,

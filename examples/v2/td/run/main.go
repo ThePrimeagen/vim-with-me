@@ -158,7 +158,7 @@ outer:
 
 			if gs.Finished {
                 //           w  r 1n 2n seed
-                fmt.Printf("%d,%d,%s,%s,%d,", gs.Winner, gs.Round, one.Player.Name(), two.Player.Name(), seed);
+                fmt.Printf("%d,%d,%s,%s,%d,", gs.Winner, gs.Round, playerOneStr, playerTwoStr, seed);
                 // oneTotalTowersBuild, oneTotalProjectiles, oneTotalTowerUpgrades, oneTotalCreepDamage, oneTotalTowerDamage,
                 fmt.Printf("%d,%d,%d,%d,%d,%d,", gs.OneTotalTowersBuild, gs.OneTotalProjectiles, gs.OneTotalTowerUpgrades, gs.OneTotalCreepDamage, gs.OneTotalTowerDamage, gs.OneTotalDamageFromCreeps)
                 // twoTotalTowersBuild, twoTotalProjectiles, twoTotalTowerUpgrades, twoTotalCreepDamage, twoTotalTowerDamage")

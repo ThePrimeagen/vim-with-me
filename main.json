@@ -1,8 +1,8 @@
 {
     "rows": 24,
     "cols": 80,
-    "fps": 16666,
-    "realtimeMultiplier": 30,
+    "fps": 50000,
+    "realtimeMultiplier": 2,
     "seed": 1235,
     "viz": true
 }

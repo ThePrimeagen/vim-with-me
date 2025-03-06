@@ -79,7 +79,7 @@ pub const Position = struct {
 
         const endIdx = idx + 1 + (std.mem.indexOf(u8, str[idx + 1..], ",") orelse str[idx + 1..].len);
 
-        assert.unwrap(void, std.io.getStdErr().writeAll(assert.u(std.fmt.bufPrint(scratchBuf(150), "str = {s} idx = {}, endIdx = {}", .{str, idx, endIdx}))));
+        assert.unwrap(void, std.io.getStdErr().writeAll(assert.u(std.fmt.bufPrint(scratchBuf(1000), "str = {s} idx = {}, endIdx = {}", .{str, idx, endIdx}))));
         const row = std.fmt.parseInt(usize, str[0..idx], 10) catch {
             return 0;
         };

@@ -1,23 +1,28 @@
 {
-    "name": "vim-with-me",
-    "version": "1.0.0",
-    "description": "Right now its a work in progress so there is not going to be a lot of information about it or how to use until i get to a 1.0",
-    "main": "index.js",
-    "directories": {
-        "example": "examples",
-        "test": "test"
-    },
-    "type": "module",
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
-    },
-    "keywords": [],
-    "author": "",
-    "license": "GLWTS(NOLLM)",
-    "devDependencies": {
-        "@types/node": "^20.12.12"
-    },
-    "dependencies": {
-        "ts-node": "^10.9.2"
-    }
+  "name": "vim-with-me",
+  "version": "1.0.0",
+  "description": "Right now its a work in progress so there is not going to be a lot of information about it or how to use until i get to a 1.0",
+  "main": "index.js",
+  "directories": {
+    "example": "examples",
+    "test": "test"
+  },
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "GLWTS(NOLLM)",
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "@types/bun": "latest"
+  },
+  "dependencies": {
+    "csv-simple-parser": "^2.0.2",
+    "ts-node": "^10.9.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
 }
