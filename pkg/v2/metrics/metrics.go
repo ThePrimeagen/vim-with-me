@@ -54,9 +54,13 @@ func (m *Metrics) SetIfGreater(key string, value int) {
 }
 
 func (m *Metrics) Inc(key string) {
+	m.Add(key, 1)
+}
+
+func (m *Metrics) Add(key string, value int) {
 	m.Lock()
 	defer m.Unlock()
-	m.metrics[key]++
+	m.metrics[key] += value
 }
 
 func (m *Metrics) Get(key string) int {
